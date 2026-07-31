@@ -1,0 +1,216 @@
+# Tracive SDK for Kotlin Multiplatform
+
+Client for the Tracive scammer-check Open API. Android and iOS from one common source set.
+
+```kotlin
+val result = client.checkScammer(TraciveQuery.phone("+62 812-3456-7891"))
+if (result.riskTier == RiskTier.HIGH) {
+  warnTheUser(result.reportTotal, result.disclaimer)
+}
+```
+
+---
+
+## Status — read this before you plan around it
+
+**phase 1 is OAuth mode only, and the backend Open API is not live yet.**
+
+Three separate facts, none of which this README will pretend otherwise about:
+
+1. **There is no server.** No `/v1/*` routes are live, and the consent endpoint this SDK opens
+   exist in the Tracive backend yet. `https://api.tracive.id/v1` does not answer. Every method on
+   this SDK that needs the network will fail until it does. That is expected, not a bug to report.
+2. **Proxy mode is phase 2.** `TraciveMode.Proxy` exists in the public surface today so that adding
+   the behaviour later is not a breaking change for anyone. Any call made in Proxy mode throws
+   `TraciveException.NotImplemented` right now. See [docs/proxy-contract.md](docs/proxy-contract.md).
+3. **What *is* finished and useful today** is everything that does not need a server: query folding
+   and validation, the encrypted on-device cache with its TTL policy, error mapping, and the OAuth
+   flow up to the point where it hands off to a live authorization endpoint. All of it is covered by
+   tests that run with no network at all.
+
+Version `0.1.0`. SemVer, and `0.x` means the surface can still move — it is frozen against the
+cross-language spec, not against you, until `1.0.0`.
+
+## There is no API key. There will never be one.
+
+The SDK has **no API-key parameter anywhere in its public surface, in any mode.** Not on
+`TraciveClient`, not on `TraciveMode.OAuth`, not on `TraciveMode.Proxy`. This is a design invariant
+rather than a feature that has not been built yet, and it is worth being explicit about why:
+
+A key shipped inside an APK or an IPA is a key that has been published. Anyone can pull it out with
+`apktool` in about a minute, and from that moment every check they make is billed to you. The two
+modes exist precisely so that a mobile app never holds a long-lived credential:
+
+- **OAuth mode** — the user authorises in the Tracive app, and the app receives a short-lived token
+  scoped to that user. Checks are billed to the user's own credits.
+- **Proxy mode (phase 2)** — calls route through the partner's own backend, which is where a secret
+  can actually be kept.
+
+If you find yourself wanting a place to put a key, you want Proxy mode, and it is not ready yet.
+
+---
+
+## Install
+
+Not published to Maven Central yet. Until it is, build it locally:
+
+```bash
+./gradlew :tracive-sdk:publishToMavenLocal
+```
+
+```kotlin
+// settings.gradle.kts
+dependencyResolutionManagement { repositories { mavenLocal(); mavenCentral() } }
+
+// build.gradle.kts
+dependencies { implementation("id.tracive:tracive-sdk:0.1.0") }
+```
+
+Requirements: Android `minSdk` 24, iOS 15+, Kotlin 2.3, JDK 17 to build.
+
+## Quick start
+
+```kotlin
+val client = TraciveClient(
+  mode = TraciveMode.OAuth(
+    clientId = "your-client-id",
+    redirectUri = "https://yourapp.example.com/oauth/callback",
+    scopes = listOf("check:read", "profile:read"),
+    partnerUserId = null,
+  ),
+  environment = TraciveEnvironment.Sandbox,
+)
+
+// 1. Authorise once. Opens the Tracive app's consent screen in a Custom Tab.
+when (val auth = client.oauth!!.authorize()) {
+  is AuthResult.Authorized -> proceed(auth.grantedScopes)
+  is AuthResult.AppNotInstalled -> tellUserToInstallTracive()   // already sent them to the store
+  is AuthResult.Denied -> respectThat()
+  is AuthResult.CodeReceived -> sendToOwnBackend(auth.code, auth.codeVerifier, auth.redirectUri)
+  is AuthResult.Failed -> report(auth.error)
+}
+
+// 2. Route the redirect back in, from onNewIntent / onOpenURL.
+client.oauth!!.handleCallback(incomingUrl)
+
+// 3. Check.
+val result = client.checkScammer(TraciveQuery.phone("+6281234567891"))
+```
+
+Full walkthrough, including the Android and iOS wiring: [docs/integration.md](docs/integration.md).
+
+## What you can query
+
+```kotlin
+TraciveQuery.phone("+6281234567891")
+TraciveQuery.email("Someone@Example.COM")
+TraciveQuery.bankAccount(countryAlpha3 = "IDN", bankCode = "BCA", account = "1234567890")
+TraciveQuery.iban("GB82 WEST 1234 5698 7654 32")
+TraciveQuery.crypto(chain = "ETH", address = "0xAbC…")
+TraciveQuery.username(platform = "instagram", handle = "@SomeHandle")
+```
+
+Every builder folds its input into a canonical `searchQueryIndex` — the same string the Flutter and
+Swift SDKs produce for the same input, pinned by a shared fixture (`query-grammar-vectors.json`)
+that all three repos vendor verbatim. Invalid input throws `TraciveQueryException` **before**
+anything is sent, because a key that cannot possibly hit would still be billed.
+
+**There is no `domain()` builder.** The original plan listed a DOMAIN type; the backend dropped it.
+Building such a key would guarantee a miss, and misses cost money.
+
+## Cost, and the two things that most affect your bill
+
+Every request that reaches the server is billed, **a miss included** — the server did the lookup
+either way. Two consequences worth internalising:
+
+**Do not call `credits()` before each check.** It is one extra round trip per transaction and it
+tells you nothing you will not learn anyway. Make the check and handle
+`TraciveException.InsufficientCredits` (HTTP 402) when it comes. Call `credits()` to *display* a
+balance, not to gate a call.
+
+**Do not retry a failed check without an `idempotencyKey`.** A 5xx or a timeout does not tell you
+whether the server processed the check before it failed, so a blind retry is a request to be charged
+twice. The SDK will not do it: `checkScammer` retries **only** when you passed an `idempotencyKey`,
+which the server uses to collapse the repeat onto the original charge.
+
+```kotlin
+val key = randomUuid()  // one per logical check; reuse it only to retry that same check
+val result = client.checkScammer(query, idempotencyKey = key)
+```
+
+## Caching
+
+On by default in policy, off by default in wiring — the persistent cache needs a platform database
+and a platform key store, so you construct it and pass it in ([docs/caching.md](docs/caching.md)
+shows both platforms). What it gives you:
+
+| Risk tier | Default TTL |
+|---|---|
+| `HIGH` | 30 days |
+| `ELEVATED` | 7 days |
+| `CAUTION` | 24 hours |
+| `NONE` | 1 hour |
+
+A hit costs zero credits and does zero network I/O, so it also works offline. The server can
+override any of these per response via `cacheTtlSeconds`; the SDK honours it, and that is the
+fleet-wide invalidation lever — leave `honorServerTtlOverride` on.
+
+Privacy: the row key is `SHA-256(searchQueryIndex)` and the payload is AES-256-GCM. **The identifier
+itself is never written to disk in any form**, and neither is the risk tier or the report count.
+
+## Errors
+
+Everything throws a subclass of `TraciveException`, mapped from the server's `error.code`:
+
+| You will see | When | What to do |
+|---|---|---|
+| `InsufficientCredits` | 402 | Prompt to top up. Do not pre-check with `credits()`. |
+| `ExpiredToken` | 401 | Nothing — the SDK refreshes and retries once, single-flight. |
+| `GrantRevoked` | 401 | Tokens are already cleared. Send the user through `authorize()` again. Never retry. |
+| `RateLimited` | 429 | Wait `retryAfter`. Never auto-retried. |
+| `CacheMiss` | — | `Source.CACHE` with no live entry. Never a silent empty result. |
+| `NotImplemented` | — | You called something in Proxy mode. |
+
+An unrecognised code maps to `Server` or `Unknown` carrying the raw code. The SDK never crashes on a
+response shape it does not know, and unknown JSON fields are ignored rather than fatal — phase 2 will
+add fields, and a build shipped today must survive them.
+
+## Surfacing results
+
+`CheckResult.disclaimer` carries the text the backend requires you to show alongside a verdict.
+**Display it.** A risk tier is aggregated user-reported evidence, not an adjudication, and presenting
+it as a verdict on a named person is a legal problem for you rather than for us.
+
+Also note `relatedScammerCount` is a count and never a list — the SDK will not hand you other
+people's identifiers.
+
+## Building this repo
+
+```bash
+./gradlew build                    # compile + test, all targets
+./gradlew :tracive-sdk:testAndroidHostTest   # the common test suite, on the JVM — fastest loop
+./gradlew ktfmtFormat              # reformat (ktfmt, Google style, 2-space indent)
+./gradlew ktfmtCheck               # verify formatting; wired into `check`
+./gradlew apiDump                  # regenerate the public-API snapshot after a deliberate change
+```
+
+Every test in this repo runs **with no network**. The HTTP transport is an injected interface
+(`HttpTransport`), and the suite runs against a fake. No test may hit a real host — there is not one
+to hit, and a suite that needed one would be untestable in CI anyway.
+
+Formatting is ktfmt **Google style, 2-space indent**, enforced by `ktfmtCheck` in `check`. The public
+surface is pinned by the binary-compatibility-validator; `apiCheck` fails CI on an unintended change,
+and the fix is `./gradlew apiDump` plus a look at the diff — the look is the point.
+
+## Documentation
+
+- [docs/integration.md](docs/integration.md) — wiring the SDK into an Android or iOS app end to end
+- [docs/oauth.md](docs/oauth.md) — the PKCE flow, redirect handling, token storage, refresh
+- [docs/caching.md](docs/caching.md) — TTLs, encryption, invalidation, what is and is not stored
+- [docs/proxy-contract.md](docs/proxy-contract.md) — the phase 2 contract, written down early
+- [SECURITY.md](SECURITY.md) — reporting a vulnerability
+- [CHANGELOG.md](CHANGELOG.md)
+
+## Licence
+
+Apache-2.0. See [LICENSE](LICENSE).

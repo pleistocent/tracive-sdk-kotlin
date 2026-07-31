@@ -1,0 +1,98 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A force-push or a quick second commit should not leave two runs racing for the same cache.
+# The in-progress run for a PR is cancelled; runs on main are not, so main keeps a full history.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build and test
+    # macOS, because this is where the Apple targets are. A Linux runner can compile the Android
+    # target and run the common tests, but it cannot build iosArm64 / iosSimulatorArm64 / iosX64 at
+    # all — and those are half of what this SDK ships. A green Linux build would be a green build of
+    # something nobody installs.
+    runs-on: macos-15
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          # Only main writes the shared cache. A PR reads it but cannot poison it, which matters
+          # because a PR runs code from a fork.
+          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+
+      # The embedded copy of the grammar fixture must be the fixture. Kotlin Multiplatform cannot
+      # read a test resource from commonTest, so `QueryGrammarVectorsJson.kt` carries the file as a
+      # constant — and a constant that drifts from the JSON beside it is exactly the silent failure
+      # the fixture exists to prevent: the tests would keep passing against a stale contract. The
+      # generator is deterministic, so regenerating and diffing is the whole check.
+      - name: Check the embedded grammar fixture matches the JSON
+        run: |
+          python3 tools/generate_vectors_kt.py
+          git diff --exit-code -- tracive-sdk/src/commonTest/kotlin/id/tracive/sdk/QueryGrammarVectorsJson.kt
+
+      # Verified before anything else that needs a compiler, because it is the cheapest check that
+      # can fail and the one most likely to. ktfmt Google style, 2-space indent. `./gradlew
+      # ktfmtFormat` fixes it.
+      - name: Check formatting
+        run: ./gradlew ktfmtCheck
+
+      # The public surface, pinned. A change here is not necessarily wrong — it is necessarily
+      # deliberate. If this fails, run `./gradlew apiDump` and review the diff; the review is the
+      # point, because partner apps upgrade on their own schedule and an accidental signature change
+      # is a broken build in someone else's release train.
+      - name: Check public API surface
+        run: ./gradlew apiCheck
+
+      # The common test suite, on the JVM. Fastest signal, and it covers query folding, the cache,
+      # TTL policy and error mapping — everything that does not need a device.
+      #
+      # Every test in this repo runs with no network. The HTTP transport is an injected interface
+      # and the suite runs against a fake. There is no live backend to hit, and a suite that needed
+      # one could not run here anyway.
+      - name: Run common tests (JVM)
+        run: ./gradlew :tracive-sdk:testAndroidHostTest
+
+      # The same common tests again, compiled by Kotlin/Native and run on the simulator target.
+      # Not redundant: this SDK implements SHA-256 and AES-GCM in common Kotlin specifically so a
+      # cache record written on Android opens byte-for-byte on iOS, and that claim is only tested if
+      # the vectors are checked by the Native backend too. Integer and byte semantics are where the
+      # two would drift.
+      - name: Run common tests (iOS simulator)
+        run: ./gradlew :tracive-sdk:iosSimulatorArm64Test
+
+      # Compiles every target, links the Apple frameworks, and runs `check` on the whole tree —
+      # including the sample app, which is a separate Gradle project depending on `:tracive-sdk` the
+      # way a partner would. A change that compiles only because it can see the library's internals
+      # fails here rather than in a partner's build.
+      - name: Build all targets
+        run: ./gradlew build
+
+      - name: Upload test reports
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            **/build/reports/tests/
+            **/build/test-results/
+          retention-days: 7

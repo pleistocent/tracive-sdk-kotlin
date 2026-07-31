@@ -1,0 +1,55 @@
+# Gradle
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!gradle/wrapper/gradle-wrapper.properties
+
+# The wrapper JAR is committed on purpose. Without it `./gradlew` cannot bootstrap, so a fresh clone
+# and every CI runner would need a matching Gradle installed by hand — which is the thing the
+# wrapper exists to remove. Its checksum is pinned in gradle-wrapper.properties; review a change to
+# either file the way you would review a dependency bump.
+
+# Local machine configuration. `local.properties` holds the Android SDK path, which is different on
+# every machine and is never a project decision.
+local.properties
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.fleet/
+out/
+
+# Xcode and SwiftPM, for anyone opening the iOS frameworks from a host project. `.build/` is
+# SwiftPM's output directory and `Pods/` is CocoaPods' vendored checkout; neither is produced by
+# this repo's own build, but both appear the moment someone integrates the framework from here, and
+# a committed build directory is the one thing a repo must never carry.
+xcuserdata/
+*.xcuserstate
+DerivedData/
+.build/
+Pods/
+
+# Dart/Flutter, for the sibling Flutter SDK's tooling if it is ever run against this checkout.
+.dart_tool/
+
+# Kotlin/Native and Apple build products
+*.klib
+*.framework.dSYM/
+
+# macOS / editors
+.DS_Store
+*.swp
+*~
+
+# Secrets. Nothing in this repo should need any of these — the SDK has no API key, and there is
+# nothing to sign or publish yet — but a keystore or a service-account JSON that lands here by
+# accident must not be committable.
+*.jks
+*.keystore
+google-services.json
+*.p12
+*.p8
+secrets.properties

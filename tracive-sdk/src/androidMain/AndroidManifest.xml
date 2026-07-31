@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Tracive SDK's own manifest. Everything here is merged into the host app automatically, which
+  is the point: an integrator gets the package-visibility declaration and the context capture by
+  depending on the AAR, with nothing to remember.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!--
+    Package visibility (API 30+). Without this entry, PackageManager.getPackageInfo throws
+    NameNotFoundException for the Tracive app even when it is installed — so the SDK's pre-check
+    would report "not installed" for every user and send all of them to the install page.
+
+    Both build variants are declared: the production app and the sandbox `.dev` build a partner
+    tests against.
+  -->
+  <queries>
+    <package android:name="com.pleistocent.tracive" />
+    <package android:name="com.pleistocent.tracive.dev" />
+
+    <!--
+      Browsers, so Custom Tabs can resolve one. The authorize page is opened in the system browser
+      and never in a WebView: an App Link does not fire from a WebView, and RFC 8252 §8.12 forbids
+      embedded user-agents for OAuth.
+    -->
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="https" />
+    </intent>
+  </queries>
+
+  <application>
+    <!--
+      Captures the application Context before Application.onCreate returns. Not exported and it
+      answers nothing; see TraciveInitProvider. A host that removes it must call
+      TraciveAndroid.initialize(context) itself.
+
+      The authority is namespaced with ${applicationId} so two apps with this SDK installed on one
+      device do not collide — a duplicate provider authority fails the install outright.
+    -->
+    <provider
+      android:name="id.tracive.sdk.TraciveInitProvider"
+      android:authorities="${applicationId}.tracive-sdk-init"
+      android:exported="false"
+      android:initOrder="100"
+      android:multiprocess="true" />
+  </application>
+
+</manifest>

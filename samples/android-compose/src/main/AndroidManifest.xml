@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <uses-permission android:name="android.permission.INTERNET" />
+
+  <!--
+    The `<queries>` entry for com.pleistocent.tracive is NOT declared here. It ships inside the
+    Tracive SDK's own AAR manifest and is merged into this app automatically, so a partner never has
+    to remember it. That matters more than it looks: without package visibility on Android 11 and
+    above, the SDK's "is the Tracive app installed?" pre-check silently answers "no" for every user
+    who does have it, and every one of them is sent to the install page instead of the consent
+    screen.
+  -->
+
+  <application
+      android:allowBackup="false"
+      android:icon="@android:drawable/ic_dialog_info"
+      android:label="@string/app_name"
+      android:supportsRtl="true"
+      android:theme="@android:style/Theme.Material.Light.NoActionBar">
+
+    <activity
+        android:name=".MainActivity"
+        android:exported="true"
+        android:launchMode="singleTask">
+
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+
+      <!--
+        The OAuth redirect target. `singleTask` above is what makes the redirect arrive in
+        `onNewIntent` on the existing task rather than stacking a second copy of the app behind the
+        browser.
+
+        This sample uses a private-use URI scheme, which RFC 8252 permits for a native app that does
+        not control a web domain. A partner who does control one should register an https App Link
+        instead: a verified App Link cannot be claimed by another app on the device, whereas any app
+        may declare this scheme. docs/oauth.md covers the trade-off.
+      -->
+      <intent-filter>
+        <action android:name="android.intent.action.VIEW" />
+        <category android:name="android.intent.category.DEFAULT" />
+        <category android:name="android.intent.category.BROWSABLE" />
+        <data
+            android:host="${traciveRedirectHost}"
+            android:scheme="${traciveRedirectScheme}" />
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>

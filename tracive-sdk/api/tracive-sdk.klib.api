@@ -1,0 +1,1054 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <id.tracive:tracive-sdk>
+final enum class id.tracive.sdk.client/HttpMethod : kotlin/Enum<id.tracive.sdk.client/HttpMethod> { // id.tracive.sdk.client/HttpMethod|null[0]
+    enum entry GET // id.tracive.sdk.client/HttpMethod.GET|null[0]
+    enum entry POST // id.tracive.sdk.client/HttpMethod.POST|null[0]
+
+    final val entries // id.tracive.sdk.client/HttpMethod.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<id.tracive.sdk.client/HttpMethod> // id.tracive.sdk.client/HttpMethod.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): id.tracive.sdk.client/HttpMethod // id.tracive.sdk.client/HttpMethod.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<id.tracive.sdk.client/HttpMethod> // id.tracive.sdk.client/HttpMethod.values|values#static(){}[0]
+}
+
+final enum class id.tracive.sdk.model/ClientType : kotlin/Enum<id.tracive.sdk.model/ClientType> { // id.tracive.sdk.model/ClientType|null[0]
+    enum entry CONFIDENTIAL // id.tracive.sdk.model/ClientType.CONFIDENTIAL|null[0]
+    enum entry PUBLIC // id.tracive.sdk.model/ClientType.PUBLIC|null[0]
+
+    final val entries // id.tracive.sdk.model/ClientType.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<id.tracive.sdk.model/ClientType> // id.tracive.sdk.model/ClientType.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): id.tracive.sdk.model/ClientType // id.tracive.sdk.model/ClientType.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<id.tracive.sdk.model/ClientType> // id.tracive.sdk.model/ClientType.values|values#static(){}[0]
+}
+
+final enum class id.tracive.sdk.model/Detail : kotlin/Enum<id.tracive.sdk.model/Detail> { // id.tracive.sdk.model/Detail|null[0]
+    enum entry FULL // id.tracive.sdk.model/Detail.FULL|null[0]
+    enum entry MINIMAL // id.tracive.sdk.model/Detail.MINIMAL|null[0]
+
+    final val entries // id.tracive.sdk.model/Detail.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<id.tracive.sdk.model/Detail> // id.tracive.sdk.model/Detail.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): id.tracive.sdk.model/Detail // id.tracive.sdk.model/Detail.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<id.tracive.sdk.model/Detail> // id.tracive.sdk.model/Detail.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // id.tracive.sdk.model/Detail.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/Detail> // id.tracive.sdk.model/Detail.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // id.tracive.sdk.model/Detail.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class id.tracive.sdk.model/Origin : kotlin/Enum<id.tracive.sdk.model/Origin> { // id.tracive.sdk.model/Origin|null[0]
+    enum entry CACHE // id.tracive.sdk.model/Origin.CACHE|null[0]
+    enum entry SERVER // id.tracive.sdk.model/Origin.SERVER|null[0]
+
+    final val entries // id.tracive.sdk.model/Origin.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<id.tracive.sdk.model/Origin> // id.tracive.sdk.model/Origin.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): id.tracive.sdk.model/Origin // id.tracive.sdk.model/Origin.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<id.tracive.sdk.model/Origin> // id.tracive.sdk.model/Origin.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // id.tracive.sdk.model/Origin.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/Origin> // id.tracive.sdk.model/Origin.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // id.tracive.sdk.model/Origin.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class id.tracive.sdk.model/RiskTier : kotlin/Enum<id.tracive.sdk.model/RiskTier> { // id.tracive.sdk.model/RiskTier|null[0]
+    enum entry CAUTION // id.tracive.sdk.model/RiskTier.CAUTION|null[0]
+    enum entry ELEVATED // id.tracive.sdk.model/RiskTier.ELEVATED|null[0]
+    enum entry HIGH // id.tracive.sdk.model/RiskTier.HIGH|null[0]
+    enum entry NONE // id.tracive.sdk.model/RiskTier.NONE|null[0]
+
+    final val entries // id.tracive.sdk.model/RiskTier.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<id.tracive.sdk.model/RiskTier> // id.tracive.sdk.model/RiskTier.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): id.tracive.sdk.model/RiskTier // id.tracive.sdk.model/RiskTier.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<id.tracive.sdk.model/RiskTier> // id.tracive.sdk.model/RiskTier.values|values#static(){}[0]
+
+    final object Companion : kotlinx.serialization.internal/SerializerFactory { // id.tracive.sdk.model/RiskTier.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/RiskTier> // id.tracive.sdk.model/RiskTier.Companion.serializer|serializer(){}[0]
+        final fun serializer(kotlin/Array<out kotlinx.serialization/KSerializer<*>>...): kotlinx.serialization/KSerializer<*> // id.tracive.sdk.model/RiskTier.Companion.serializer|serializer(kotlin.Array<out|kotlinx.serialization.KSerializer<*>>...){}[0]
+    }
+}
+
+final enum class id.tracive.sdk.model/Source : kotlin/Enum<id.tracive.sdk.model/Source> { // id.tracive.sdk.model/Source|null[0]
+    enum entry CACHE // id.tracive.sdk.model/Source.CACHE|null[0]
+    enum entry CACHE_FIRST // id.tracive.sdk.model/Source.CACHE_FIRST|null[0]
+    enum entry SERVER // id.tracive.sdk.model/Source.SERVER|null[0]
+    enum entry SERVER_FIRST // id.tracive.sdk.model/Source.SERVER_FIRST|null[0]
+
+    final val entries // id.tracive.sdk.model/Source.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<id.tracive.sdk.model/Source> // id.tracive.sdk.model/Source.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): id.tracive.sdk.model/Source // id.tracive.sdk.model/Source.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<id.tracive.sdk.model/Source> // id.tracive.sdk.model/Source.values|values#static(){}[0]
+}
+
+abstract interface id.tracive.sdk.cache/CacheCipher { // id.tracive.sdk.cache/CacheCipher|null[0]
+    abstract fun open(kotlin/ByteArray, kotlin/ByteArray): kotlin/ByteArray? // id.tracive.sdk.cache/CacheCipher.open|open(kotlin.ByteArray;kotlin.ByteArray){}[0]
+    abstract fun seal(kotlin/ByteArray, kotlin/ByteArray, kotlin/ByteArray): kotlin/ByteArray // id.tracive.sdk.cache/CacheCipher.seal|seal(kotlin.ByteArray;kotlin.ByteArray;kotlin.ByteArray){}[0]
+}
+
+abstract interface id.tracive.sdk.cache/CacheDataKeyStore { // id.tracive.sdk.cache/CacheDataKeyStore|null[0]
+    abstract suspend fun createKey(): id.tracive.sdk.cache/CacheDataKey // id.tracive.sdk.cache/CacheDataKeyStore.createKey|createKey(){}[0]
+    abstract suspend fun deleteKey(kotlin/String) // id.tracive.sdk.cache/CacheDataKeyStore.deleteKey|deleteKey(kotlin.String){}[0]
+    abstract suspend fun loadKey(kotlin/String): id.tracive.sdk.cache/CacheDataKey? // id.tracive.sdk.cache/CacheDataKeyStore.loadKey|loadKey(kotlin.String){}[0]
+}
+
+abstract interface id.tracive.sdk.cache/CheckCache { // id.tracive.sdk.cache/CheckCache|null[0]
+    abstract suspend fun clear() // id.tracive.sdk.cache/CheckCache.clear|clear(){}[0]
+    abstract suspend fun get(id.tracive.sdk.query/TraciveQuery): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/CheckCache.get|get(id.tracive.sdk.query.TraciveQuery){}[0]
+    abstract suspend fun prune(): kotlin/Int // id.tracive.sdk.cache/CheckCache.prune|prune(){}[0]
+    abstract suspend fun put(id.tracive.sdk.query/TraciveQuery, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/CheckCache.put|put(id.tracive.sdk.query.TraciveQuery;id.tracive.sdk.model.CheckResult){}[0]
+    abstract suspend fun remove(id.tracive.sdk.query/TraciveQuery) // id.tracive.sdk.cache/CheckCache.remove|remove(id.tracive.sdk.query.TraciveQuery){}[0]
+    abstract suspend fun size(): kotlin/Int // id.tracive.sdk.cache/CheckCache.size|size(){}[0]
+}
+
+abstract interface id.tracive.sdk.client/HttpTransport { // id.tracive.sdk.client/HttpTransport|null[0]
+    abstract suspend fun execute(id.tracive.sdk.client/HttpRequest): id.tracive.sdk.client/HttpResponse // id.tracive.sdk.client/HttpTransport.execute|execute(id.tracive.sdk.client.HttpRequest){}[0]
+    open fun close() // id.tracive.sdk.client/HttpTransport.close|close(){}[0]
+}
+
+abstract interface id.tracive.sdk.oauth/TokenStore { // id.tracive.sdk.oauth/TokenStore|null[0]
+    abstract suspend fun clear() // id.tracive.sdk.oauth/TokenStore.clear|clear(){}[0]
+    abstract suspend fun load(): id.tracive.sdk.oauth/TokenSet? // id.tracive.sdk.oauth/TokenStore.load|load(){}[0]
+    abstract suspend fun save(id.tracive.sdk.oauth/TokenSet) // id.tracive.sdk.oauth/TokenStore.save|save(id.tracive.sdk.oauth.TokenSet){}[0]
+}
+
+abstract interface id.tracive.sdk.platform/AppPresenceChecker { // id.tracive.sdk.platform/AppPresenceChecker|null[0]
+    abstract fun isTraciveAppInstalled(): kotlin/Boolean // id.tracive.sdk.platform/AppPresenceChecker.isTraciveAppInstalled|isTraciveAppInstalled(){}[0]
+
+    final object Companion { // id.tracive.sdk.platform/AppPresenceChecker.Companion|null[0]
+        final const val ANDROID_PACKAGE // id.tracive.sdk.platform/AppPresenceChecker.Companion.ANDROID_PACKAGE|{}ANDROID_PACKAGE[0]
+            final fun <get-ANDROID_PACKAGE>(): kotlin/String // id.tracive.sdk.platform/AppPresenceChecker.Companion.ANDROID_PACKAGE.<get-ANDROID_PACKAGE>|<get-ANDROID_PACKAGE>(){}[0]
+        final const val IOS_URL_SCHEME // id.tracive.sdk.platform/AppPresenceChecker.Companion.IOS_URL_SCHEME|{}IOS_URL_SCHEME[0]
+            final fun <get-IOS_URL_SCHEME>(): kotlin/String // id.tracive.sdk.platform/AppPresenceChecker.Companion.IOS_URL_SCHEME.<get-IOS_URL_SCHEME>|<get-IOS_URL_SCHEME>(){}[0]
+    }
+}
+
+abstract interface id.tracive.sdk.platform/AuthorizeLauncher { // id.tracive.sdk.platform/AuthorizeLauncher|null[0]
+    abstract fun launchAuthorize(kotlin/String) // id.tracive.sdk.platform/AuthorizeLauncher.launchAuthorize|launchAuthorize(kotlin.String){}[0]
+    abstract fun launchInstall(kotlin/String) // id.tracive.sdk.platform/AuthorizeLauncher.launchInstall|launchInstall(kotlin.String){}[0]
+}
+
+final class id.tracive.sdk.cache/AesGcmCacheCipher : id.tracive.sdk.cache/CacheCipher { // id.tracive.sdk.cache/AesGcmCacheCipher|null[0]
+    constructor <init>(id.tracive.sdk.cache/CacheDataKey) // id.tracive.sdk.cache/AesGcmCacheCipher.<init>|<init>(id.tracive.sdk.cache.CacheDataKey){}[0]
+    constructor <init>(kotlin/ByteArray) // id.tracive.sdk.cache/AesGcmCacheCipher.<init>|<init>(kotlin.ByteArray){}[0]
+
+    final fun open(kotlin/ByteArray, kotlin/ByteArray): kotlin/ByteArray? // id.tracive.sdk.cache/AesGcmCacheCipher.open|open(kotlin.ByteArray;kotlin.ByteArray){}[0]
+    final fun seal(kotlin/ByteArray, kotlin/ByteArray, kotlin/ByteArray): kotlin/ByteArray // id.tracive.sdk.cache/AesGcmCacheCipher.seal|seal(kotlin.ByteArray;kotlin.ByteArray;kotlin.ByteArray){}[0]
+
+    final object Companion { // id.tracive.sdk.cache/AesGcmCacheCipher.Companion|null[0]
+        final const val ENVELOPE_VERSION // id.tracive.sdk.cache/AesGcmCacheCipher.Companion.ENVELOPE_VERSION|{}ENVELOPE_VERSION[0]
+            final fun <get-ENVELOPE_VERSION>(): kotlin/Int // id.tracive.sdk.cache/AesGcmCacheCipher.Companion.ENVELOPE_VERSION.<get-ENVELOPE_VERSION>|<get-ENVELOPE_VERSION>(){}[0]
+    }
+}
+
+final class id.tracive.sdk.cache/CacheDataKey { // id.tracive.sdk.cache/CacheDataKey|null[0]
+    constructor <init>(kotlin/String, kotlin/ByteArray) // id.tracive.sdk.cache/CacheDataKey.<init>|<init>(kotlin.String;kotlin.ByteArray){}[0]
+
+    final val bytes // id.tracive.sdk.cache/CacheDataKey.bytes|{}bytes[0]
+        final fun <get-bytes>(): kotlin/ByteArray // id.tracive.sdk.cache/CacheDataKey.bytes.<get-bytes>|<get-bytes>(){}[0]
+    final val id // id.tracive.sdk.cache/CacheDataKey.id|{}id[0]
+        final fun <get-id>(): kotlin/String // id.tracive.sdk.cache/CacheDataKey.id.<get-id>|<get-id>(){}[0]
+
+    final fun toString(): kotlin/String // id.tracive.sdk.cache/CacheDataKey.toString|toString(){}[0]
+
+    final object Companion { // id.tracive.sdk.cache/CacheDataKey.Companion|null[0]
+        final const val KEY_SIZE // id.tracive.sdk.cache/CacheDataKey.Companion.KEY_SIZE|{}KEY_SIZE[0]
+            final fun <get-KEY_SIZE>(): kotlin/Int // id.tracive.sdk.cache/CacheDataKey.Companion.KEY_SIZE.<get-KEY_SIZE>|<get-KEY_SIZE>(){}[0]
+    }
+}
+
+final class id.tracive.sdk.cache/InMemoryCacheDataKeyStore : id.tracive.sdk.cache/CacheDataKeyStore { // id.tracive.sdk.cache/InMemoryCacheDataKeyStore|null[0]
+    constructor <init>(kotlin/ByteArray) // id.tracive.sdk.cache/InMemoryCacheDataKeyStore.<init>|<init>(kotlin.ByteArray){}[0]
+
+    final suspend fun createKey(): id.tracive.sdk.cache/CacheDataKey // id.tracive.sdk.cache/InMemoryCacheDataKeyStore.createKey|createKey(){}[0]
+    final suspend fun deleteKey(kotlin/String) // id.tracive.sdk.cache/InMemoryCacheDataKeyStore.deleteKey|deleteKey(kotlin.String){}[0]
+    final suspend fun loadKey(kotlin/String): id.tracive.sdk.cache/CacheDataKey? // id.tracive.sdk.cache/InMemoryCacheDataKeyStore.loadKey|loadKey(kotlin.String){}[0]
+}
+
+final class id.tracive.sdk.cache/InMemoryCheckCache : id.tracive.sdk.cache/CheckCache { // id.tracive.sdk.cache/InMemoryCheckCache|null[0]
+    constructor <init>(id.tracive.sdk.cache/CacheDataKeyStore, id.tracive.sdk.model/CachePolicy = ..., kotlinx.datetime/Clock = ...) // id.tracive.sdk.cache/InMemoryCheckCache.<init>|<init>(id.tracive.sdk.cache.CacheDataKeyStore;id.tracive.sdk.model.CachePolicy;kotlinx.datetime.Clock){}[0]
+
+    final fun toString(): kotlin/String // id.tracive.sdk.cache/InMemoryCheckCache.toString|toString(){}[0]
+    final suspend fun clear() // id.tracive.sdk.cache/InMemoryCheckCache.clear|clear(){}[0]
+    final suspend fun get(id.tracive.sdk.query/TraciveQuery): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/InMemoryCheckCache.get|get(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun prune(): kotlin/Int // id.tracive.sdk.cache/InMemoryCheckCache.prune|prune(){}[0]
+    final suspend fun put(id.tracive.sdk.query/TraciveQuery, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/InMemoryCheckCache.put|put(id.tracive.sdk.query.TraciveQuery;id.tracive.sdk.model.CheckResult){}[0]
+    final suspend fun remove(id.tracive.sdk.query/TraciveQuery) // id.tracive.sdk.cache/InMemoryCheckCache.remove|remove(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun size(): kotlin/Int // id.tracive.sdk.cache/InMemoryCheckCache.size|size(){}[0]
+}
+
+final class id.tracive.sdk.cache/SqlDelightCheckCache : id.tracive.sdk.cache/CheckCache { // id.tracive.sdk.cache/SqlDelightCheckCache|null[0]
+    constructor <init>(app.cash.sqldelight.db/SqlDriver, id.tracive.sdk.cache/CacheDataKeyStore, id.tracive.sdk.model/CachePolicy = ..., kotlinx.datetime/Clock = ..., kotlin.coroutines/CoroutineContext = ...) // id.tracive.sdk.cache/SqlDelightCheckCache.<init>|<init>(app.cash.sqldelight.db.SqlDriver;id.tracive.sdk.cache.CacheDataKeyStore;id.tracive.sdk.model.CachePolicy;kotlinx.datetime.Clock;kotlin.coroutines.CoroutineContext){}[0]
+
+    final fun toString(): kotlin/String // id.tracive.sdk.cache/SqlDelightCheckCache.toString|toString(){}[0]
+    final suspend fun clear() // id.tracive.sdk.cache/SqlDelightCheckCache.clear|clear(){}[0]
+    final suspend fun get(id.tracive.sdk.query/TraciveQuery): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/SqlDelightCheckCache.get|get(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun prune(): kotlin/Int // id.tracive.sdk.cache/SqlDelightCheckCache.prune|prune(){}[0]
+    final suspend fun put(id.tracive.sdk.query/TraciveQuery, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/SqlDelightCheckCache.put|put(id.tracive.sdk.query.TraciveQuery;id.tracive.sdk.model.CheckResult){}[0]
+    final suspend fun remove(id.tracive.sdk.query/TraciveQuery) // id.tracive.sdk.cache/SqlDelightCheckCache.remove|remove(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun size(): kotlin/Int // id.tracive.sdk.cache/SqlDelightCheckCache.size|size(){}[0]
+
+    final object Companion { // id.tracive.sdk.cache/SqlDelightCheckCache.Companion|null[0]
+        final val Schema // id.tracive.sdk.cache/SqlDelightCheckCache.Companion.Schema|{}Schema[0]
+            final fun <get-Schema>(): app.cash.sqldelight.db/SqlSchema<app.cash.sqldelight.db/QueryResult.Value<kotlin/Unit>> // id.tracive.sdk.cache/SqlDelightCheckCache.Companion.Schema.<get-Schema>|<get-Schema>(){}[0]
+    }
+}
+
+final class id.tracive.sdk.client/HttpRequest { // id.tracive.sdk.client/HttpRequest|null[0]
+    constructor <init>(id.tracive.sdk.client/HttpMethod, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk.client/HttpRequest.<init>|<init>(id.tracive.sdk.client.HttpMethod;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>;kotlin.String?;kotlin.String?){}[0]
+
+    final val body // id.tracive.sdk.client/HttpRequest.body|{}body[0]
+        final fun <get-body>(): kotlin/String? // id.tracive.sdk.client/HttpRequest.body.<get-body>|<get-body>(){}[0]
+    final val contentType // id.tracive.sdk.client/HttpRequest.contentType|{}contentType[0]
+        final fun <get-contentType>(): kotlin/String? // id.tracive.sdk.client/HttpRequest.contentType.<get-contentType>|<get-contentType>(){}[0]
+    final val headers // id.tracive.sdk.client/HttpRequest.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, kotlin/String> // id.tracive.sdk.client/HttpRequest.headers.<get-headers>|<get-headers>(){}[0]
+    final val method // id.tracive.sdk.client/HttpRequest.method|{}method[0]
+        final fun <get-method>(): id.tracive.sdk.client/HttpMethod // id.tracive.sdk.client/HttpRequest.method.<get-method>|<get-method>(){}[0]
+    final val url // id.tracive.sdk.client/HttpRequest.url|{}url[0]
+        final fun <get-url>(): kotlin/String // id.tracive.sdk.client/HttpRequest.url.<get-url>|<get-url>(){}[0]
+
+    final fun header(kotlin/String): kotlin/String? // id.tracive.sdk.client/HttpRequest.header|header(kotlin.String){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.client/HttpRequest.toString|toString(){}[0]
+}
+
+final class id.tracive.sdk.client/HttpResponse { // id.tracive.sdk.client/HttpResponse|null[0]
+    constructor <init>(kotlin/Int, kotlin/String = ..., kotlin.collections/Map<kotlin/String, kotlin/String> = ...) // id.tracive.sdk.client/HttpResponse.<init>|<init>(kotlin.Int;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+
+    final val body // id.tracive.sdk.client/HttpResponse.body|{}body[0]
+        final fun <get-body>(): kotlin/String // id.tracive.sdk.client/HttpResponse.body.<get-body>|<get-body>(){}[0]
+    final val headers // id.tracive.sdk.client/HttpResponse.headers|{}headers[0]
+        final fun <get-headers>(): kotlin.collections/Map<kotlin/String, kotlin/String> // id.tracive.sdk.client/HttpResponse.headers.<get-headers>|<get-headers>(){}[0]
+    final val isSuccessful // id.tracive.sdk.client/HttpResponse.isSuccessful|{}isSuccessful[0]
+        final fun <get-isSuccessful>(): kotlin/Boolean // id.tracive.sdk.client/HttpResponse.isSuccessful.<get-isSuccessful>|<get-isSuccessful>(){}[0]
+    final val status // id.tracive.sdk.client/HttpResponse.status|{}status[0]
+        final fun <get-status>(): kotlin/Int // id.tracive.sdk.client/HttpResponse.status.<get-status>|<get-status>(){}[0]
+
+    final fun header(kotlin/String): kotlin/String? // id.tracive.sdk.client/HttpResponse.header|header(kotlin.String){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.client/HttpResponse.toString|toString(){}[0]
+}
+
+final class id.tracive.sdk.client/KtorTransport : id.tracive.sdk.client/HttpTransport { // id.tracive.sdk.client/KtorTransport|null[0]
+    constructor <init>(io.ktor.client/HttpClient = ..., kotlin/Boolean = ...) // id.tracive.sdk.client/KtorTransport.<init>|<init>(io.ktor.client.HttpClient;kotlin.Boolean){}[0]
+
+    final fun close() // id.tracive.sdk.client/KtorTransport.close|close(){}[0]
+    final suspend fun execute(id.tracive.sdk.client/HttpRequest): id.tracive.sdk.client/HttpResponse // id.tracive.sdk.client/KtorTransport.execute|execute(id.tracive.sdk.client.HttpRequest){}[0]
+}
+
+final class id.tracive.sdk.client/RetryPolicy { // id.tracive.sdk.client/RetryPolicy|null[0]
+    constructor <init>(kotlin/Int = ..., kotlin.time/Duration = ..., kotlin/Double = ..., kotlin.time/Duration = ..., kotlin/Double = ...) // id.tracive.sdk.client/RetryPolicy.<init>|<init>(kotlin.Int;kotlin.time.Duration;kotlin.Double;kotlin.time.Duration;kotlin.Double){}[0]
+
+    final val backoffMultiplier // id.tracive.sdk.client/RetryPolicy.backoffMultiplier|{}backoffMultiplier[0]
+        final fun <get-backoffMultiplier>(): kotlin/Double // id.tracive.sdk.client/RetryPolicy.backoffMultiplier.<get-backoffMultiplier>|<get-backoffMultiplier>(){}[0]
+    final val initialBackoff // id.tracive.sdk.client/RetryPolicy.initialBackoff|{}initialBackoff[0]
+        final fun <get-initialBackoff>(): kotlin.time/Duration // id.tracive.sdk.client/RetryPolicy.initialBackoff.<get-initialBackoff>|<get-initialBackoff>(){}[0]
+    final val jitterRatio // id.tracive.sdk.client/RetryPolicy.jitterRatio|{}jitterRatio[0]
+        final fun <get-jitterRatio>(): kotlin/Double // id.tracive.sdk.client/RetryPolicy.jitterRatio.<get-jitterRatio>|<get-jitterRatio>(){}[0]
+    final val maxAttempts // id.tracive.sdk.client/RetryPolicy.maxAttempts|{}maxAttempts[0]
+        final fun <get-maxAttempts>(): kotlin/Int // id.tracive.sdk.client/RetryPolicy.maxAttempts.<get-maxAttempts>|<get-maxAttempts>(){}[0]
+    final val maxBackoff // id.tracive.sdk.client/RetryPolicy.maxBackoff|{}maxBackoff[0]
+        final fun <get-maxBackoff>(): kotlin.time/Duration // id.tracive.sdk.client/RetryPolicy.maxBackoff.<get-maxBackoff>|<get-maxBackoff>(){}[0]
+
+    final fun backoffBefore(kotlin/Int): kotlin.time/Duration // id.tracive.sdk.client/RetryPolicy.backoffBefore|backoffBefore(kotlin.Int){}[0]
+    final fun component1(): kotlin/Int // id.tracive.sdk.client/RetryPolicy.component1|component1(){}[0]
+    final fun component2(): kotlin.time/Duration // id.tracive.sdk.client/RetryPolicy.component2|component2(){}[0]
+    final fun component3(): kotlin/Double // id.tracive.sdk.client/RetryPolicy.component3|component3(){}[0]
+    final fun component4(): kotlin.time/Duration // id.tracive.sdk.client/RetryPolicy.component4|component4(){}[0]
+    final fun component5(): kotlin/Double // id.tracive.sdk.client/RetryPolicy.component5|component5(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin.time/Duration = ..., kotlin/Double = ..., kotlin.time/Duration = ..., kotlin/Double = ...): id.tracive.sdk.client/RetryPolicy // id.tracive.sdk.client/RetryPolicy.copy|copy(kotlin.Int;kotlin.time.Duration;kotlin.Double;kotlin.time.Duration;kotlin.Double){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.client/RetryPolicy.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.client/RetryPolicy.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.client/RetryPolicy.toString|toString(){}[0]
+
+    final object Companion { // id.tracive.sdk.client/RetryPolicy.Companion|null[0]
+        final val Default // id.tracive.sdk.client/RetryPolicy.Companion.Default|{}Default[0]
+            final fun <get-Default>(): id.tracive.sdk.client/RetryPolicy // id.tracive.sdk.client/RetryPolicy.Companion.Default.<get-Default>|<get-Default>(){}[0]
+        final val None // id.tracive.sdk.client/RetryPolicy.Companion.None|{}None[0]
+            final fun <get-None>(): id.tracive.sdk.client/RetryPolicy // id.tracive.sdk.client/RetryPolicy.Companion.None.<get-None>|<get-None>(){}[0]
+    }
+}
+
+final class id.tracive.sdk.client/TraciveClient { // id.tracive.sdk.client/TraciveClient|null[0]
+    constructor <init>(id.tracive.sdk.model/TraciveMode, id.tracive.sdk.model/TraciveEnvironment = ..., id.tracive.sdk.model/CachePolicy = ..., id.tracive.sdk.model/Source = ..., id.tracive.sdk.client/HttpTransport? = ..., kotlinx.datetime/Clock? = ..., id.tracive.sdk.cache/CheckCache? = ..., id.tracive.sdk.oauth/TokenStore? = ..., id.tracive.sdk.client/RetryPolicy = ..., id.tracive.sdk.platform/AppPresenceChecker? = ..., id.tracive.sdk.platform/AuthorizeLauncher? = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk.client/TraciveClient.<init>|<init>(id.tracive.sdk.model.TraciveMode;id.tracive.sdk.model.TraciveEnvironment;id.tracive.sdk.model.CachePolicy;id.tracive.sdk.model.Source;id.tracive.sdk.client.HttpTransport?;kotlinx.datetime.Clock?;id.tracive.sdk.cache.CheckCache?;id.tracive.sdk.oauth.TokenStore?;id.tracive.sdk.client.RetryPolicy;id.tracive.sdk.platform.AppPresenceChecker?;id.tracive.sdk.platform.AuthorizeLauncher?;kotlin.String?;kotlin.String?){}[0]
+
+    final val cache // id.tracive.sdk.client/TraciveClient.cache|{}cache[0]
+        final fun <get-cache>(): id.tracive.sdk.cache/CheckCache // id.tracive.sdk.client/TraciveClient.cache.<get-cache>|<get-cache>(){}[0]
+    final val cachePolicy // id.tracive.sdk.client/TraciveClient.cachePolicy|{}cachePolicy[0]
+        final fun <get-cachePolicy>(): id.tracive.sdk.model/CachePolicy // id.tracive.sdk.client/TraciveClient.cachePolicy.<get-cachePolicy>|<get-cachePolicy>(){}[0]
+    final val defaultSource // id.tracive.sdk.client/TraciveClient.defaultSource|{}defaultSource[0]
+        final fun <get-defaultSource>(): id.tracive.sdk.model/Source // id.tracive.sdk.client/TraciveClient.defaultSource.<get-defaultSource>|<get-defaultSource>(){}[0]
+    final val environment // id.tracive.sdk.client/TraciveClient.environment|{}environment[0]
+        final fun <get-environment>(): id.tracive.sdk.model/TraciveEnvironment // id.tracive.sdk.client/TraciveClient.environment.<get-environment>|<get-environment>(){}[0]
+    final val mode // id.tracive.sdk.client/TraciveClient.mode|{}mode[0]
+        final fun <get-mode>(): id.tracive.sdk.model/TraciveMode // id.tracive.sdk.client/TraciveClient.mode.<get-mode>|<get-mode>(){}[0]
+    final val oauth // id.tracive.sdk.client/TraciveClient.oauth|{}oauth[0]
+        final fun <get-oauth>(): id.tracive.sdk.oauth/TraciveOAuth? // id.tracive.sdk.client/TraciveClient.oauth.<get-oauth>|<get-oauth>(){}[0]
+    final val retryPolicy // id.tracive.sdk.client/TraciveClient.retryPolicy|{}retryPolicy[0]
+        final fun <get-retryPolicy>(): id.tracive.sdk.client/RetryPolicy // id.tracive.sdk.client/TraciveClient.retryPolicy.<get-retryPolicy>|<get-retryPolicy>(){}[0]
+
+    final fun close() // id.tracive.sdk.client/TraciveClient.close|close(){}[0]
+    final suspend fun checkScammer(id.tracive.sdk.query/TraciveQuery, id.tracive.sdk.model/Source = ..., id.tracive.sdk.model/Detail = ..., kotlin/String? = ..., kotlin/String? = ...): id.tracive.sdk.model/CheckResult // id.tracive.sdk.client/TraciveClient.checkScammer|checkScammer(id.tracive.sdk.query.TraciveQuery;id.tracive.sdk.model.Source;id.tracive.sdk.model.Detail;kotlin.String?;kotlin.String?){}[0]
+    final suspend fun credits(): id.tracive.sdk.model/CreditsInfo // id.tracive.sdk.client/TraciveClient.credits|credits(){}[0]
+    final suspend fun profile(): id.tracive.sdk.model/ProfileInfo // id.tracive.sdk.client/TraciveClient.profile|profile(){}[0]
+    final suspend fun signOut() // id.tracive.sdk.client/TraciveClient.signOut|signOut(){}[0]
+
+    final object Companion { // id.tracive.sdk.client/TraciveClient.Companion|null[0]
+        final const val HEADER_IDEMPOTENCY_KEY // id.tracive.sdk.client/TraciveClient.Companion.HEADER_IDEMPOTENCY_KEY|{}HEADER_IDEMPOTENCY_KEY[0]
+            final fun <get-HEADER_IDEMPOTENCY_KEY>(): kotlin/String // id.tracive.sdk.client/TraciveClient.Companion.HEADER_IDEMPOTENCY_KEY.<get-HEADER_IDEMPOTENCY_KEY>|<get-HEADER_IDEMPOTENCY_KEY>(){}[0]
+        final const val JSON_CONTENT_TYPE // id.tracive.sdk.client/TraciveClient.Companion.JSON_CONTENT_TYPE|{}JSON_CONTENT_TYPE[0]
+            final fun <get-JSON_CONTENT_TYPE>(): kotlin/String // id.tracive.sdk.client/TraciveClient.Companion.JSON_CONTENT_TYPE.<get-JSON_CONTENT_TYPE>|<get-JSON_CONTENT_TYPE>(){}[0]
+        final const val PATH_CREDITS // id.tracive.sdk.client/TraciveClient.Companion.PATH_CREDITS|{}PATH_CREDITS[0]
+            final fun <get-PATH_CREDITS>(): kotlin/String // id.tracive.sdk.client/TraciveClient.Companion.PATH_CREDITS.<get-PATH_CREDITS>|<get-PATH_CREDITS>(){}[0]
+        final const val PATH_PROFILE // id.tracive.sdk.client/TraciveClient.Companion.PATH_PROFILE|{}PATH_PROFILE[0]
+            final fun <get-PATH_PROFILE>(): kotlin/String // id.tracive.sdk.client/TraciveClient.Companion.PATH_PROFILE.<get-PATH_PROFILE>|<get-PATH_PROFILE>(){}[0]
+        final const val PATH_SCAMMER_CHECKS // id.tracive.sdk.client/TraciveClient.Companion.PATH_SCAMMER_CHECKS|{}PATH_SCAMMER_CHECKS[0]
+            final fun <get-PATH_SCAMMER_CHECKS>(): kotlin/String // id.tracive.sdk.client/TraciveClient.Companion.PATH_SCAMMER_CHECKS.<get-PATH_SCAMMER_CHECKS>|<get-PATH_SCAMMER_CHECKS>(){}[0]
+        final const val PROXY_MODE_MESSAGE // id.tracive.sdk.client/TraciveClient.Companion.PROXY_MODE_MESSAGE|{}PROXY_MODE_MESSAGE[0]
+            final fun <get-PROXY_MODE_MESSAGE>(): kotlin/String // id.tracive.sdk.client/TraciveClient.Companion.PROXY_MODE_MESSAGE.<get-PROXY_MODE_MESSAGE>|<get-PROXY_MODE_MESSAGE>(){}[0]
+    }
+}
+
+final class id.tracive.sdk.model/Billing { // id.tracive.sdk.model/Billing|null[0]
+    constructor <init>(kotlin/String, kotlin/Int = ..., kotlin/Long? = ...) // id.tracive.sdk.model/Billing.<init>|<init>(kotlin.String;kotlin.Int;kotlin.Long?){}[0]
+
+    final val creditSource // id.tracive.sdk.model/Billing.creditSource|{}creditSource[0]
+        final fun <get-creditSource>(): kotlin/String // id.tracive.sdk.model/Billing.creditSource.<get-creditSource>|<get-creditSource>(){}[0]
+    final val partnerBalanceRemaining // id.tracive.sdk.model/Billing.partnerBalanceRemaining|{}partnerBalanceRemaining[0]
+        final fun <get-partnerBalanceRemaining>(): kotlin/Long? // id.tracive.sdk.model/Billing.partnerBalanceRemaining.<get-partnerBalanceRemaining>|<get-partnerBalanceRemaining>(){}[0]
+    final val unitsCharged // id.tracive.sdk.model/Billing.unitsCharged|{}unitsCharged[0]
+        final fun <get-unitsCharged>(): kotlin/Int // id.tracive.sdk.model/Billing.unitsCharged.<get-unitsCharged>|<get-unitsCharged>(){}[0]
+
+    final fun component1(): kotlin/String // id.tracive.sdk.model/Billing.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // id.tracive.sdk.model/Billing.component2|component2(){}[0]
+    final fun component3(): kotlin/Long? // id.tracive.sdk.model/Billing.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Int = ..., kotlin/Long? = ...): id.tracive.sdk.model/Billing // id.tracive.sdk.model/Billing.copy|copy(kotlin.String;kotlin.Int;kotlin.Long?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/Billing.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.model/Billing.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.model/Billing.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.model/Billing> { // id.tracive.sdk.model/Billing.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.model/Billing.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.model/Billing.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.model/Billing.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.model/Billing // id.tracive.sdk.model/Billing.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.model/Billing) // id.tracive.sdk.model/Billing.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.model.Billing){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.model/Billing.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/Billing> // id.tracive.sdk.model/Billing.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class id.tracive.sdk.model/CachePolicy { // id.tracive.sdk.model/CachePolicy|null[0]
+    constructor <init>(kotlin/Boolean = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Boolean = ...) // id.tracive.sdk.model/CachePolicy.<init>|<init>(kotlin.Boolean;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.Boolean){}[0]
+
+    final val cautionTtl // id.tracive.sdk.model/CachePolicy.cautionTtl|{}cautionTtl[0]
+        final fun <get-cautionTtl>(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.cautionTtl.<get-cautionTtl>|<get-cautionTtl>(){}[0]
+    final val elevatedTtl // id.tracive.sdk.model/CachePolicy.elevatedTtl|{}elevatedTtl[0]
+        final fun <get-elevatedTtl>(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.elevatedTtl.<get-elevatedTtl>|<get-elevatedTtl>(){}[0]
+    final val enabled // id.tracive.sdk.model/CachePolicy.enabled|{}enabled[0]
+        final fun <get-enabled>(): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.enabled.<get-enabled>|<get-enabled>(){}[0]
+    final val highTtl // id.tracive.sdk.model/CachePolicy.highTtl|{}highTtl[0]
+        final fun <get-highTtl>(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.highTtl.<get-highTtl>|<get-highTtl>(){}[0]
+    final val honorServerTtlOverride // id.tracive.sdk.model/CachePolicy.honorServerTtlOverride|{}honorServerTtlOverride[0]
+        final fun <get-honorServerTtlOverride>(): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.honorServerTtlOverride.<get-honorServerTtlOverride>|<get-honorServerTtlOverride>(){}[0]
+    final val noneTtl // id.tracive.sdk.model/CachePolicy.noneTtl|{}noneTtl[0]
+        final fun <get-noneTtl>(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.noneTtl.<get-noneTtl>|<get-noneTtl>(){}[0]
+
+    final fun component1(): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.component1|component1(){}[0]
+    final fun component2(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.component2|component2(){}[0]
+    final fun component3(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.component3|component3(){}[0]
+    final fun component4(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.component4|component4(){}[0]
+    final fun component5(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.component5|component5(){}[0]
+    final fun component6(): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.component6|component6(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Boolean = ...): id.tracive.sdk.model/CachePolicy // id.tracive.sdk.model/CachePolicy.copy|copy(kotlin.Boolean;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.Boolean){}[0]
+    final fun effectiveTtl(id.tracive.sdk.model/RiskTier, kotlin/Long?): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.effectiveTtl|effectiveTtl(id.tracive.sdk.model.RiskTier;kotlin.Long?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.model/CachePolicy.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.model/CachePolicy.toString|toString(){}[0]
+    final fun ttlFor(id.tracive.sdk.model/RiskTier): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.ttlFor|ttlFor(id.tracive.sdk.model.RiskTier){}[0]
+
+    final object Companion { // id.tracive.sdk.model/CachePolicy.Companion|null[0]
+        final const val SCHEMA_VERSION // id.tracive.sdk.model/CachePolicy.Companion.SCHEMA_VERSION|{}SCHEMA_VERSION[0]
+            final fun <get-SCHEMA_VERSION>(): kotlin/Int // id.tracive.sdk.model/CachePolicy.Companion.SCHEMA_VERSION.<get-SCHEMA_VERSION>|<get-SCHEMA_VERSION>(){}[0]
+
+        final val Default // id.tracive.sdk.model/CachePolicy.Companion.Default|{}Default[0]
+            final fun <get-Default>(): id.tracive.sdk.model/CachePolicy // id.tracive.sdk.model/CachePolicy.Companion.Default.<get-Default>|<get-Default>(){}[0]
+    }
+}
+
+final class id.tracive.sdk.model/CheckResult { // id.tracive.sdk.model/CheckResult|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/Boolean = ..., id.tracive.sdk.model/RiskTier = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlinx.datetime/Instant? = ..., kotlinx.datetime/Instant? = ..., kotlin.collections/Map<kotlin/String, kotlin/Double> = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/Int = ..., kotlin.collections/List<id.tracive.sdk.model/Chronology>? = ..., kotlin.collections/List<id.tracive.sdk.model/Comment>? = ..., id.tracive.sdk.model/Billing? = ..., kotlin/Long? = ..., kotlin/String? = ..., id.tracive.sdk.model/Origin = ..., kotlinx.datetime/Instant = ...) // id.tracive.sdk.model/CheckResult.<init>|<init>(kotlin.String?;kotlin.Boolean;id.tracive.sdk.model.RiskTier;kotlin.Int;kotlin.Int;kotlin.Int;kotlinx.datetime.Instant?;kotlinx.datetime.Instant?;kotlin.collections.Map<kotlin.String,kotlin.Double>;kotlin.collections.List<kotlin.String>;kotlin.Int;kotlin.collections.List<id.tracive.sdk.model.Chronology>?;kotlin.collections.List<id.tracive.sdk.model.Comment>?;id.tracive.sdk.model.Billing?;kotlin.Long?;kotlin.String?;id.tracive.sdk.model.Origin;kotlinx.datetime.Instant){}[0]
+
+    final val ambiguousReports // id.tracive.sdk.model/CheckResult.ambiguousReports|{}ambiguousReports[0]
+        final fun <get-ambiguousReports>(): kotlin/Int // id.tracive.sdk.model/CheckResult.ambiguousReports.<get-ambiguousReports>|<get-ambiguousReports>(){}[0]
+    final val billing // id.tracive.sdk.model/CheckResult.billing|{}billing[0]
+        final fun <get-billing>(): id.tracive.sdk.model/Billing? // id.tracive.sdk.model/CheckResult.billing.<get-billing>|<get-billing>(){}[0]
+    final val cacheTtlSeconds // id.tracive.sdk.model/CheckResult.cacheTtlSeconds|{}cacheTtlSeconds[0]
+        final fun <get-cacheTtlSeconds>(): kotlin/Long? // id.tracive.sdk.model/CheckResult.cacheTtlSeconds.<get-cacheTtlSeconds>|<get-cacheTtlSeconds>(){}[0]
+    final val checkId // id.tracive.sdk.model/CheckResult.checkId|{}checkId[0]
+        final fun <get-checkId>(): kotlin/String? // id.tracive.sdk.model/CheckResult.checkId.<get-checkId>|<get-checkId>(){}[0]
+    final val comments // id.tracive.sdk.model/CheckResult.comments|{}comments[0]
+        final fun <get-comments>(): kotlin.collections/List<id.tracive.sdk.model/Comment>? // id.tracive.sdk.model/CheckResult.comments.<get-comments>|<get-comments>(){}[0]
+    final val credibleReports // id.tracive.sdk.model/CheckResult.credibleReports|{}credibleReports[0]
+        final fun <get-credibleReports>(): kotlin/Int // id.tracive.sdk.model/CheckResult.credibleReports.<get-credibleReports>|<get-credibleReports>(){}[0]
+    final val disclaimer // id.tracive.sdk.model/CheckResult.disclaimer|{}disclaimer[0]
+        final fun <get-disclaimer>(): kotlin/String? // id.tracive.sdk.model/CheckResult.disclaimer.<get-disclaimer>|<get-disclaimer>(){}[0]
+    final val fetchedAt // id.tracive.sdk.model/CheckResult.fetchedAt|{}fetchedAt[0]
+        final fun <get-fetchedAt>(): kotlinx.datetime/Instant // id.tracive.sdk.model/CheckResult.fetchedAt.<get-fetchedAt>|<get-fetchedAt>(){}[0]
+    final val firstReportOn // id.tracive.sdk.model/CheckResult.firstReportOn|{}firstReportOn[0]
+        final fun <get-firstReportOn>(): kotlinx.datetime/Instant? // id.tracive.sdk.model/CheckResult.firstReportOn.<get-firstReportOn>|<get-firstReportOn>(){}[0]
+    final val found // id.tracive.sdk.model/CheckResult.found|{}found[0]
+        final fun <get-found>(): kotlin/Boolean // id.tracive.sdk.model/CheckResult.found.<get-found>|<get-found>(){}[0]
+    final val fraudAmount // id.tracive.sdk.model/CheckResult.fraudAmount|{}fraudAmount[0]
+        final fun <get-fraudAmount>(): kotlin.collections/Map<kotlin/String, kotlin/Double> // id.tracive.sdk.model/CheckResult.fraudAmount.<get-fraudAmount>|<get-fraudAmount>(){}[0]
+    final val lastReportOn // id.tracive.sdk.model/CheckResult.lastReportOn|{}lastReportOn[0]
+        final fun <get-lastReportOn>(): kotlinx.datetime/Instant? // id.tracive.sdk.model/CheckResult.lastReportOn.<get-lastReportOn>|<get-lastReportOn>(){}[0]
+    final val origin // id.tracive.sdk.model/CheckResult.origin|{}origin[0]
+        final fun <get-origin>(): id.tracive.sdk.model/Origin // id.tracive.sdk.model/CheckResult.origin.<get-origin>|<get-origin>(){}[0]
+    final val relatedScammerCount // id.tracive.sdk.model/CheckResult.relatedScammerCount|{}relatedScammerCount[0]
+        final fun <get-relatedScammerCount>(): kotlin/Int // id.tracive.sdk.model/CheckResult.relatedScammerCount.<get-relatedScammerCount>|<get-relatedScammerCount>(){}[0]
+    final val reportTotal // id.tracive.sdk.model/CheckResult.reportTotal|{}reportTotal[0]
+        final fun <get-reportTotal>(): kotlin/Int // id.tracive.sdk.model/CheckResult.reportTotal.<get-reportTotal>|<get-reportTotal>(){}[0]
+    final val riskTier // id.tracive.sdk.model/CheckResult.riskTier|{}riskTier[0]
+        final fun <get-riskTier>(): id.tracive.sdk.model/RiskTier // id.tracive.sdk.model/CheckResult.riskTier.<get-riskTier>|<get-riskTier>(){}[0]
+    final val tags // id.tracive.sdk.model/CheckResult.tags|{}tags[0]
+        final fun <get-tags>(): kotlin.collections/List<kotlin/String> // id.tracive.sdk.model/CheckResult.tags.<get-tags>|<get-tags>(){}[0]
+    final val topChronologies // id.tracive.sdk.model/CheckResult.topChronologies|{}topChronologies[0]
+        final fun <get-topChronologies>(): kotlin.collections/List<id.tracive.sdk.model/Chronology>? // id.tracive.sdk.model/CheckResult.topChronologies.<get-topChronologies>|<get-topChronologies>(){}[0]
+
+    final fun component1(): kotlin/String? // id.tracive.sdk.model/CheckResult.component1|component1(){}[0]
+    final fun component10(): kotlin.collections/List<kotlin/String> // id.tracive.sdk.model/CheckResult.component10|component10(){}[0]
+    final fun component11(): kotlin/Int // id.tracive.sdk.model/CheckResult.component11|component11(){}[0]
+    final fun component12(): kotlin.collections/List<id.tracive.sdk.model/Chronology>? // id.tracive.sdk.model/CheckResult.component12|component12(){}[0]
+    final fun component13(): kotlin.collections/List<id.tracive.sdk.model/Comment>? // id.tracive.sdk.model/CheckResult.component13|component13(){}[0]
+    final fun component14(): id.tracive.sdk.model/Billing? // id.tracive.sdk.model/CheckResult.component14|component14(){}[0]
+    final fun component15(): kotlin/Long? // id.tracive.sdk.model/CheckResult.component15|component15(){}[0]
+    final fun component16(): kotlin/String? // id.tracive.sdk.model/CheckResult.component16|component16(){}[0]
+    final fun component17(): id.tracive.sdk.model/Origin // id.tracive.sdk.model/CheckResult.component17|component17(){}[0]
+    final fun component18(): kotlinx.datetime/Instant // id.tracive.sdk.model/CheckResult.component18|component18(){}[0]
+    final fun component2(): kotlin/Boolean // id.tracive.sdk.model/CheckResult.component2|component2(){}[0]
+    final fun component3(): id.tracive.sdk.model/RiskTier // id.tracive.sdk.model/CheckResult.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // id.tracive.sdk.model/CheckResult.component4|component4(){}[0]
+    final fun component5(): kotlin/Int // id.tracive.sdk.model/CheckResult.component5|component5(){}[0]
+    final fun component6(): kotlin/Int // id.tracive.sdk.model/CheckResult.component6|component6(){}[0]
+    final fun component7(): kotlinx.datetime/Instant? // id.tracive.sdk.model/CheckResult.component7|component7(){}[0]
+    final fun component8(): kotlinx.datetime/Instant? // id.tracive.sdk.model/CheckResult.component8|component8(){}[0]
+    final fun component9(): kotlin.collections/Map<kotlin/String, kotlin/Double> // id.tracive.sdk.model/CheckResult.component9|component9(){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/Boolean = ..., id.tracive.sdk.model/RiskTier = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlinx.datetime/Instant? = ..., kotlinx.datetime/Instant? = ..., kotlin.collections/Map<kotlin/String, kotlin/Double> = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/Int = ..., kotlin.collections/List<id.tracive.sdk.model/Chronology>? = ..., kotlin.collections/List<id.tracive.sdk.model/Comment>? = ..., id.tracive.sdk.model/Billing? = ..., kotlin/Long? = ..., kotlin/String? = ..., id.tracive.sdk.model/Origin = ..., kotlinx.datetime/Instant = ...): id.tracive.sdk.model/CheckResult // id.tracive.sdk.model/CheckResult.copy|copy(kotlin.String?;kotlin.Boolean;id.tracive.sdk.model.RiskTier;kotlin.Int;kotlin.Int;kotlin.Int;kotlinx.datetime.Instant?;kotlinx.datetime.Instant?;kotlin.collections.Map<kotlin.String,kotlin.Double>;kotlin.collections.List<kotlin.String>;kotlin.Int;kotlin.collections.List<id.tracive.sdk.model.Chronology>?;kotlin.collections.List<id.tracive.sdk.model.Comment>?;id.tracive.sdk.model.Billing?;kotlin.Long?;kotlin.String?;id.tracive.sdk.model.Origin;kotlinx.datetime.Instant){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/CheckResult.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.model/CheckResult.hashCode|hashCode(){}[0]
+    final fun toCacheable(): id.tracive.sdk.model/CheckResult // id.tracive.sdk.model/CheckResult.toCacheable|toCacheable(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.model/CheckResult.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.model/CheckResult> { // id.tracive.sdk.model/CheckResult.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.model/CheckResult.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.model/CheckResult.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.model/CheckResult.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.model/CheckResult // id.tracive.sdk.model/CheckResult.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.model/CheckResult.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.model.CheckResult){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.model/CheckResult.Companion|null[0]
+        final val $childSerializers // id.tracive.sdk.model/CheckResult.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/CheckResult> // id.tracive.sdk.model/CheckResult.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class id.tracive.sdk.model/Chronology { // id.tracive.sdk.model/Chronology|null[0]
+    constructor <init>(kotlin/String, kotlin/Int = ..., kotlin/String? = ...) // id.tracive.sdk.model/Chronology.<init>|<init>(kotlin.String;kotlin.Int;kotlin.String?){}[0]
+
+    final val chronology // id.tracive.sdk.model/Chronology.chronology|{}chronology[0]
+        final fun <get-chronology>(): kotlin/String // id.tracive.sdk.model/Chronology.chronology.<get-chronology>|<get-chronology>(){}[0]
+    final val incidentDate // id.tracive.sdk.model/Chronology.incidentDate|{}incidentDate[0]
+        final fun <get-incidentDate>(): kotlin/String? // id.tracive.sdk.model/Chronology.incidentDate.<get-incidentDate>|<get-incidentDate>(){}[0]
+    final val riskLevel // id.tracive.sdk.model/Chronology.riskLevel|{}riskLevel[0]
+        final fun <get-riskLevel>(): kotlin/Int // id.tracive.sdk.model/Chronology.riskLevel.<get-riskLevel>|<get-riskLevel>(){}[0]
+
+    final fun component1(): kotlin/String // id.tracive.sdk.model/Chronology.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // id.tracive.sdk.model/Chronology.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // id.tracive.sdk.model/Chronology.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/Int = ..., kotlin/String? = ...): id.tracive.sdk.model/Chronology // id.tracive.sdk.model/Chronology.copy|copy(kotlin.String;kotlin.Int;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/Chronology.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.model/Chronology.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.model/Chronology.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.model/Chronology> { // id.tracive.sdk.model/Chronology.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.model/Chronology.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.model/Chronology.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.model/Chronology.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.model/Chronology // id.tracive.sdk.model/Chronology.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.model/Chronology) // id.tracive.sdk.model/Chronology.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.model.Chronology){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.model/Chronology.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/Chronology> // id.tracive.sdk.model/Chronology.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class id.tracive.sdk.model/Comment { // id.tracive.sdk.model/Comment|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/Boolean = ...) // id.tracive.sdk.model/Comment.<init>|<init>(kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+
+    final val date // id.tracive.sdk.model/Comment.date|{}date[0]
+        final fun <get-date>(): kotlin/String // id.tracive.sdk.model/Comment.date.<get-date>|<get-date>(){}[0]
+    final val fromCredibleReport // id.tracive.sdk.model/Comment.fromCredibleReport|{}fromCredibleReport[0]
+        final fun <get-fromCredibleReport>(): kotlin/Boolean // id.tracive.sdk.model/Comment.fromCredibleReport.<get-fromCredibleReport>|<get-fromCredibleReport>(){}[0]
+    final val text // id.tracive.sdk.model/Comment.text|{}text[0]
+        final fun <get-text>(): kotlin/String // id.tracive.sdk.model/Comment.text.<get-text>|<get-text>(){}[0]
+
+    final fun component1(): kotlin/String // id.tracive.sdk.model/Comment.component1|component1(){}[0]
+    final fun component2(): kotlin/String // id.tracive.sdk.model/Comment.component2|component2(){}[0]
+    final fun component3(): kotlin/Boolean // id.tracive.sdk.model/Comment.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/Boolean = ...): id.tracive.sdk.model/Comment // id.tracive.sdk.model/Comment.copy|copy(kotlin.String;kotlin.String;kotlin.Boolean){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/Comment.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.model/Comment.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.model/Comment.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.model/Comment> { // id.tracive.sdk.model/Comment.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.model/Comment.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.model/Comment.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.model/Comment.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.model/Comment // id.tracive.sdk.model/Comment.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.model/Comment) // id.tracive.sdk.model/Comment.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.model.Comment){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.model/Comment.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/Comment> // id.tracive.sdk.model/Comment.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class id.tracive.sdk.model/CreditsInfo { // id.tracive.sdk.model/CreditsInfo|null[0]
+    constructor <init>(kotlin/Int = ..., kotlin/String? = ..., kotlinx.datetime/Instant? = ...) // id.tracive.sdk.model/CreditsInfo.<init>|<init>(kotlin.Int;kotlin.String?;kotlinx.datetime.Instant?){}[0]
+
+    final val nextResetAt // id.tracive.sdk.model/CreditsInfo.nextResetAt|{}nextResetAt[0]
+        final fun <get-nextResetAt>(): kotlinx.datetime/Instant? // id.tracive.sdk.model/CreditsInfo.nextResetAt.<get-nextResetAt>|<get-nextResetAt>(){}[0]
+    final val subscriptionCredits // id.tracive.sdk.model/CreditsInfo.subscriptionCredits|{}subscriptionCredits[0]
+        final fun <get-subscriptionCredits>(): kotlin/Int // id.tracive.sdk.model/CreditsInfo.subscriptionCredits.<get-subscriptionCredits>|<get-subscriptionCredits>(){}[0]
+    final val tier // id.tracive.sdk.model/CreditsInfo.tier|{}tier[0]
+        final fun <get-tier>(): kotlin/String? // id.tracive.sdk.model/CreditsInfo.tier.<get-tier>|<get-tier>(){}[0]
+
+    final fun component1(): kotlin/Int // id.tracive.sdk.model/CreditsInfo.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // id.tracive.sdk.model/CreditsInfo.component2|component2(){}[0]
+    final fun component3(): kotlinx.datetime/Instant? // id.tracive.sdk.model/CreditsInfo.component3|component3(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/String? = ..., kotlinx.datetime/Instant? = ...): id.tracive.sdk.model/CreditsInfo // id.tracive.sdk.model/CreditsInfo.copy|copy(kotlin.Int;kotlin.String?;kotlinx.datetime.Instant?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/CreditsInfo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.model/CreditsInfo.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.model/CreditsInfo.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.model/CreditsInfo> { // id.tracive.sdk.model/CreditsInfo.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.model/CreditsInfo.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.model/CreditsInfo.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.model/CreditsInfo.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.model/CreditsInfo // id.tracive.sdk.model/CreditsInfo.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.model/CreditsInfo) // id.tracive.sdk.model/CreditsInfo.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.model.CreditsInfo){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.model/CreditsInfo.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/CreditsInfo> // id.tracive.sdk.model/CreditsInfo.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class id.tracive.sdk.model/ProfileInfo { // id.tracive.sdk.model/ProfileInfo|null[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlinx.datetime/Instant? = ...) // id.tracive.sdk.model/ProfileInfo.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?;kotlinx.datetime.Instant?){}[0]
+
+    final val country // id.tracive.sdk.model/ProfileInfo.country|{}country[0]
+        final fun <get-country>(): kotlin/String? // id.tracive.sdk.model/ProfileInfo.country.<get-country>|<get-country>(){}[0]
+    final val memberSince // id.tracive.sdk.model/ProfileInfo.memberSince|{}memberSince[0]
+        final fun <get-memberSince>(): kotlinx.datetime/Instant? // id.tracive.sdk.model/ProfileInfo.memberSince.<get-memberSince>|<get-memberSince>(){}[0]
+    final val name // id.tracive.sdk.model/ProfileInfo.name|{}name[0]
+        final fun <get-name>(): kotlin/String? // id.tracive.sdk.model/ProfileInfo.name.<get-name>|<get-name>(){}[0]
+    final val sub // id.tracive.sdk.model/ProfileInfo.sub|{}sub[0]
+        final fun <get-sub>(): kotlin/String // id.tracive.sdk.model/ProfileInfo.sub.<get-sub>|<get-sub>(){}[0]
+    final val tier // id.tracive.sdk.model/ProfileInfo.tier|{}tier[0]
+        final fun <get-tier>(): kotlin/String? // id.tracive.sdk.model/ProfileInfo.tier.<get-tier>|<get-tier>(){}[0]
+
+    final fun component1(): kotlin/String // id.tracive.sdk.model/ProfileInfo.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // id.tracive.sdk.model/ProfileInfo.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // id.tracive.sdk.model/ProfileInfo.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // id.tracive.sdk.model/ProfileInfo.component4|component4(){}[0]
+    final fun component5(): kotlinx.datetime/Instant? // id.tracive.sdk.model/ProfileInfo.component5|component5(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlinx.datetime/Instant? = ...): id.tracive.sdk.model/ProfileInfo // id.tracive.sdk.model/ProfileInfo.copy|copy(kotlin.String;kotlin.String?;kotlin.String?;kotlin.String?;kotlinx.datetime.Instant?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/ProfileInfo.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.model/ProfileInfo.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.model/ProfileInfo.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.model/ProfileInfo> { // id.tracive.sdk.model/ProfileInfo.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.model/ProfileInfo.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.model/ProfileInfo.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.model/ProfileInfo.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.model/ProfileInfo // id.tracive.sdk.model/ProfileInfo.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.model/ProfileInfo) // id.tracive.sdk.model/ProfileInfo.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.model.ProfileInfo){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.model/ProfileInfo.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/ProfileInfo> // id.tracive.sdk.model/ProfileInfo.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class id.tracive.sdk.oauth/AuthorizeUrlBuilder { // id.tracive.sdk.oauth/AuthorizeUrlBuilder|null[0]
+    constructor <init>(id.tracive.sdk.model/TraciveEnvironment = ..., kotlin/String? = ...) // id.tracive.sdk.oauth/AuthorizeUrlBuilder.<init>|<init>(id.tracive.sdk.model.TraciveEnvironment;kotlin.String?){}[0]
+
+    final val endpoint // id.tracive.sdk.oauth/AuthorizeUrlBuilder.endpoint|{}endpoint[0]
+        final fun <get-endpoint>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.endpoint.<get-endpoint>|<get-endpoint>(){}[0]
+
+    final fun build(id.tracive.sdk.model/TraciveMode.OAuth, id.tracive.sdk.oauth/Pkce, kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String> = ...): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.build|build(id.tracive.sdk.model.TraciveMode.OAuth;id.tracive.sdk.oauth.Pkce;kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+
+    final object Companion { // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion|null[0]
+        final const val AUTHORIZE_PATH // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.AUTHORIZE_PATH|{}AUTHORIZE_PATH[0]
+            final fun <get-AUTHORIZE_PATH>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.AUTHORIZE_PATH.<get-AUTHORIZE_PATH>|<get-AUTHORIZE_PATH>(){}[0]
+        final const val PARAM_CLIENT_ID // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_CLIENT_ID|{}PARAM_CLIENT_ID[0]
+            final fun <get-PARAM_CLIENT_ID>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_CLIENT_ID.<get-PARAM_CLIENT_ID>|<get-PARAM_CLIENT_ID>(){}[0]
+        final const val PARAM_CODE_CHALLENGE // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_CODE_CHALLENGE|{}PARAM_CODE_CHALLENGE[0]
+            final fun <get-PARAM_CODE_CHALLENGE>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_CODE_CHALLENGE.<get-PARAM_CODE_CHALLENGE>|<get-PARAM_CODE_CHALLENGE>(){}[0]
+        final const val PARAM_CODE_CHALLENGE_METHOD // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_CODE_CHALLENGE_METHOD|{}PARAM_CODE_CHALLENGE_METHOD[0]
+            final fun <get-PARAM_CODE_CHALLENGE_METHOD>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_CODE_CHALLENGE_METHOD.<get-PARAM_CODE_CHALLENGE_METHOD>|<get-PARAM_CODE_CHALLENGE_METHOD>(){}[0]
+        final const val PARAM_PARTNER_USER_ID // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_PARTNER_USER_ID|{}PARAM_PARTNER_USER_ID[0]
+            final fun <get-PARAM_PARTNER_USER_ID>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_PARTNER_USER_ID.<get-PARAM_PARTNER_USER_ID>|<get-PARAM_PARTNER_USER_ID>(){}[0]
+        final const val PARAM_REDIRECT_URI // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_REDIRECT_URI|{}PARAM_REDIRECT_URI[0]
+            final fun <get-PARAM_REDIRECT_URI>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_REDIRECT_URI.<get-PARAM_REDIRECT_URI>|<get-PARAM_REDIRECT_URI>(){}[0]
+        final const val PARAM_RESPONSE_TYPE // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_RESPONSE_TYPE|{}PARAM_RESPONSE_TYPE[0]
+            final fun <get-PARAM_RESPONSE_TYPE>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_RESPONSE_TYPE.<get-PARAM_RESPONSE_TYPE>|<get-PARAM_RESPONSE_TYPE>(){}[0]
+        final const val PARAM_SCOPE // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_SCOPE|{}PARAM_SCOPE[0]
+            final fun <get-PARAM_SCOPE>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_SCOPE.<get-PARAM_SCOPE>|<get-PARAM_SCOPE>(){}[0]
+        final const val PARAM_STATE // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_STATE|{}PARAM_STATE[0]
+            final fun <get-PARAM_STATE>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PARAM_STATE.<get-PARAM_STATE>|<get-PARAM_STATE>(){}[0]
+        final const val PRODUCTION_AUTHORIZE_URL // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PRODUCTION_AUTHORIZE_URL|{}PRODUCTION_AUTHORIZE_URL[0]
+            final fun <get-PRODUCTION_AUTHORIZE_URL>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.PRODUCTION_AUTHORIZE_URL.<get-PRODUCTION_AUTHORIZE_URL>|<get-PRODUCTION_AUTHORIZE_URL>(){}[0]
+        final const val SANDBOX_AUTHORIZE_URL // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.SANDBOX_AUTHORIZE_URL|{}SANDBOX_AUTHORIZE_URL[0]
+            final fun <get-SANDBOX_AUTHORIZE_URL>(): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.SANDBOX_AUTHORIZE_URL.<get-SANDBOX_AUTHORIZE_URL>|<get-SANDBOX_AUTHORIZE_URL>(){}[0]
+
+        final fun endpointFor(id.tracive.sdk.model/TraciveEnvironment): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.endpointFor|endpointFor(id.tracive.sdk.model.TraciveEnvironment){}[0]
+        final fun percentEncode(kotlin/String): kotlin/String // id.tracive.sdk.oauth/AuthorizeUrlBuilder.Companion.percentEncode|percentEncode(kotlin.String){}[0]
+    }
+}
+
+final class id.tracive.sdk.oauth/InMemoryTokenStore : id.tracive.sdk.oauth/TokenStore { // id.tracive.sdk.oauth/InMemoryTokenStore|null[0]
+    constructor <init>(id.tracive.sdk.oauth/TokenSet? = ...) // id.tracive.sdk.oauth/InMemoryTokenStore.<init>|<init>(id.tracive.sdk.oauth.TokenSet?){}[0]
+
+    final fun toString(): kotlin/String // id.tracive.sdk.oauth/InMemoryTokenStore.toString|toString(){}[0]
+    final suspend fun clear() // id.tracive.sdk.oauth/InMemoryTokenStore.clear|clear(){}[0]
+    final suspend fun load(): id.tracive.sdk.oauth/TokenSet? // id.tracive.sdk.oauth/InMemoryTokenStore.load|load(){}[0]
+    final suspend fun save(id.tracive.sdk.oauth/TokenSet) // id.tracive.sdk.oauth/InMemoryTokenStore.save|save(id.tracive.sdk.oauth.TokenSet){}[0]
+}
+
+final class id.tracive.sdk.oauth/Pkce { // id.tracive.sdk.oauth/Pkce|null[0]
+    constructor <init>(kotlin/String, kotlin/String) // id.tracive.sdk.oauth/Pkce.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+    final val codeChallenge // id.tracive.sdk.oauth/Pkce.codeChallenge|{}codeChallenge[0]
+        final fun <get-codeChallenge>(): kotlin/String // id.tracive.sdk.oauth/Pkce.codeChallenge.<get-codeChallenge>|<get-codeChallenge>(){}[0]
+    final val codeChallengeMethod // id.tracive.sdk.oauth/Pkce.codeChallengeMethod|{}codeChallengeMethod[0]
+        final fun <get-codeChallengeMethod>(): kotlin/String // id.tracive.sdk.oauth/Pkce.codeChallengeMethod.<get-codeChallengeMethod>|<get-codeChallengeMethod>(){}[0]
+    final val codeVerifier // id.tracive.sdk.oauth/Pkce.codeVerifier|{}codeVerifier[0]
+        final fun <get-codeVerifier>(): kotlin/String // id.tracive.sdk.oauth/Pkce.codeVerifier.<get-codeVerifier>|<get-codeVerifier>(){}[0]
+
+    final fun toString(): kotlin/String // id.tracive.sdk.oauth/Pkce.toString|toString(){}[0]
+}
+
+final class id.tracive.sdk.oauth/TokenSet { // id.tracive.sdk.oauth/TokenSet|null[0]
+    constructor <init>(kotlin/String, kotlin/String? = ..., kotlinx.datetime/Instant? = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/String = ...) // id.tracive.sdk.oauth/TokenSet.<init>|<init>(kotlin.String;kotlin.String?;kotlinx.datetime.Instant?;kotlin.collections.List<kotlin.String>;kotlin.String){}[0]
+
+    final val accessToken // id.tracive.sdk.oauth/TokenSet.accessToken|{}accessToken[0]
+        final fun <get-accessToken>(): kotlin/String // id.tracive.sdk.oauth/TokenSet.accessToken.<get-accessToken>|<get-accessToken>(){}[0]
+    final val expiresAt // id.tracive.sdk.oauth/TokenSet.expiresAt|{}expiresAt[0]
+        final fun <get-expiresAt>(): kotlinx.datetime/Instant? // id.tracive.sdk.oauth/TokenSet.expiresAt.<get-expiresAt>|<get-expiresAt>(){}[0]
+    final val grantedScopes // id.tracive.sdk.oauth/TokenSet.grantedScopes|{}grantedScopes[0]
+        final fun <get-grantedScopes>(): kotlin.collections/List<kotlin/String> // id.tracive.sdk.oauth/TokenSet.grantedScopes.<get-grantedScopes>|<get-grantedScopes>(){}[0]
+    final val refreshToken // id.tracive.sdk.oauth/TokenSet.refreshToken|{}refreshToken[0]
+        final fun <get-refreshToken>(): kotlin/String? // id.tracive.sdk.oauth/TokenSet.refreshToken.<get-refreshToken>|<get-refreshToken>(){}[0]
+    final val tokenType // id.tracive.sdk.oauth/TokenSet.tokenType|{}tokenType[0]
+        final fun <get-tokenType>(): kotlin/String // id.tracive.sdk.oauth/TokenSet.tokenType.<get-tokenType>|<get-tokenType>(){}[0]
+
+    final fun isExpiredAt(kotlinx.datetime/Instant, kotlin.time/Duration = ...): kotlin/Boolean // id.tracive.sdk.oauth/TokenSet.isExpiredAt|isExpiredAt(kotlinx.datetime.Instant;kotlin.time.Duration){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.oauth/TokenSet.toString|toString(){}[0]
+
+    final object Companion { // id.tracive.sdk.oauth/TokenSet.Companion|null[0]
+        final val DEFAULT_EXPIRY_SKEW // id.tracive.sdk.oauth/TokenSet.Companion.DEFAULT_EXPIRY_SKEW|{}DEFAULT_EXPIRY_SKEW[0]
+            final fun <get-DEFAULT_EXPIRY_SKEW>(): kotlin.time/Duration // id.tracive.sdk.oauth/TokenSet.Companion.DEFAULT_EXPIRY_SKEW.<get-DEFAULT_EXPIRY_SKEW>|<get-DEFAULT_EXPIRY_SKEW>(){}[0]
+    }
+}
+
+final class id.tracive.sdk.oauth/TraciveOAuth { // id.tracive.sdk.oauth/TraciveOAuth|null[0]
+    constructor <init>(id.tracive.sdk.model/TraciveMode.OAuth, id.tracive.sdk.model/TraciveEnvironment = ..., id.tracive.sdk.client/HttpTransport? = ..., id.tracive.sdk.oauth/TokenStore? = ..., id.tracive.sdk.platform/AppPresenceChecker? = ..., id.tracive.sdk.platform/AuthorizeLauncher? = ..., kotlinx.datetime/Clock = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk.oauth/TraciveOAuth.<init>|<init>(id.tracive.sdk.model.TraciveMode.OAuth;id.tracive.sdk.model.TraciveEnvironment;id.tracive.sdk.client.HttpTransport?;id.tracive.sdk.oauth.TokenStore?;id.tracive.sdk.platform.AppPresenceChecker?;id.tracive.sdk.platform.AuthorizeLauncher?;kotlinx.datetime.Clock;kotlin.String?;kotlin.String?){}[0]
+
+    final val authorizeEndpoint // id.tracive.sdk.oauth/TraciveOAuth.authorizeEndpoint|{}authorizeEndpoint[0]
+        final fun <get-authorizeEndpoint>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.authorizeEndpoint.<get-authorizeEndpoint>|<get-authorizeEndpoint>(){}[0]
+    final val environment // id.tracive.sdk.oauth/TraciveOAuth.environment|{}environment[0]
+        final fun <get-environment>(): id.tracive.sdk.model/TraciveEnvironment // id.tracive.sdk.oauth/TraciveOAuth.environment.<get-environment>|<get-environment>(){}[0]
+    final val installUrl // id.tracive.sdk.oauth/TraciveOAuth.installUrl|{}installUrl[0]
+        final fun <get-installUrl>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.installUrl.<get-installUrl>|<get-installUrl>(){}[0]
+    final val mode // id.tracive.sdk.oauth/TraciveOAuth.mode|{}mode[0]
+        final fun <get-mode>(): id.tracive.sdk.model/TraciveMode.OAuth // id.tracive.sdk.oauth/TraciveOAuth.mode.<get-mode>|<get-mode>(){}[0]
+
+    final fun cancelPendingAuthorization() // id.tracive.sdk.oauth/TraciveOAuth.cancelPendingAuthorization|cancelPendingAuthorization(){}[0]
+    final fun handleCallback(kotlin/String): kotlin/Boolean // id.tracive.sdk.oauth/TraciveOAuth.handleCallback|handleCallback(kotlin.String){}[0]
+    final suspend fun adoptTokens(kotlin/String, kotlin/String? = ..., kotlin/Long? = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/String = ...) // id.tracive.sdk.oauth/TraciveOAuth.adoptTokens|adoptTokens(kotlin.String;kotlin.String?;kotlin.Long?;kotlin.collections.List<kotlin.String>;kotlin.String){}[0]
+    final suspend fun authorize(kotlin.collections/Map<kotlin/String, kotlin/String> = ...): id.tracive.sdk.model/AuthResult // id.tracive.sdk.oauth/TraciveOAuth.authorize|authorize(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+    final suspend fun grantedScopes(): kotlin.collections/List<kotlin/String> // id.tracive.sdk.oauth/TraciveOAuth.grantedScopes|grantedScopes(){}[0]
+    final suspend fun isAuthorized(): kotlin/Boolean // id.tracive.sdk.oauth/TraciveOAuth.isAuthorized|isAuthorized(){}[0]
+    final suspend fun signOut() // id.tracive.sdk.oauth/TraciveOAuth.signOut|signOut(){}[0]
+
+    final object Companion { // id.tracive.sdk.oauth/TraciveOAuth.Companion|null[0]
+        final const val FORM_CONTENT_TYPE // id.tracive.sdk.oauth/TraciveOAuth.Companion.FORM_CONTENT_TYPE|{}FORM_CONTENT_TYPE[0]
+            final fun <get-FORM_CONTENT_TYPE>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.FORM_CONTENT_TYPE.<get-FORM_CONTENT_TYPE>|<get-FORM_CONTENT_TYPE>(){}[0]
+        final const val INSTALL_ATTRIBUTION_PARAM // id.tracive.sdk.oauth/TraciveOAuth.Companion.INSTALL_ATTRIBUTION_PARAM|{}INSTALL_ATTRIBUTION_PARAM[0]
+            final fun <get-INSTALL_ATTRIBUTION_PARAM>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.INSTALL_ATTRIBUTION_PARAM.<get-INSTALL_ATTRIBUTION_PARAM>|<get-INSTALL_ATTRIBUTION_PARAM>(){}[0]
+        final const val INSTALL_URL // id.tracive.sdk.oauth/TraciveOAuth.Companion.INSTALL_URL|{}INSTALL_URL[0]
+            final fun <get-INSTALL_URL>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.INSTALL_URL.<get-INSTALL_URL>|<get-INSTALL_URL>(){}[0]
+        final const val PATH_REVOKE // id.tracive.sdk.oauth/TraciveOAuth.Companion.PATH_REVOKE|{}PATH_REVOKE[0]
+            final fun <get-PATH_REVOKE>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.PATH_REVOKE.<get-PATH_REVOKE>|<get-PATH_REVOKE>(){}[0]
+        final const val PATH_TOKEN // id.tracive.sdk.oauth/TraciveOAuth.Companion.PATH_TOKEN|{}PATH_TOKEN[0]
+            final fun <get-PATH_TOKEN>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.PATH_TOKEN.<get-PATH_TOKEN>|<get-PATH_TOKEN>(){}[0]
+
+        final fun defaultInstallUrl(kotlin/String): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.defaultInstallUrl|defaultInstallUrl(kotlin.String){}[0]
+    }
+}
+
+final class id.tracive.sdk.platform/IosAppPresenceChecker : id.tracive.sdk.platform/AppPresenceChecker { // id.tracive.sdk.platform/IosAppPresenceChecker|null[0]
+    constructor <init>(kotlin/String = ...) // id.tracive.sdk.platform/IosAppPresenceChecker.<init>|<init>(kotlin.String){}[0]
+
+    final fun isTraciveAppInstalled(): kotlin/Boolean // id.tracive.sdk.platform/IosAppPresenceChecker.isTraciveAppInstalled|isTraciveAppInstalled(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.platform/IosAppPresenceChecker.toString|toString(){}[0]
+}
+
+final class id.tracive.sdk.platform/IosAuthorizeLauncher : id.tracive.sdk.platform/AuthorizeLauncher { // id.tracive.sdk.platform/IosAuthorizeLauncher|null[0]
+    constructor <init>() // id.tracive.sdk.platform/IosAuthorizeLauncher.<init>|<init>(){}[0]
+
+    final fun launchAuthorize(kotlin/String) // id.tracive.sdk.platform/IosAuthorizeLauncher.launchAuthorize|launchAuthorize(kotlin.String){}[0]
+    final fun launchInstall(kotlin/String) // id.tracive.sdk.platform/IosAuthorizeLauncher.launchInstall|launchInstall(kotlin.String){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.platform/IosAuthorizeLauncher.toString|toString(){}[0]
+}
+
+final class id.tracive.sdk.query/TraciveQuery { // id.tracive.sdk.query/TraciveQuery|null[0]
+    final val searchQueryIndex // id.tracive.sdk.query/TraciveQuery.searchQueryIndex|{}searchQueryIndex[0]
+        final fun <get-searchQueryIndex>(): kotlin/String // id.tracive.sdk.query/TraciveQuery.searchQueryIndex.<get-searchQueryIndex>|<get-searchQueryIndex>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.query/TraciveQuery.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.query/TraciveQuery.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.query/TraciveQuery.toString|toString(){}[0]
+
+    final object Companion { // id.tracive.sdk.query/TraciveQuery.Companion|null[0]
+        final fun bankAccount(kotlin/String, kotlin/String, kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.bankAccount|bankAccount(kotlin.String;kotlin.String;kotlin.String){}[0]
+        final fun crypto(kotlin/String, kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.crypto|crypto(kotlin.String;kotlin.String){}[0]
+        final fun email(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.email|email(kotlin.String){}[0]
+        final fun iban(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.iban|iban(kotlin.String){}[0]
+        final fun phone(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.phone|phone(kotlin.String){}[0]
+        final fun username(kotlin/String, kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.username|username(kotlin.String;kotlin.String){}[0]
+    }
+}
+
+final class id.tracive.sdk/TraciveQueryException : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveQueryException|null[0]
+    constructor <init>(kotlin/String) // id.tracive.sdk/TraciveQueryException.<init>|<init>(kotlin.String){}[0]
+
+    final val reason // id.tracive.sdk/TraciveQueryException.reason|{}reason[0]
+        final fun <get-reason>(): kotlin/String // id.tracive.sdk/TraciveQueryException.reason.<get-reason>|<get-reason>(){}[0]
+
+    final object Companion { // id.tracive.sdk/TraciveQueryException.Companion|null[0]
+        final const val COUNTRY_NOT_ALPHA3 // id.tracive.sdk/TraciveQueryException.Companion.COUNTRY_NOT_ALPHA3|{}COUNTRY_NOT_ALPHA3[0]
+            final fun <get-COUNTRY_NOT_ALPHA3>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.COUNTRY_NOT_ALPHA3.<get-COUNTRY_NOT_ALPHA3>|<get-COUNTRY_NOT_ALPHA3>(){}[0]
+        final const val EMPTY_ACCOUNT_ID // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_ACCOUNT_ID|{}EMPTY_ACCOUNT_ID[0]
+            final fun <get-EMPTY_ACCOUNT_ID>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_ACCOUNT_ID.<get-EMPTY_ACCOUNT_ID>|<get-EMPTY_ACCOUNT_ID>(){}[0]
+        final const val EMPTY_BANK_CODE // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_BANK_CODE|{}EMPTY_BANK_CODE[0]
+            final fun <get-EMPTY_BANK_CODE>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_BANK_CODE.<get-EMPTY_BANK_CODE>|<get-EMPTY_BANK_CODE>(){}[0]
+        final const val EMPTY_CHAIN // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_CHAIN|{}EMPTY_CHAIN[0]
+            final fun <get-EMPTY_CHAIN>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_CHAIN.<get-EMPTY_CHAIN>|<get-EMPTY_CHAIN>(){}[0]
+        final const val EMPTY_HANDLE // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_HANDLE|{}EMPTY_HANDLE[0]
+            final fun <get-EMPTY_HANDLE>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_HANDLE.<get-EMPTY_HANDLE>|<get-EMPTY_HANDLE>(){}[0]
+        final const val EMPTY_VALUE // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_VALUE|{}EMPTY_VALUE[0]
+            final fun <get-EMPTY_VALUE>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_VALUE.<get-EMPTY_VALUE>|<get-EMPTY_VALUE>(){}[0]
+        final const val INVALID_DOCUMENT_ID // id.tracive.sdk/TraciveQueryException.Companion.INVALID_DOCUMENT_ID|{}INVALID_DOCUMENT_ID[0]
+            final fun <get-INVALID_DOCUMENT_ID>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.INVALID_DOCUMENT_ID.<get-INVALID_DOCUMENT_ID>|<get-INVALID_DOCUMENT_ID>(){}[0]
+        final const val NOT_E164 // id.tracive.sdk/TraciveQueryException.Companion.NOT_E164|{}NOT_E164[0]
+            final fun <get-NOT_E164>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.NOT_E164.<get-NOT_E164>|<get-NOT_E164>(){}[0]
+    }
+}
+
+sealed class id.tracive.sdk.model/AuthResult { // id.tracive.sdk.model/AuthResult|null[0]
+    final class Authorized : id.tracive.sdk.model/AuthResult { // id.tracive.sdk.model/AuthResult.Authorized|null[0]
+        constructor <init>(kotlin.collections/List<kotlin/String>) // id.tracive.sdk.model/AuthResult.Authorized.<init>|<init>(kotlin.collections.List<kotlin.String>){}[0]
+
+        final val grantedScopes // id.tracive.sdk.model/AuthResult.Authorized.grantedScopes|{}grantedScopes[0]
+            final fun <get-grantedScopes>(): kotlin.collections/List<kotlin/String> // id.tracive.sdk.model/AuthResult.Authorized.grantedScopes.<get-grantedScopes>|<get-grantedScopes>(){}[0]
+
+        final fun component1(): kotlin.collections/List<kotlin/String> // id.tracive.sdk.model/AuthResult.Authorized.component1|component1(){}[0]
+        final fun copy(kotlin.collections/List<kotlin/String> = ...): id.tracive.sdk.model/AuthResult.Authorized // id.tracive.sdk.model/AuthResult.Authorized.copy|copy(kotlin.collections.List<kotlin.String>){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/AuthResult.Authorized.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // id.tracive.sdk.model/AuthResult.Authorized.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/AuthResult.Authorized.toString|toString(){}[0]
+    }
+
+    final class CodeReceived : id.tracive.sdk.model/AuthResult { // id.tracive.sdk.model/AuthResult.CodeReceived|null[0]
+        constructor <init>(kotlin/String, kotlin/String, kotlin/String) // id.tracive.sdk.model/AuthResult.CodeReceived.<init>|<init>(kotlin.String;kotlin.String;kotlin.String){}[0]
+
+        final val code // id.tracive.sdk.model/AuthResult.CodeReceived.code|{}code[0]
+            final fun <get-code>(): kotlin/String // id.tracive.sdk.model/AuthResult.CodeReceived.code.<get-code>|<get-code>(){}[0]
+        final val codeVerifier // id.tracive.sdk.model/AuthResult.CodeReceived.codeVerifier|{}codeVerifier[0]
+            final fun <get-codeVerifier>(): kotlin/String // id.tracive.sdk.model/AuthResult.CodeReceived.codeVerifier.<get-codeVerifier>|<get-codeVerifier>(){}[0]
+        final val redirectUri // id.tracive.sdk.model/AuthResult.CodeReceived.redirectUri|{}redirectUri[0]
+            final fun <get-redirectUri>(): kotlin/String // id.tracive.sdk.model/AuthResult.CodeReceived.redirectUri.<get-redirectUri>|<get-redirectUri>(){}[0]
+
+        final fun toString(): kotlin/String // id.tracive.sdk.model/AuthResult.CodeReceived.toString|toString(){}[0]
+    }
+
+    final class Failed : id.tracive.sdk.model/AuthResult { // id.tracive.sdk.model/AuthResult.Failed|null[0]
+        constructor <init>(id.tracive.sdk/TraciveException) // id.tracive.sdk.model/AuthResult.Failed.<init>|<init>(id.tracive.sdk.TraciveException){}[0]
+
+        final val error // id.tracive.sdk.model/AuthResult.Failed.error|{}error[0]
+            final fun <get-error>(): id.tracive.sdk/TraciveException // id.tracive.sdk.model/AuthResult.Failed.error.<get-error>|<get-error>(){}[0]
+
+        final fun component1(): id.tracive.sdk/TraciveException // id.tracive.sdk.model/AuthResult.Failed.component1|component1(){}[0]
+        final fun copy(id.tracive.sdk/TraciveException = ...): id.tracive.sdk.model/AuthResult.Failed // id.tracive.sdk.model/AuthResult.Failed.copy|copy(id.tracive.sdk.TraciveException){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/AuthResult.Failed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // id.tracive.sdk.model/AuthResult.Failed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/AuthResult.Failed.toString|toString(){}[0]
+    }
+
+    final object AppNotInstalled : id.tracive.sdk.model/AuthResult { // id.tracive.sdk.model/AuthResult.AppNotInstalled|null[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/AuthResult.AppNotInstalled.toString|toString(){}[0]
+    }
+
+    final object Denied : id.tracive.sdk.model/AuthResult { // id.tracive.sdk.model/AuthResult.Denied|null[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/AuthResult.Denied.toString|toString(){}[0]
+    }
+}
+
+sealed class id.tracive.sdk.model/TraciveEnvironment { // id.tracive.sdk.model/TraciveEnvironment|null[0]
+    abstract val baseUrl // id.tracive.sdk.model/TraciveEnvironment.baseUrl|{}baseUrl[0]
+        abstract fun <get-baseUrl>(): kotlin/String // id.tracive.sdk.model/TraciveEnvironment.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+
+    final class Custom : id.tracive.sdk.model/TraciveEnvironment { // id.tracive.sdk.model/TraciveEnvironment.Custom|null[0]
+        constructor <init>(kotlin/String) // id.tracive.sdk.model/TraciveEnvironment.Custom.<init>|<init>(kotlin.String){}[0]
+
+        final val baseUrl // id.tracive.sdk.model/TraciveEnvironment.Custom.baseUrl|{}baseUrl[0]
+            final fun <get-baseUrl>(): kotlin/String // id.tracive.sdk.model/TraciveEnvironment.Custom.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+
+        final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/TraciveEnvironment.Custom.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // id.tracive.sdk.model/TraciveEnvironment.Custom.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/TraciveEnvironment.Custom.toString|toString(){}[0]
+    }
+
+    final object Production : id.tracive.sdk.model/TraciveEnvironment { // id.tracive.sdk.model/TraciveEnvironment.Production|null[0]
+        final val baseUrl // id.tracive.sdk.model/TraciveEnvironment.Production.baseUrl|{}baseUrl[0]
+            final fun <get-baseUrl>(): kotlin/String // id.tracive.sdk.model/TraciveEnvironment.Production.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+
+        final fun toString(): kotlin/String // id.tracive.sdk.model/TraciveEnvironment.Production.toString|toString(){}[0]
+    }
+
+    final object Sandbox : id.tracive.sdk.model/TraciveEnvironment { // id.tracive.sdk.model/TraciveEnvironment.Sandbox|null[0]
+        final val baseUrl // id.tracive.sdk.model/TraciveEnvironment.Sandbox.baseUrl|{}baseUrl[0]
+            final fun <get-baseUrl>(): kotlin/String // id.tracive.sdk.model/TraciveEnvironment.Sandbox.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+
+        final fun toString(): kotlin/String // id.tracive.sdk.model/TraciveEnvironment.Sandbox.toString|toString(){}[0]
+    }
+}
+
+sealed class id.tracive.sdk.model/TraciveMode { // id.tracive.sdk.model/TraciveMode|null[0]
+    final class OAuth : id.tracive.sdk.model/TraciveMode { // id.tracive.sdk.model/TraciveMode.OAuth|null[0]
+        constructor <init>(kotlin/String, kotlin/String, kotlin.collections/List<kotlin/String>, kotlin/String?, id.tracive.sdk.model/ClientType = ...) // id.tracive.sdk.model/TraciveMode.OAuth.<init>|<init>(kotlin.String;kotlin.String;kotlin.collections.List<kotlin.String>;kotlin.String?;id.tracive.sdk.model.ClientType){}[0]
+
+        final val clientId // id.tracive.sdk.model/TraciveMode.OAuth.clientId|{}clientId[0]
+            final fun <get-clientId>(): kotlin/String // id.tracive.sdk.model/TraciveMode.OAuth.clientId.<get-clientId>|<get-clientId>(){}[0]
+        final val clientType // id.tracive.sdk.model/TraciveMode.OAuth.clientType|{}clientType[0]
+            final fun <get-clientType>(): id.tracive.sdk.model/ClientType // id.tracive.sdk.model/TraciveMode.OAuth.clientType.<get-clientType>|<get-clientType>(){}[0]
+        final val partnerUserId // id.tracive.sdk.model/TraciveMode.OAuth.partnerUserId|{}partnerUserId[0]
+            final fun <get-partnerUserId>(): kotlin/String? // id.tracive.sdk.model/TraciveMode.OAuth.partnerUserId.<get-partnerUserId>|<get-partnerUserId>(){}[0]
+        final val redirectUri // id.tracive.sdk.model/TraciveMode.OAuth.redirectUri|{}redirectUri[0]
+            final fun <get-redirectUri>(): kotlin/String // id.tracive.sdk.model/TraciveMode.OAuth.redirectUri.<get-redirectUri>|<get-redirectUri>(){}[0]
+        final val scopes // id.tracive.sdk.model/TraciveMode.OAuth.scopes|{}scopes[0]
+            final fun <get-scopes>(): kotlin.collections/List<kotlin/String> // id.tracive.sdk.model/TraciveMode.OAuth.scopes.<get-scopes>|<get-scopes>(){}[0]
+
+        final fun toString(): kotlin/String // id.tracive.sdk.model/TraciveMode.OAuth.toString|toString(){}[0]
+    }
+
+    final class Proxy : id.tracive.sdk.model/TraciveMode { // id.tracive.sdk.model/TraciveMode.Proxy|null[0]
+        constructor <init>(kotlin/String, kotlin.collections/Map<kotlin/String, kotlin/String>) // id.tracive.sdk.model/TraciveMode.Proxy.<init>|<init>(kotlin.String;kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
+
+        final val authHeaders // id.tracive.sdk.model/TraciveMode.Proxy.authHeaders|{}authHeaders[0]
+            final fun <get-authHeaders>(): kotlin.collections/Map<kotlin/String, kotlin/String> // id.tracive.sdk.model/TraciveMode.Proxy.authHeaders.<get-authHeaders>|<get-authHeaders>(){}[0]
+        final val baseUrl // id.tracive.sdk.model/TraciveMode.Proxy.baseUrl|{}baseUrl[0]
+            final fun <get-baseUrl>(): kotlin/String // id.tracive.sdk.model/TraciveMode.Proxy.baseUrl.<get-baseUrl>|<get-baseUrl>(){}[0]
+
+        final fun toString(): kotlin/String // id.tracive.sdk.model/TraciveMode.Proxy.toString|toString(){}[0]
+    }
+}
+
+sealed class id.tracive.sdk/TraciveException : kotlin/Exception { // id.tracive.sdk/TraciveException|null[0]
+    final val checkId // id.tracive.sdk/TraciveException.checkId|{}checkId[0]
+        final fun <get-checkId>(): kotlin/String? // id.tracive.sdk/TraciveException.checkId.<get-checkId>|<get-checkId>(){}[0]
+    final val errorCode // id.tracive.sdk/TraciveException.errorCode|{}errorCode[0]
+        final fun <get-errorCode>(): kotlin/String? // id.tracive.sdk/TraciveException.errorCode.<get-errorCode>|<get-errorCode>(){}[0]
+    final val httpStatus // id.tracive.sdk/TraciveException.httpStatus|{}httpStatus[0]
+        final fun <get-httpStatus>(): kotlin/Int? // id.tracive.sdk/TraciveException.httpStatus.<get-httpStatus>|<get-httpStatus>(){}[0]
+
+    final class CacheMiss : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.CacheMiss|null[0]
+        constructor <init>(kotlin/String? = ...) // id.tracive.sdk/TraciveException.CacheMiss.<init>|<init>(kotlin.String?){}[0]
+    }
+
+    final class CredentialMismatch : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.CredentialMismatch|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.CredentialMismatch.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class DetailNotPermitted : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.DetailNotPermitted|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.DetailNotPermitted.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class ExpiredToken : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.ExpiredToken|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.ExpiredToken.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class GrantRevoked : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.GrantRevoked|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.GrantRevoked.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class IdempotencyConflict : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.IdempotencyConflict|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.IdempotencyConflict.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class InsufficientCredits : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.InsufficientCredits|null[0]
+        constructor <init>(kotlin/String, kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.InsufficientCredits.<init>|<init>(kotlin.String;kotlin.String?;kotlin.String?){}[0]
+
+        final val which // id.tracive.sdk/TraciveException.InsufficientCredits.which|{}which[0]
+            final fun <get-which>(): kotlin/String // id.tracive.sdk/TraciveException.InsufficientCredits.which.<get-which>|<get-which>(){}[0]
+    }
+
+    final class InvalidApiKey : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.InvalidApiKey|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.InvalidApiKey.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class InvalidRequest : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.InvalidRequest|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.InvalidRequest.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class InvalidToken : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.InvalidToken|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.InvalidToken.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class MissingScope : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.MissingScope|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.MissingScope.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class Network : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.Network|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/Throwable? = ...) // id.tracive.sdk/TraciveException.Network.<init>|<init>(kotlin.String?;kotlin.Throwable?){}[0]
+    }
+
+    final class NotImplemented : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.NotImplemented|null[0]
+        constructor <init>(kotlin/String) // id.tracive.sdk/TraciveException.NotImplemented.<init>|<init>(kotlin.String){}[0]
+    }
+
+    final class PartnerSuspended : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.PartnerSuspended|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.PartnerSuspended.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class RateLimited : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.RateLimited|null[0]
+        constructor <init>(kotlin.time/Duration? = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.RateLimited.<init>|<init>(kotlin.time.Duration?;kotlin.String?;kotlin.String?){}[0]
+
+        final val retryAfter // id.tracive.sdk/TraciveException.RateLimited.retryAfter|{}retryAfter[0]
+            final fun <get-retryAfter>(): kotlin.time/Duration? // id.tracive.sdk/TraciveException.RateLimited.retryAfter.<get-retryAfter>|<get-retryAfter>(){}[0]
+    }
+
+    final class Server : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.Server|null[0]
+        constructor <init>(kotlin/Int, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.Server.<init>|<init>(kotlin.Int;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class Unknown : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.Unknown|null[0]
+        constructor <init>(kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.Unknown.<init>|<init>(kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class UnsupportedCreditSource : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.UnsupportedCreditSource|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.UnsupportedCreditSource.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final class UnsupportedInputType : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.UnsupportedInputType|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.UnsupportedInputType.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk/TraciveException.Companion|null[0]
+        final const val CODE_CREDENTIAL_MISMATCH // id.tracive.sdk/TraciveException.Companion.CODE_CREDENTIAL_MISMATCH|{}CODE_CREDENTIAL_MISMATCH[0]
+            final fun <get-CODE_CREDENTIAL_MISMATCH>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_CREDENTIAL_MISMATCH.<get-CODE_CREDENTIAL_MISMATCH>|<get-CODE_CREDENTIAL_MISMATCH>(){}[0]
+        final const val CODE_DETAIL_NOT_PERMITTED // id.tracive.sdk/TraciveException.Companion.CODE_DETAIL_NOT_PERMITTED|{}CODE_DETAIL_NOT_PERMITTED[0]
+            final fun <get-CODE_DETAIL_NOT_PERMITTED>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_DETAIL_NOT_PERMITTED.<get-CODE_DETAIL_NOT_PERMITTED>|<get-CODE_DETAIL_NOT_PERMITTED>(){}[0]
+        final const val CODE_EXPIRED_TOKEN // id.tracive.sdk/TraciveException.Companion.CODE_EXPIRED_TOKEN|{}CODE_EXPIRED_TOKEN[0]
+            final fun <get-CODE_EXPIRED_TOKEN>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_EXPIRED_TOKEN.<get-CODE_EXPIRED_TOKEN>|<get-CODE_EXPIRED_TOKEN>(){}[0]
+        final const val CODE_GRANT_REVOKED // id.tracive.sdk/TraciveException.Companion.CODE_GRANT_REVOKED|{}CODE_GRANT_REVOKED[0]
+            final fun <get-CODE_GRANT_REVOKED>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_GRANT_REVOKED.<get-CODE_GRANT_REVOKED>|<get-CODE_GRANT_REVOKED>(){}[0]
+        final const val CODE_IDEMPOTENCY_CONFLICT // id.tracive.sdk/TraciveException.Companion.CODE_IDEMPOTENCY_CONFLICT|{}CODE_IDEMPOTENCY_CONFLICT[0]
+            final fun <get-CODE_IDEMPOTENCY_CONFLICT>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_IDEMPOTENCY_CONFLICT.<get-CODE_IDEMPOTENCY_CONFLICT>|<get-CODE_IDEMPOTENCY_CONFLICT>(){}[0]
+        final const val CODE_INSUFFICIENT_CREDITS // id.tracive.sdk/TraciveException.Companion.CODE_INSUFFICIENT_CREDITS|{}CODE_INSUFFICIENT_CREDITS[0]
+            final fun <get-CODE_INSUFFICIENT_CREDITS>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_INSUFFICIENT_CREDITS.<get-CODE_INSUFFICIENT_CREDITS>|<get-CODE_INSUFFICIENT_CREDITS>(){}[0]
+        final const val CODE_INSUFFICIENT_PARTNER_BALANCE // id.tracive.sdk/TraciveException.Companion.CODE_INSUFFICIENT_PARTNER_BALANCE|{}CODE_INSUFFICIENT_PARTNER_BALANCE[0]
+            final fun <get-CODE_INSUFFICIENT_PARTNER_BALANCE>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_INSUFFICIENT_PARTNER_BALANCE.<get-CODE_INSUFFICIENT_PARTNER_BALANCE>|<get-CODE_INSUFFICIENT_PARTNER_BALANCE>(){}[0]
+        final const val CODE_INSUFFICIENT_USER_CREDITS // id.tracive.sdk/TraciveException.Companion.CODE_INSUFFICIENT_USER_CREDITS|{}CODE_INSUFFICIENT_USER_CREDITS[0]
+            final fun <get-CODE_INSUFFICIENT_USER_CREDITS>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_INSUFFICIENT_USER_CREDITS.<get-CODE_INSUFFICIENT_USER_CREDITS>|<get-CODE_INSUFFICIENT_USER_CREDITS>(){}[0]
+        final const val CODE_INVALID_API_KEY // id.tracive.sdk/TraciveException.Companion.CODE_INVALID_API_KEY|{}CODE_INVALID_API_KEY[0]
+            final fun <get-CODE_INVALID_API_KEY>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_INVALID_API_KEY.<get-CODE_INVALID_API_KEY>|<get-CODE_INVALID_API_KEY>(){}[0]
+        final const val CODE_INVALID_REQUEST // id.tracive.sdk/TraciveException.Companion.CODE_INVALID_REQUEST|{}CODE_INVALID_REQUEST[0]
+            final fun <get-CODE_INVALID_REQUEST>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_INVALID_REQUEST.<get-CODE_INVALID_REQUEST>|<get-CODE_INVALID_REQUEST>(){}[0]
+        final const val CODE_INVALID_TOKEN // id.tracive.sdk/TraciveException.Companion.CODE_INVALID_TOKEN|{}CODE_INVALID_TOKEN[0]
+            final fun <get-CODE_INVALID_TOKEN>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_INVALID_TOKEN.<get-CODE_INVALID_TOKEN>|<get-CODE_INVALID_TOKEN>(){}[0]
+        final const val CODE_MISSING_SCOPE // id.tracive.sdk/TraciveException.Companion.CODE_MISSING_SCOPE|{}CODE_MISSING_SCOPE[0]
+            final fun <get-CODE_MISSING_SCOPE>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_MISSING_SCOPE.<get-CODE_MISSING_SCOPE>|<get-CODE_MISSING_SCOPE>(){}[0]
+        final const val CODE_PARTNER_SUSPENDED // id.tracive.sdk/TraciveException.Companion.CODE_PARTNER_SUSPENDED|{}CODE_PARTNER_SUSPENDED[0]
+            final fun <get-CODE_PARTNER_SUSPENDED>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_PARTNER_SUSPENDED.<get-CODE_PARTNER_SUSPENDED>|<get-CODE_PARTNER_SUSPENDED>(){}[0]
+        final const val CODE_RATE_LIMITED // id.tracive.sdk/TraciveException.Companion.CODE_RATE_LIMITED|{}CODE_RATE_LIMITED[0]
+            final fun <get-CODE_RATE_LIMITED>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_RATE_LIMITED.<get-CODE_RATE_LIMITED>|<get-CODE_RATE_LIMITED>(){}[0]
+        final const val CODE_UNSUPPORTED_CREDIT_SOURCE // id.tracive.sdk/TraciveException.Companion.CODE_UNSUPPORTED_CREDIT_SOURCE|{}CODE_UNSUPPORTED_CREDIT_SOURCE[0]
+            final fun <get-CODE_UNSUPPORTED_CREDIT_SOURCE>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_UNSUPPORTED_CREDIT_SOURCE.<get-CODE_UNSUPPORTED_CREDIT_SOURCE>|<get-CODE_UNSUPPORTED_CREDIT_SOURCE>(){}[0]
+        final const val CODE_UNSUPPORTED_INPUT_TYPE // id.tracive.sdk/TraciveException.Companion.CODE_UNSUPPORTED_INPUT_TYPE|{}CODE_UNSUPPORTED_INPUT_TYPE[0]
+            final fun <get-CODE_UNSUPPORTED_INPUT_TYPE>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_UNSUPPORTED_INPUT_TYPE.<get-CODE_UNSUPPORTED_INPUT_TYPE>|<get-CODE_UNSUPPORTED_INPUT_TYPE>(){}[0]
+
+        final fun fromApiError(kotlin/Int, kotlin/String?, kotlin/String? = ..., kotlin/String? = ..., kotlin.time/Duration? = ...): id.tracive.sdk/TraciveException // id.tracive.sdk/TraciveException.Companion.fromApiError|fromApiError(kotlin.Int;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.time.Duration?){}[0]
+    }
+}
+
+final object id.tracive.sdk.cache/DisabledCheckCache : id.tracive.sdk.cache/CheckCache { // id.tracive.sdk.cache/DisabledCheckCache|null[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.cache/DisabledCheckCache.toString|toString(){}[0]
+    final suspend fun clear() // id.tracive.sdk.cache/DisabledCheckCache.clear|clear(){}[0]
+    final suspend fun get(id.tracive.sdk.query/TraciveQuery): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/DisabledCheckCache.get|get(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun prune(): kotlin/Int // id.tracive.sdk.cache/DisabledCheckCache.prune|prune(){}[0]
+    final suspend fun put(id.tracive.sdk.query/TraciveQuery, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/DisabledCheckCache.put|put(id.tracive.sdk.query.TraciveQuery;id.tracive.sdk.model.CheckResult){}[0]
+    final suspend fun remove(id.tracive.sdk.query/TraciveQuery) // id.tracive.sdk.cache/DisabledCheckCache.remove|remove(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun size(): kotlin/Int // id.tracive.sdk.cache/DisabledCheckCache.size|size(){}[0]
+}
+
+final object id.tracive.sdk.oauth/PkceGenerator { // id.tracive.sdk.oauth/PkceGenerator|null[0]
+    final const val DEFAULT_STATE_BYTES // id.tracive.sdk.oauth/PkceGenerator.DEFAULT_STATE_BYTES|{}DEFAULT_STATE_BYTES[0]
+        final fun <get-DEFAULT_STATE_BYTES>(): kotlin/Int // id.tracive.sdk.oauth/PkceGenerator.DEFAULT_STATE_BYTES.<get-DEFAULT_STATE_BYTES>|<get-DEFAULT_STATE_BYTES>(){}[0]
+    final const val DEFAULT_VERIFIER_LENGTH // id.tracive.sdk.oauth/PkceGenerator.DEFAULT_VERIFIER_LENGTH|{}DEFAULT_VERIFIER_LENGTH[0]
+        final fun <get-DEFAULT_VERIFIER_LENGTH>(): kotlin/Int // id.tracive.sdk.oauth/PkceGenerator.DEFAULT_VERIFIER_LENGTH.<get-DEFAULT_VERIFIER_LENGTH>|<get-DEFAULT_VERIFIER_LENGTH>(){}[0]
+    final const val MAX_VERIFIER_LENGTH // id.tracive.sdk.oauth/PkceGenerator.MAX_VERIFIER_LENGTH|{}MAX_VERIFIER_LENGTH[0]
+        final fun <get-MAX_VERIFIER_LENGTH>(): kotlin/Int // id.tracive.sdk.oauth/PkceGenerator.MAX_VERIFIER_LENGTH.<get-MAX_VERIFIER_LENGTH>|<get-MAX_VERIFIER_LENGTH>(){}[0]
+    final const val METHOD_S256 // id.tracive.sdk.oauth/PkceGenerator.METHOD_S256|{}METHOD_S256[0]
+        final fun <get-METHOD_S256>(): kotlin/String // id.tracive.sdk.oauth/PkceGenerator.METHOD_S256.<get-METHOD_S256>|<get-METHOD_S256>(){}[0]
+    final const val MIN_VERIFIER_LENGTH // id.tracive.sdk.oauth/PkceGenerator.MIN_VERIFIER_LENGTH|{}MIN_VERIFIER_LENGTH[0]
+        final fun <get-MIN_VERIFIER_LENGTH>(): kotlin/Int // id.tracive.sdk.oauth/PkceGenerator.MIN_VERIFIER_LENGTH.<get-MIN_VERIFIER_LENGTH>|<get-MIN_VERIFIER_LENGTH>(){}[0]
+
+    final fun challengeFor(kotlin/String): kotlin/String // id.tracive.sdk.oauth/PkceGenerator.challengeFor|challengeFor(kotlin.String){}[0]
+    final fun generate(kotlin/Int = ...): id.tracive.sdk.oauth/Pkce // id.tracive.sdk.oauth/PkceGenerator.generate|generate(kotlin.Int){}[0]
+    final fun randomState(kotlin/Int = ...): kotlin/String // id.tracive.sdk.oauth/PkceGenerator.randomState|randomState(kotlin.Int){}[0]
+}
+
+final object id.tracive.sdk.platform/CryptoProvider { // id.tracive.sdk.platform/CryptoProvider|null[0]
+    final fun randomBytes(kotlin/Int): kotlin/ByteArray // id.tracive.sdk.platform/CryptoProvider.randomBytes|randomBytes(kotlin.Int){}[0]
+    final fun sha256(kotlin/ByteArray): kotlin/ByteArray // id.tracive.sdk.platform/CryptoProvider.sha256|sha256(kotlin.ByteArray){}[0]
+    final fun sha256Hex(kotlin/String): kotlin/String // id.tracive.sdk.platform/CryptoProvider.sha256Hex|sha256Hex(kotlin.String){}[0]
+}
+
+final fun id.tracive.sdk.platform/SecureTokenStore(): id.tracive.sdk.oauth/TokenStore // id.tracive.sdk.platform/SecureTokenStore|SecureTokenStore(){}[0]
+final fun id.tracive.sdk.platform/defaultAppPresenceChecker(): id.tracive.sdk.platform/AppPresenceChecker // id.tracive.sdk.platform/defaultAppPresenceChecker|defaultAppPresenceChecker(){}[0]
+final fun id.tracive.sdk.platform/defaultAuthorizeLauncher(): id.tracive.sdk.platform/AuthorizeLauncher // id.tracive.sdk.platform/defaultAuthorizeLauncher|defaultAuthorizeLauncher(){}[0]

@@ -1,0 +1,96 @@
+-- Tracive SDK check cache.
+--
+-- Two tables and nothing else. Read `CacheRecordStore.kt` alongside this file: the storage contract
+-- is defined there, and everything interesting (key derivation, encryption, expiry, schema
+-- invalidation) lives in `DefaultCheckCache` rather than in SQL.
+--
+-- What is deliberately absent from this schema is the point of it. There is no query column, no
+-- identifier column, no risk tier, no `found` flag, no report count. `cacheKey` is a SHA-256 digest
+-- of the folded query and `envelope` is AES-256-GCM ciphertext. Someone who pulls this database off
+-- a rooted or jailbroken device learns how many identifiers the user checked and roughly when each
+-- answer stops being trusted — nothing about who or what was checked, and nothing about the
+-- verdicts. Adding a plaintext column because it would be convenient to query on would give all of
+-- that away at once, so do not add one.
+--
+-- There are no migrations, and there will not be any. A schema change bumps
+-- `CachePolicy.SCHEMA_VERSION`; the cache then drops every row and starts again under a fresh data
+-- key. These rows are answers that can be re-fetched, so losing them costs credits and nothing
+-- else, whereas migrating them would mean decrypting under an old key and re-sealing under a new
+-- one — real risk in exchange for saving something disposable.
+
+-- One row, `id = 0`, enforced by the CHECK constraint: this is a singleton row that the code reads
+-- and rewrites, not a table that grows.
+CREATE TABLE checkCacheMeta (
+  id INTEGER NOT NULL PRIMARY KEY CHECK (id = 0),
+  -- The `CachePolicy.SCHEMA_VERSION` the rows below were written under. A mismatch on open means
+  -- "discard everything", not "migrate".
+  schemaVersion INTEGER NOT NULL,
+  -- Which key in the platform key store the envelopes are sealed with. An id, never key material.
+  dataKeyId TEXT NOT NULL,
+  -- The highest AES-GCM nonce counter handed out so far. Incremented inside the write transaction,
+  -- so a crash loses a counter value rather than reissuing one. See `cacheNonce` for why a repeated
+  -- nonce under one key would be catastrophic rather than merely unfortunate.
+  nonceCounter INTEGER NOT NULL
+);
+
+CREATE TABLE checkCacheEntry (
+  -- `SHA-256(searchQueryIndex)`, lower-case hex.
+  cacheKey TEXT NOT NULL PRIMARY KEY,
+  -- Envelope version byte, 96-bit nonce, then ciphertext and the 128-bit GCM tag.
+  envelope BLOB NOT NULL,
+  -- Wall-clock expiry in epoch milliseconds. Cleartext because expiry has to be queryable, and it
+  -- is the one fact about a record that leaks nothing about its contents beyond a tier's order of
+  -- magnitude.
+  expiresAtEpochMs INTEGER NOT NULL
+);
+
+-- Prune deletes by expiry across the whole table, which is a scan without this.
+CREATE INDEX checkCacheEntry_expiresAt ON checkCacheEntry(expiresAtEpochMs);
+
+selectMeta:
+SELECT schemaVersion, dataKeyId, nonceCounter
+FROM checkCacheMeta
+WHERE id = 0;
+
+upsertMeta:
+INSERT OR REPLACE INTO checkCacheMeta(id, schemaVersion, dataKeyId, nonceCounter)
+VALUES (0, ?, ?, ?);
+
+bumpNonceCounter:
+UPDATE checkCacheMeta
+SET nonceCounter = nonceCounter + 1
+WHERE id = 0;
+
+selectNonceCounter:
+SELECT nonceCounter
+FROM checkCacheMeta
+WHERE id = 0;
+
+selectEntry:
+SELECT cacheKey, envelope, expiresAtEpochMs
+FROM checkCacheEntry
+WHERE cacheKey = ?;
+
+upsertEntry:
+INSERT OR REPLACE INTO checkCacheEntry(cacheKey, envelope, expiresAtEpochMs)
+VALUES (?, ?, ?);
+
+deleteEntry:
+DELETE FROM checkCacheEntry
+WHERE cacheKey = ?;
+
+deleteAllEntries:
+DELETE FROM checkCacheEntry;
+
+deleteExpiredEntries:
+DELETE FROM checkCacheEntry
+WHERE expiresAtEpochMs <= ?;
+
+countEntries:
+SELECT count(*)
+FROM checkCacheEntry;
+
+-- Rows touched by the statement immediately before, inside the same transaction. SQLDelight cannot
+-- return an affected-row count from a DELETE, and `prune()` reports one.
+selectChanges:
+SELECT changes();
