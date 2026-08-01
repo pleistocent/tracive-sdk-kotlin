@@ -128,6 +128,12 @@ data class CheckResult(
    * rather than the identifier. Caching any of them would let a `MINIMAL` request serve narrative
    * text in the wrong language, or replay another call's charge.
    *
+   * **This projection is not by itself sufficient, and the gap is easy to miss.** It KEEPS [tags]
+   * and [disclaimer], and those vary with `locale` too — so a full-detail answer, which is the only
+   * kind that carries a locale, must never be written at all. `TraciveClient` enforces that
+   * separately; this method cannot, because it cannot see the request. Do not read "the subset is
+   * safe to cache" as "any result is safe to cache once projected".
+   *
    * If a later version ever needs to cache full-detail content, the cache key must become the
    * triple of query, detail and locale. Not this method's business, but do not skip it.
    */

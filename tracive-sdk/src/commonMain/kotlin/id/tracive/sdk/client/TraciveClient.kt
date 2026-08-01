@@ -298,8 +298,22 @@ class TraciveClient(
       decode(response, CheckResult.serializer())
         .copy(origin = Origin.SERVER, fetchedAt = clock.now())
 
-    // `put` keeps only the cacheable subset, so this is safe for a full-detail result too.
-    cache.put(query, result)
+    // A full-detail answer is never stored. The old reasoning here — "`put` keeps only the
+    // cacheable subset, so this is safe for a full-detail result too" — was wrong, and wrong in a
+    // way the subset itself hides: `toCacheable()` drops `topChronologies`, `comments`, `billing`
+    // and `checkId`, but it KEEPS `tags` and `disclaimer`, and both of those vary with `locale`.
+    // The row key is `SHA-256(searchQueryIndex)` with no locale in it, and only a FULL request
+    // sends a locale at all. So storing a full-detail answer files locale-specific text under a
+    // locale-less key, and the next MINIMAL caller — which sends no locale — reads it straight back
+    // as if it were the default. `disclaimer` is the one string this SDK asks every integrator to
+    // put on screen, so the visible failure is a legal notice in a language nobody requested.
+    //
+    // Gating the read alone does not help: the row is poisoned on the way IN, by the FULL call,
+    // and collected later by a MINIMAL call that is reading the cache quite legitimately. Relaxing
+    // either half needs the key to become (query, detail, locale) first.
+    if (detail != Detail.FULL) {
+      cache.put(query, result)
+    }
     return result
   }
 

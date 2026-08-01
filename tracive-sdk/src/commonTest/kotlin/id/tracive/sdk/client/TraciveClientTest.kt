@@ -215,6 +215,29 @@ class TraciveClientTest {
     }
   }
 
+  /**
+   * A full-detail answer must not be WRITTEN either, not merely skipped on read.
+   *
+   * [CheckResult.toCacheable] drops `topChronologies`, `comments`, `billing` and `checkId` — but it
+   * keeps `tags` and `disclaimer`, and both of those vary with `locale`. The cache key is
+   * `SHA-256(searchQueryIndex)` with no locale in it, and only a FULL request sends a locale at
+   * all. So storing a full-detail answer files locale-specific text under a locale-less key, and
+   * the next MINIMAL caller — which sends no locale — reads it back as though it were the default.
+   * `disclaimer` is the one string this SDK asks every integrator to render.
+   *
+   * Gating only the read cannot prevent this: the row is poisoned on the way IN.
+   */
+  @Test
+  fun fullDetailNeverWritesTheCache() = runSdkTest {
+    val cache = FakeCheckCache()
+    val transport = FakeHttpTransport.always(jsonResponse(checkResultJson()))
+    val client = testClient(transport, cache = cache)
+
+    client.checkScammer(testQuery(), source = Source.SERVER, detail = Detail.FULL, locale = "id")
+
+    assertEquals(0, cache.writes, "a full-detail answer was stored under a locale-less key")
+  }
+
   @Test
   fun serverFirstFallsBackToTheCacheWhenTheServerFails() = runSdkTest {
     val cache = FakeCheckCache()
