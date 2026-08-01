@@ -2,7 +2,6 @@ package id.tracive.sdk.platform
 
 import android.content.Context
 import android.content.SharedPreferences
-import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import id.tracive.sdk.TraciveAndroid
@@ -164,14 +163,13 @@ internal class AndroidKeystoreTokenStore(context: Context) : TokenStore {
 /**
  * The Android Keystore-backed token store.
  *
- * @throws IllegalStateException if the SDK has no application `Context` (see [TraciveAndroid]), or
- *   on API levels below 23, where the Keystore cannot hold an AES key. There is no plaintext
- *   fallback: storing a refresh token in the clear to support an old device would put every user's
- *   grant at the mercy of any app with file access on it.
+ * The Keystore can hold an AES key from API 23 onwards, and this SDK's `minSdk` is 24 — so there is
+ * no runtime level check here, because there is no level it could reject. That floor is not
+ * negotiable downwards: there is no plaintext fallback, since storing a refresh token in the clear
+ * to support an older device would put every user's grant at the mercy of any app with file access
+ * on it. Lowering `android-minSdk` below 24 means restoring a guard here first.
+ *
+ * @throws IllegalStateException if the SDK has no application `Context` (see [TraciveAndroid]).
  */
-actual fun SecureTokenStore(): TokenStore {
-  check(Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-    "The Tracive SDK stores tokens in the Android Keystore, which needs API 23 or newer."
-  }
-  return AndroidKeystoreTokenStore(TraciveAndroid.requireContext())
-}
+actual fun SecureTokenStore(): TokenStore =
+  AndroidKeystoreTokenStore(TraciveAndroid.requireContext())
