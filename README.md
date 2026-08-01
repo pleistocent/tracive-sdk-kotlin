@@ -100,6 +100,31 @@ val result = client.checkScammer(TraciveQuery.phone("+6281234567891"))
 
 Full walkthrough, including the Android and iOS wiring: [docs/integration.md](docs/integration.md).
 
+## How it works
+
+`TraciveClient` is the entry point and owns four collaborators. `TraciveQuery` folds and validates
+the identifier before anything is sent, `CheckCache` answers from the device when it can,
+`TraciveOAuth` obtains and keeps the grant, and `HttpTransport` is the one place the SDK touches the
+network. The user consents inside the Tracive app rather than in a WebView, so your app never sees
+their Tracive credentials and never holds a long-lived one of its own.
+
+```mermaid
+flowchart LR
+    App["Your app"] --> Client["TraciveClient"]
+    Client --> Query["TraciveQuery<br/>fold and validate"]
+    Client --> Cache["CheckCache<br/>encrypted, on device"]
+    Client --> OAuth["TraciveOAuth<br/>PKCE grant, token store"]
+    Client --> Transport["HttpTransport"]
+    OAuth --> Launcher["System browser"]
+    Launcher --> TraciveApp["Tracive app<br/>user consents here"]
+    Transport --> Api["Tracive API"]
+    Client -. "TraciveMode.Proxy, phase 2" .-> Proxy["Your own backend"]
+    Proxy -.-> Api
+```
+
+The authorization flow, the single-flight token refresh, the cache decision path and the folding
+grammar each have their own diagram in [docs/architecture.md](docs/architecture.md).
+
 ## What you can query
 
 ```kotlin
@@ -213,6 +238,8 @@ the point.
 
 ## Documentation
 
+- [docs/architecture.md](docs/architecture.md) — the diagrams: components, the PKCE flow, the token
+  lifecycle, the check path, and identifier folding
 - [docs/integration.md](docs/integration.md) — wiring the SDK into an Android or iOS app end to end
 - [docs/oauth.md](docs/oauth.md) — the PKCE flow, redirect handling, token storage, refresh
 - [docs/caching.md](docs/caching.md) — TTLs, encryption, invalidation, what is and is not stored
