@@ -33,6 +33,10 @@ import kotlinx.serialization.json.jsonPrimitive
  * semantics: `trim`, `\s`, `\d` and the case mappings all differ somewhere. Those two sections are
  * driven here as well, so "the SDK uses its platform default" cannot pass silently.
  *
+ * Fixture version 3 corrected `crossLanguageSemantics.nfcScope`, which used to leave the bank code
+ * out of the list of fields NFC applies to while the `rules` section put it in, and added the
+ * vector that tells the two readings apart.
+ *
  * Nothing here touches the network. Folding happens entirely on the client, by design.
  */
 class QueryGrammarTest {
@@ -50,16 +54,16 @@ class QueryGrammarTest {
 
   @Test
   fun theEmbeddedFixtureIsTheWholeVendoredFile() {
-    assertEquals(2, fixture.getValue("version").jsonPrimitive.int, "fixture schema version")
-    assertEquals(33, vectors.size, "vector count — did the embedded copy get truncated?")
+    assertEquals(3, fixture.getValue("version").jsonPrimitive.int, "fixture schema version")
+    assertEquals(34, vectors.size, "vector count — did the embedded copy get truncated?")
     assertEquals(11, rejected.size, "rejected count — did the embedded copy get truncated?")
     assertTrue(
       fixture.getValue("derivedFrom").jsonObject.string("authority").isNotBlank(),
       "the fixture must still record where its expected values came from",
     )
-    // Version 2 is exactly these two sections plus eight vectors. A copy that still parses but has
-    // lost a section would leave the platform-default traps untested, which is the one failure this
-    // file exists to prevent.
+    // Version 2 added exactly these two sections plus eight vectors; version 3 added one more
+    // vector. A copy that still parses but has lost a section would leave the platform-default
+    // traps untested, which is the one failure this file exists to prevent.
     assertTrue(fixture.containsKey("crossLanguageSemantics"), "crossLanguageSemantics section")
     assertTrue(fixture.containsKey("documentIdGuard"), "documentIdGuard section")
   }
@@ -393,17 +397,37 @@ class QueryGrammarTest {
     assertEquals("PHONE_+62812345678", TraciveQuery.phone("+62812345678\u0969").searchQueryIndex)
   }
 
-  /** NFC is applied to email, username, platform and chain codes only — never to the rest. */
+  /**
+   * NFC applies to email addresses, usernames and every code field — the platform or chain code and
+   * the bank code — and to nothing else.
+   *
+   * `nfcScope` is the sentence an implementer reads when deciding where to call `normalize`, so
+   * asserting that the sentence merely exists is not enough. Fixture version 2 left the bank code
+   * out of it while the `rules` section put it in, and a `contains("NOT applied")` check could not
+   * tell the two readings apart. Both halves of the sentence are driven by a real fold below.
+   */
   @Test
   fun nfcAppliesOnlyWhereTheFixtureSaysItDoes() {
-    assertTrue(
-      crossLanguageSemantics.string("nfcScope").contains("NOT applied"),
-      "the fixture must keep stating where NFC does not apply",
-    )
+    val scope = crossLanguageSemantics.string("nfcScope")
+    assertTrue(scope.contains("bank code"), "nfcScope must name the bank code as a field NFC folds")
+    assertTrue(scope.contains("NOT applied"), "nfcScope must keep stating where NFC does not apply")
+
     // A decomposed 'é' in an email composes.
     assertEquals(
       "EMAIL_caf\u00e9@example.com",
       TraciveQuery.email("cafe\u0301@example.com").searchQueryIndex,
+    )
+    // So does a decomposed 'Á' in a bank code, and it composes before the uppercase step. That step
+    // is length-changing, so a fold that skipped NFC would leave the combining mark loose and build
+    // a key the backend never wrote.
+    assertEquals(
+      "BANK_IDN_BC\u00c1_1234567890",
+      TraciveQuery.bankAccount("IDN", "BCA\u0301", "1234567890").searchQueryIndex,
+    )
+    assertNotEquals(
+      "BANK_IDN_BCA\u0301_1234567890",
+      TraciveQuery.bankAccount("IDN", "BCA\u0301", "1234567890").searchQueryIndex,
+      "a bank code that skipped NFC would keep the combining mark as a code point of its own",
     )
     // The same two code points in a bank account do NOT compose: the backend does not normalise an
     // account id, so composing here would build a key it never wrote.
