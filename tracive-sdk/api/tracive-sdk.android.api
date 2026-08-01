@@ -876,6 +876,7 @@ public final class id/tracive/sdk/oauth/TraciveOAuth {
 	public static synthetic fun authorize$default (Lid/tracive/sdk/oauth/TraciveOAuth;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun cancelPendingAuthorization (Ljava/lang/String;)Z
 	public static synthetic fun cancelPendingAuthorization$default (Lid/tracive/sdk/oauth/TraciveOAuth;Ljava/lang/String;ILjava/lang/Object;)Z
+	public final fun close ()V
 	public final fun getAuthorizeEndpoint ()Ljava/lang/String;
 	public final fun getEnvironment ()Lid/tracive/sdk/model/TraciveEnvironment;
 	public final fun getInstallUrl ()Ljava/lang/String;

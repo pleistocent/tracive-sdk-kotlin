@@ -209,3 +209,9 @@ val oauth = TraciveOAuth(
 Every seam the flow needs is a constructor parameter — presence check, launcher, transport, token
 store, clock — so the whole thing runs with no browser, no device and no network. That is how the
 suite in this repo tests it, and there is no server to test against anyway.
+
+**Call `oauth.close()` on any `TraciveOAuth` you built yourself without passing a `transport`.**
+Without one it lazily builds its own HTTP client and owns it — on Android that is an OkHttp
+dispatcher and a connection pool that outlive every reference to the object. Instances reached
+through `TraciveClient.oauth` need nothing: they share the client's transport, and
+`TraciveClient.close()` releases it once.

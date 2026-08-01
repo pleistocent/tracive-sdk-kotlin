@@ -503,8 +503,19 @@ class TraciveOAuth(
     tokenStoreProvider.value.clear()
   }
 
-  /** Releases the transport when this instance created it. */
-  internal fun close() {
+  /**
+   * Releases the HTTP client, when this instance built one. Idempotent.
+   *
+   * **Call this on any `TraciveOAuth` you constructed yourself without passing a `transport`.** The
+   * constructor is public precisely so a partner can drive the flow on its own, and with no
+   * transport supplied this class lazily builds a [KtorTransport] and owns it — which on Android
+   * means an OkHttp dispatcher and a connection pool that outlive every reference to this object.
+   *
+   * There is nothing to do on the [id.tracive.sdk.client.TraciveClient] path: that client injects
+   * its shared transport, so this instance does not own it and `TraciveClient.close()` releases it
+   * exactly once.
+   */
+  fun close() {
     if (ownsTransport && transportProvider.isInitialized()) transportProvider.value.close()
   }
 

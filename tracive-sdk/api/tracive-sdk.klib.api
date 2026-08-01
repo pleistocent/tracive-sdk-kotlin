@@ -699,6 +699,7 @@ final class id.tracive.sdk.oauth/TraciveOAuth { // id.tracive.sdk.oauth/TraciveO
         final fun <get-pendingAuthorizationId>(): kotlin/String? // id.tracive.sdk.oauth/TraciveOAuth.pendingAuthorizationId.<get-pendingAuthorizationId>|<get-pendingAuthorizationId>(){}[0]
 
     final fun cancelPendingAuthorization(kotlin/String? = ...): kotlin/Boolean // id.tracive.sdk.oauth/TraciveOAuth.cancelPendingAuthorization|cancelPendingAuthorization(kotlin.String?){}[0]
+    final fun close() // id.tracive.sdk.oauth/TraciveOAuth.close|close(){}[0]
     final fun handleCallback(kotlin/String): kotlin/Boolean // id.tracive.sdk.oauth/TraciveOAuth.handleCallback|handleCallback(kotlin.String){}[0]
     final suspend fun adoptTokens(kotlin/String, kotlin/String? = ..., kotlin/Long? = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/String = ...) // id.tracive.sdk.oauth/TraciveOAuth.adoptTokens|adoptTokens(kotlin.String;kotlin.String?;kotlin.Long?;kotlin.collections.List<kotlin.String>;kotlin.String){}[0]
     final suspend fun authorize(kotlin.collections/Map<kotlin/String, kotlin/String> = ...): id.tracive.sdk.model/AuthResult // id.tracive.sdk.oauth/TraciveOAuth.authorize|authorize(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
