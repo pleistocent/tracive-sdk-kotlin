@@ -38,7 +38,16 @@ object TraciveSample {
   /** Must match the `<data>` element in `AndroidManifest.xml` exactly, scheme and host included. */
   private const val REDIRECT_URI = "tracive-sample://oauth/callback"
 
-  private var instance: TraciveClient? = null
+  /**
+   * `@Volatile` is load-bearing, not decoration.
+   *
+   * [client] reads this field once outside the lock, which is the whole point of double-checked
+   * locking — but without `@Volatile` there is no happens-before edge between the write inside the
+   * lock and that unsynchronised read. A second thread can then see a non-null reference to a
+   * `TraciveClient` whose fields it does not yet see initialised. This is the textbook broken
+   * double-checked lock, and it was in this file, which partners are told to copy.
+   */
+  @Volatile private var instance: TraciveClient? = null
 
   /** The shared client, built on first use. */
   fun client(context: Context): TraciveClient =
