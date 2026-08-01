@@ -51,8 +51,12 @@ val driver = NativeSqliteDriver(
   name = "tracive-check-cache.db",
 )
 
-val cache = SqlDelightCheckCache(driver = driver, dataKeyStore = KeychainCacheDataKeyStore())
+val cache = SqlDelightCheckCache(driver = driver, dataKeyStore = myKeychainDataKeyStore)
 ```
+
+**The SDK ships no iOS `CacheDataKeyStore`.** There is no `KeychainCacheDataKeyStore` class to
+import — you write one, and the sketch under [The key store is yours to
+supply](#the-key-store-is-yours-to-supply) is the whole of what it has to do.
 
 `SqlDelightCheckCache.Schema` is re-exported by the cache so you never import the SDK's generated
 `id.tracive.sdk.cache.db` package, which exists to serve the implementation and is not part of the
@@ -70,6 +74,8 @@ a real entropy source and keep it where the OS protects it. Common Kotlin has no
 secure RNG (`kotlin.random.Random` is not one), and a key from a weak source is worse than no
 encryption because it *looks* like encryption.
 
+#### Android
+
 `samples/android-compose/.../KeystoreCacheDataKeyStore.kt` is the reference implementation, meant to
 be copied. It uses the wrapping pattern, which is the only shape that works with a software cipher:
 
@@ -83,8 +89,64 @@ A Keystore key cannot be exported — you can ask it to encrypt, never to hand o
 the SDK's software cipher needs the 32 bytes. So the Keystore holds a *wrapping* key and the wrapped
 data key goes to a file. The file is worthless alone: unwrapping it means executing code as your app
 on that device, and on a device with a TEE or StrongBox the wrapping key never leaves secure
-hardware. On iOS the equivalent is a Keychain item with
-`kSecAttrAccessibleWhenUnlockedThisDeviceOnly`.
+hardware.
+
+#### iOS
+
+iOS is the simpler case, and there is no sample module to copy from — the SDK ships no iOS
+implementation and no sample iOS app. The Keychain stores arbitrary bytes and hands them back, so
+there is no wrapping key and no file: the data key *is* the Keychain item's payload.
+
+Sketch, in your own `iosMain`. `IosKeychainTokenStore.kt` in this repo does the same CoreFoundation
+calls for the OAuth grant and is worth reading beside it:
+
+```kotlin
+@OptIn(ExperimentalForeignApi::class)
+class KeychainCacheDataKeyStore(
+  private val service: String = "com.example.myapp.tracive.cache-keys",
+) : CacheDataKeyStore {
+
+  override suspend fun createKey(): CacheDataKey {
+    val bytes = ByteArray(CacheDataKey.KEY_SIZE)
+    val random = bytes.usePinned {
+      SecRandomCopyBytes(kSecRandomDefault, bytes.size.convert(), it.addressOf(0))
+    }
+    check(random == errSecSuccess) { "SecRandomCopyBytes failed with $random" }
+
+    val id = NSUUID().UUIDString                       // a fresh id per generation
+    val added = keychainAdd(service, account = id, payload = bytes)
+    check(added == errSecSuccess) { "the cache data key could not be stored: $added" }
+    return CacheDataKey(id, bytes)
+  }
+
+  // Null when the item is gone. Expected, not exceptional — never throw here.
+  override suspend fun loadKey(id: String): CacheDataKey? =
+    keychainRead(service, account = id)?.let { CacheDataKey(id, it) }
+
+  // Deleting a key that is already gone is the desired end state, so errSecItemNotFound is fine.
+  override suspend fun deleteKey(id: String) {
+    keychainDelete(service, account = id)
+  }
+}
+```
+
+Three attributes on the item are load-bearing:
+
+- `kSecClass` = `kSecClassGenericPassword`, with `kSecAttrService` set to your own service string and
+  `kSecAttrAccount` set to the key's id. One item per generation, so an old key can be deleted
+  without touching the new one.
+- `kSecAttrAccessible` = **`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`** — the same class the
+  SDK's own token store uses, and *not* `WhenUnlocked`. Under `WhenUnlocked`, `loadKey` returns null
+  whenever the device happens to be locked, and the SDK reads a null key as "the key is gone": it
+  drops every cached row and starts a new generation. A lock screen would become a cache wipe, and
+  each wipe is paid for in re-checks.
+- `ThisDeviceOnly`, because it keeps the key out of iCloud Keychain and out of encrypted backups. A
+  key restored onto a second device, beside a database that did not travel with it, is key material
+  meeting a nonce counter that has already used it.
+
+Check every `OSStatus`. `SecItemAdd` reports failure only through its return value, so a discarded
+one turns "the key was never stored" into "the key was stored", and the next `loadKey` returns null
+for a database that is otherwise perfectly readable.
 
 Three rules an implementation must honour:
 
