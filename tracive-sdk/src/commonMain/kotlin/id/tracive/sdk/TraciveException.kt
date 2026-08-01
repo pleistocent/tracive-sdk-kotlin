@@ -345,9 +345,10 @@ sealed class TraciveException(
  * A query could not be built, so no request was made and no credit was spent.
  *
  * [reason] is the stable machine-readable token from `query-grammar-vectors.json`: [NOT_E164],
- * [COUNTRY_NOT_ALPHA3], [EMPTY_ACCOUNT_ID], [EMPTY_BANK_CODE], [EMPTY_VALUE], [EMPTY_HANDLE],
- * [EMPTY_CHAIN] or [INVALID_DOCUMENT_ID]. Branch on it rather than on the message: the token is
- * identical across the Kotlin, Flutter and Swift SDKs, whereas the wording is not.
+ * [NOT_AN_EMAIL], [COUNTRY_NOT_ALPHA3], [EMPTY_ACCOUNT_ID], [EMPTY_BANK_CODE], [EMPTY_VALUE],
+ * [EMPTY_HANDLE], [EMPTY_CHAIN], [EMPTY_ADDRESS], [EMPTY_PLATFORM] or [INVALID_DOCUMENT_ID]. Branch
+ * on it rather than on the message: the token is identical across the Kotlin, Flutter and Swift
+ * SDKs, whereas the wording is not.
  *
  * Validation always runs before the network call. A key that cannot possibly match a stored
  * document still costs a credit when the server answers "not found", so the SDK refuses to send it.
@@ -370,14 +371,35 @@ class TraciveQueryException(val reason: String) :
     /** The bank code folded to an empty string. */
     const val EMPTY_BANK_CODE: String = "empty_bank_code"
 
-    /** A required free-text value folded to an empty string. */
+    /**
+     * The email address folded to an empty string.
+     *
+     * The other empty fields each have a token of their own — [EMPTY_ACCOUNT_ID],
+     * [EMPTY_BANK_CODE], [EMPTY_HANDLE], [EMPTY_CHAIN], [EMPTY_ADDRESS], [EMPTY_PLATFORM] — so this
+     * one names exactly one mistake rather than standing in for several.
+     */
     const val EMPTY_VALUE: String = "empty_value"
+
+    /**
+     * The email address contains no `@`.
+     *
+     * The check is `@`-presence and nothing more. The server validates no shape at all, so a value
+     * such as `budi` becomes a legal record key that is looked up, missed and billed; a fuller
+     * address grammar, on the other hand, would reject addresses the server would have matched.
+     */
+    const val NOT_AN_EMAIL: String = "not_an_email"
 
     /** The social-media handle folded to an empty string. */
     const val EMPTY_HANDLE: String = "empty_handle"
 
     /** The crypto chain code folded to an empty string. */
     const val EMPTY_CHAIN: String = "empty_chain"
+
+    /** The crypto wallet address folded to an empty string. */
+    const val EMPTY_ADDRESS: String = "empty_address"
+
+    /** The social-media platform folded to an empty string. */
+    const val EMPTY_PLATFORM: String = "empty_platform"
 
     /** The folded key is not a legal record key. */
     const val INVALID_DOCUMENT_ID: String = "invalid_document_id"

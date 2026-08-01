@@ -33,10 +33,13 @@ import kotlinx.serialization.json.jsonPrimitive
  * semantics: `trim`, `\s`, `\d` and the case mappings all differ somewhere. Those two sections are
  * driven here as well, so "the SDK uses its platform default" cannot pass silently.
  *
- * Fixture version 4 removed forward-looking product detail from the DOMAIN note, leaving only the
- * operative rule. Version 3 corrected `crossLanguageSemantics.nfcScope`, which used to leave the
- * bank code out of the list of fields NFC applies to while the `rules` section put it in, and added
- * the vector that tells the two readings apart.
+ * Fixture version 5 added three rejection vectors and one guard case, all settled by executing the
+ * server's own normalizer: an email with no `@`, an empty crypto address and an empty username
+ * platform each get their own reason token, and `__a\nb__` is recorded as a key the server ACCEPTS.
+ * Version 4 removed forward-looking product detail from the DOMAIN note, leaving only the operative
+ * rule. Version 3 corrected `crossLanguageSemantics.nfcScope`, which used to leave the bank code
+ * out of the list of fields NFC applies to while the `rules` section put it in, and added the
+ * vector that tells the two readings apart.
  *
  * Nothing here touches the network. Folding happens entirely on the client, by design.
  */
@@ -55,9 +58,9 @@ class QueryGrammarTest {
 
   @Test
   fun theEmbeddedFixtureIsTheWholeVendoredFile() {
-    assertEquals(4, fixture.getValue("version").jsonPrimitive.int, "fixture schema version")
+    assertEquals(5, fixture.getValue("version").jsonPrimitive.int, "fixture schema version")
     assertEquals(34, vectors.size, "vector count — did the embedded copy get truncated?")
-    assertEquals(11, rejected.size, "rejected count — did the embedded copy get truncated?")
+    assertEquals(14, rejected.size, "rejected count — did the embedded copy get truncated?")
     assertTrue(
       fixture.getValue("derivedFrom").jsonObject.string("authority").isNotBlank(),
       "the fixture must still record where its expected values came from",
@@ -186,13 +189,14 @@ class QueryGrammarTest {
   /**
    * Every `documentIdGuard.cases` entry, driven verbatim.
    *
-   * The `safe: true` half is the half that catches over-eager guards: `__x`, `x__` and `_` are all
-   * legal record keys, and a guard that rejected them would refuse queries the backend answers.
+   * The `safe: true` half is the half that catches over-eager guards: `__x`, `x__`, `_` and
+   * `__a\nb__` are all legal record keys, and a guard that rejected them would refuse queries the
+   * backend answers.
    */
   @Test
   fun theDocumentIdGuardAgreesWithEveryFixtureCase() {
     val cases = documentIdGuard.getValue("cases").jsonArray
-    assertEquals(8, cases.size, "documentIdGuard case count — did the embedded copy get truncated?")
+    assertEquals(9, cases.size, "documentIdGuard case count — did the embedded copy get truncated?")
     for (element in cases) {
       val case = element.jsonObject
       val value = case.string("value")
@@ -236,6 +240,44 @@ class QueryGrammarTest {
     for (key in listOf("BANK_IDN_BCA_12/34", "__proto__", ".", "..", "", "__a__")) {
       val failure =
         assertFailsWith<TraciveQueryException>("guard accepted: $key") {
+          requireValidDocumentId(key)
+        }
+      assertEquals(TraciveQueryException.INVALID_DOCUMENT_ID, failure.reason)
+    }
+  }
+
+  /**
+   * The reserved-key rule does not span a line terminator, because the server's does not.
+   *
+   * The reserved pattern is `^__.*__$`, and its `.` matches anything except a line terminator
+   * unless the `s` flag is set — which it is not. So `__a\nb__` does not match, and the server
+   * accepts it. Verified by executing the server's own normalizer, and recorded in the fixture as a
+   * guard case marked safe.
+   *
+   * A guard written as `startsWith("__") && endsWith("__")` has no notion of a line terminator, so
+   * it is stricter than the server and refuses a key the server would have answered.
+   * Over-strictness is not the safe direction here: the caller is told their identifier is invalid
+   * when it is not.
+   */
+  @Test
+  fun theReservedKeyRuleStopsAtALineTerminator() {
+    // The four code points JavaScript's '.' will not match. A key containing one of them between
+    // its leading and trailing "__" is therefore outside the reserved shape.
+    for (terminator in listOf('\n', '\r', '\u2028', '\u2029')) {
+      val key = "__a${terminator}b__"
+      assertEquals(key, requireValidDocumentId(key), "the guard rejected a key the server accepts")
+      val bare = "__${terminator}__"
+      assertEquals(
+        bare,
+        requireValidDocumentId(bare),
+        "the guard rejected a key the server accepts",
+      )
+    }
+    // The rule itself is intact: without a line terminator the shape is still reserved, and a
+    // character that merely looks like whitespace is not a line terminator.
+    for (key in listOf("__a__", "____", "__proto__", "__a\tb__", "__a b__")) {
+      val failure =
+        assertFailsWith<TraciveQueryException>("guard accepted the reserved id '$key'") {
           requireValidDocumentId(key)
         }
       assertEquals(TraciveQueryException.INVALID_DOCUMENT_ID, failure.reason)
@@ -474,6 +516,94 @@ class QueryGrammarTest {
     assertEquals(
       "BANK_IDN_BCA_123_456",
       TraciveQuery.bankAccount("IDN", "BCA", "123_456").searchQueryIndex,
+    )
+  }
+
+  // ---- rejection reasons ---------------------------------------------------
+
+  /**
+   * A value with no `@` is refused before the request, exactly as a non-E.164 number is.
+   *
+   * The server applies no shape validation to an email, so `EMAIL_budi` is a legal record key: it
+   * is looked up, missed, and billed. Rejecting here is the only thing that prevents the charge.
+   *
+   * The reason token is spelled as a literal rather than read from the constant. It is a wire
+   * contract shared with the Flutter and Swift SDKs, so a rename must fail this test instead of
+   * quietly redefining the contract on one platform.
+   */
+  @Test
+  fun anEmailWithNoAtSignIsRefusedBeforeItCanBeBilled() {
+    val failure = assertFailsWith<TraciveQueryException> { TraciveQuery.email("budi") }
+    assertEquals("not_an_email", failure.reason)
+    assertFalse(failure.message.orEmpty().contains("budi"), "the message must not carry the input")
+    // An address that folds away entirely keeps its own token: it is a different mistake, and the
+    // empty check runs first so that "" and "   " cannot be reported as a missing '@'.
+    assertEquals(
+      "empty_value",
+      assertFailsWith<TraciveQueryException> { TraciveQuery.email("   ") }.reason,
+    )
+  }
+
+  /**
+   * The email check is `@`-presence and deliberately nothing more.
+   *
+   * A fuller address grammar would reject addresses the server would happily match, and refusing to
+   * search for a scammer someone really did report is the worse failure of the two. Every value
+   * below is odd enough that a validating regex would throw it out, and every one of them is a key
+   * the server can hold a report under.
+   */
+  @Test
+  fun theEmailCheckIsAnAtSignAndNothingMore() {
+    for (address in
+      listOf(
+        "a@b",
+        "@",
+        "budi@",
+        "@gmail.com",
+        "budi@gmail..com",
+        "budi name@gmail.com",
+        "budi@gmail.com@example.com",
+        "\"quoted\"@[127.0.0.1]",
+      )) {
+      assertEquals(
+        "EMAIL_$address",
+        TraciveQuery.email(address).searchQueryIndex,
+        "an over-strict address grammar would have rejected '$address'",
+      )
+    }
+  }
+
+  /**
+   * An empty crypto address and an empty username platform each carry their own token.
+   *
+   * Both were already refused — a `CRYPTO_ETH_` or `USERNAME__scammerx` key can only miss, and a
+   * miss is billed — but both borrowed the generic empty-value token, which left a caller unable to
+   * tell which of two different mistakes they had made. The tokens are literals here for the same
+   * reason as in the email tests above: they are a cross-SDK wire contract.
+   */
+  @Test
+  fun anEmptyAddressAndAnEmptyPlatformAreNamedSeparately() {
+    assertEquals(
+      "empty_address",
+      assertFailsWith<TraciveQueryException> { TraciveQuery.crypto("ETH", "   ") }.reason,
+    )
+    assertEquals(
+      "empty_platform",
+      assertFailsWith<TraciveQueryException> { TraciveQuery.username("  ", "scammerx") }.reason,
+    )
+    // The fields beside them keep the tokens they always had, so this cannot be read as a blanket
+    // rename of empty_value — which is still what an email that folds away to nothing reports.
+    assertEquals(
+      "empty_chain",
+      assertFailsWith<TraciveQueryException> { TraciveQuery.crypto("", "0xabc") }.reason,
+    )
+    assertEquals(
+      "empty_handle",
+      assertFailsWith<TraciveQueryException> { TraciveQuery.username("INSTAGRAM", "") }.reason,
+    )
+    assertEquals(
+      "empty_value",
+      assertFailsWith<TraciveQueryException> { TraciveQuery.email(" ") }.reason,
     )
   }
 

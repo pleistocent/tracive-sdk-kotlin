@@ -21,7 +21,7 @@ import id.tracive.sdk.TraciveQueryException
  * credit when the server answers "not found", so the SDK refuses to send one.
  *
  * THE BACKEND FOLDS IN JAVASCRIPT, AND THIS FILE REIMPLEMENTS JAVASCRIPT SEMANTICS RATHER THAN
- * KOTLIN'S. The two disagree in three places, all of them silent:
+ * KOTLIN'S. The two disagree in four places, all of them silent:
  *
  *  1. Whitespace. `String.prototype.trim()` and `/\s/` in JavaScript strip exactly the set in
  *     [JS_WHITESPACE] — which includes U+FEFF and excludes U+200B and U+001C..U+001F. Kotlin's
@@ -36,6 +36,11 @@ import id.tracive.sdk.TraciveQueryException
  *     `uppercase()`/`lowercase()` are the same thing; the locale-taking overloads are not, and
  *     `uppercase(Locale.getDefault())` would fold `i` to `İ` on a Turkish device and build a key
  *     that misses. No call below passes a locale, and none may be added.
+ *  4. The regex dot. `.` in a JavaScript pattern matches everything except the four code points in
+ *     [JS_LINE_TERMINATORS], unless the `s` flag is set. The server's reserved-key pattern,
+ *     `^__.*__$`, does not set it, so `__a\nb__` is a key the server ACCEPTS. Restating the pattern
+ *     as `startsWith("__") && endsWith("__")` loses that and refuses a key the server would have
+ *     answered — the one direction of disagreement that costs a hit rather than a credit.
  *
  * Because case mapping is length-changing, the document-id guard runs on the FOLDED key, after
  * every fold — never on the caller's input.
@@ -82,6 +87,28 @@ private val JS_WHITESPACE: Set<Char> =
     '\u205f', // MEDIUM MATHEMATICAL SPACE
     '\u3000', // IDEOGRAPHIC SPACE
     '\ufeff', // ZERO WIDTH NO-BREAK SPACE / BOM -- in JS's set, absent from Kotlin's
+  )
+
+/**
+ * The four code points a JavaScript regular expression's `.` will not match without the `s` flag.
+ *
+ * This is the ECMAScript `LineTerminator` production, and it is a strict subset of [JS_WHITESPACE].
+ * It is spelled separately because it is used for something else entirely, described in full by
+ * [isReservedShape]: the server's reserved-key pattern is `^__.*__$` with no `s` flag, so a key
+ * holding one of these between its leading and trailing `__` falls outside the reserved shape and
+ * is accepted.
+ *
+ * U+000B, U+000C and U+0085 are deliberately absent. The first two are whitespace but not line
+ * terminators in ECMAScript, and the third is not either — all three are matched by `.`, so a key
+ * carrying one is still reserved. Kotlin's `Char.isWhitespace()` and Java's `\R` each draw the line
+ * somewhere else again, which is why the set is written out here.
+ */
+private val JS_LINE_TERMINATORS: Set<Char> =
+  setOf(
+    '\u000a', // LINE FEED
+    '\u000d', // CARRIAGE RETURN
+    '\u2028', // LINE SEPARATOR
+    '\u2029', // PARAGRAPH SEPARATOR
   )
 
 /**
@@ -157,10 +184,22 @@ internal fun foldPhoneKey(e164: String): String {
  *
  * The order is part of the contract, not a style choice: `lowercase()` is a full case mapping and
  * can change length, so trimming first would trim a different string.
+ *
+ * A value with no `@` is rejected with [TraciveQueryException.NOT_AN_EMAIL]. The server applies no
+ * shape validation to an email, so `EMAIL_budi` is a perfectly legal record key: it is looked up,
+ * missed, and billed. Rejecting here is the only thing that prevents the charge, exactly as
+ * [foldPhoneKey]'s E.164 test is for a phone number.
+ *
+ * The test is `@`-presence and nothing more, deliberately. A fuller address grammar would reject
+ * addresses the server would happily match — and refusing to search for a scammer somebody really
+ * did report is the worse of the two failures. The check runs on the FOLDED value, which is the key
+ * that would have gone on the wire, and it runs after the empty test so that a value that folds
+ * away entirely is still reported as empty rather than as a missing `@`.
  */
 internal fun foldEmailKey(value: String): String {
   val folded = Nfc.normalize(value).lowercase().jsTrim()
   if (folded.isEmpty()) throw TraciveQueryException(TraciveQueryException.EMPTY_VALUE)
+  if (!folded.contains('@')) throw TraciveQueryException(TraciveQueryException.NOT_AN_EMAIL)
   return requireValidDocumentId("EMAIL_$folded")
 }
 
@@ -204,18 +243,17 @@ internal fun foldBankAccountKey(countryAlpha3: String, bankCode: String, account
  * NFC is deliberately NOT applied to the address — it is applied to the chain code only. Addresses
  * are ASCII by construction, and normalising one would be a fold the backend does not perform.
  *
- * BEYOND THE FIXTURE: an empty address is rejected with [TraciveQueryException.EMPTY_VALUE]. The
- * fixture has no vector for it, but the server's own normalizer refuses to fold a `CRYPTO_` key
- * whose address is empty and hands the key straight back, so `CRYPTO_ETH_` could only ever miss —
- * and be billed. The existing reason token is reused rather than a new one invented, because a
- * token this SDK made up would not exist in the Flutter or Swift SDKs. Mirror this there.
+ * An empty address is rejected with [TraciveQueryException.EMPTY_ADDRESS]: the server refuses to
+ * fold a `CRYPTO_` key whose address is empty and hands the key straight back, so `CRYPTO_ETH_`
+ * could only ever miss — and be billed. The token is the address's own, not the generic empty-value
+ * one it used to borrow, so a caller can tell an empty address from an empty chain code.
  */
 internal fun foldCryptoKey(chain: String, address: String): String {
   val chainCode = Nfc.normalize(chain).uppercase().jsTrim()
   if (chainCode.isEmpty()) throw TraciveQueryException(TraciveQueryException.EMPTY_CHAIN)
   val trimmed = address.jsTrim()
   val folded = if (EVM_ADDRESS.matches(trimmed)) trimmed.lowercase() else trimmed
-  if (folded.isEmpty()) throw TraciveQueryException(TraciveQueryException.EMPTY_VALUE)
+  if (folded.isEmpty()) throw TraciveQueryException(TraciveQueryException.EMPTY_ADDRESS)
   return requireValidDocumentId("CRYPTO_${chainCode}_$folded")
 }
 
@@ -226,12 +264,12 @@ internal fun foldCryptoKey(chain: String, address: String): String {
  * filed as `@scammerx` lives under a different id from one filed as `scammerx`. Stripping the `@`
  * client-side would build a key that misses the reports that carry it.
  *
- * BEYOND THE FIXTURE: an empty platform is rejected with [TraciveQueryException.EMPTY_VALUE], for
- * the same reason an empty crypto address is. See [foldCryptoKey].
+ * An empty platform is rejected with [TraciveQueryException.EMPTY_PLATFORM], for the same reason an
+ * empty crypto address is: `USERNAME__scammerx` matches no stored key. See [foldCryptoKey].
  */
 internal fun foldUsernameKey(platform: String, handle: String): String {
   val platformCode = Nfc.normalize(platform).uppercase().jsTrim()
-  if (platformCode.isEmpty()) throw TraciveQueryException(TraciveQueryException.EMPTY_VALUE)
+  if (platformCode.isEmpty()) throw TraciveQueryException(TraciveQueryException.EMPTY_PLATFORM)
   val foldedHandle = Nfc.normalize(handle).lowercase().jsTrim()
   if (foldedHandle.isEmpty()) throw TraciveQueryException(TraciveQueryException.EMPTY_HANDLE)
   return requireValidDocumentId("USERNAME_${platformCode}_$foldedHandle")
@@ -269,7 +307,8 @@ private fun foldBankAccountId(account: String): String {
  *
  * Everything else is legal and must stay legal: spaces, a `.` inside the string, `@`, `+`, `#`,
  * `$`, `[`, `]`, `*`, `~`, emoji, and a lone leading or trailing `__` (`__x`, `x__` and `_` are all
- * valid ids — only the fully enclosing `__…__` shape is reserved).
+ * valid ids — only the fully enclosing `__…__` shape is reserved). `__a\nb__` is legal too, because
+ * the reserved pattern's `.` does not span a line terminator; [isReservedShape] carries the detail.
  *
  * This runs on the FOLDED key. Case mapping is not length-preserving, so a byte count taken before
  * folding would be measuring a different string.
@@ -289,11 +328,37 @@ internal fun requireValidDocumentId(key: String): String {
       key.contains('/') ||
       key == "." ||
       key == ".." ||
-      (key.length >= 4 && key.startsWith("__") && key.endsWith("__")) ||
+      key.isReservedShape() ||
       key.hasUnpairedSurrogate() ||
       key.utf8Size() > MAX_DOCUMENT_ID_BYTES
   if (invalid) throw TraciveQueryException(TraciveQueryException.INVALID_DOCUMENT_ID)
   return key
+}
+
+/**
+ * True if [this] matches the server's reserved-key pattern, `^__.*__$`.
+ *
+ * The pattern carries no `s` flag, so its `.` matches everything EXCEPT a line terminator — U+000A,
+ * U+000D, U+2028 and U+2029. A key holding one of those between its leading and trailing `__` does
+ * not match the pattern, and the server accepts it: `__a\nb__` is a legal record key, confirmed by
+ * running the server's own normalizer.
+ *
+ * That is the whole reason this is not `startsWith("__") && endsWith("__")`. Such a test has no
+ * notion of a line terminator, so it is STRICTER than the server and refuses a key the server would
+ * have answered — telling the caller their identifier is invalid when it is not. Strictness is the
+ * safe direction only for keys that cannot hit; here it costs a hit that was available.
+ *
+ * A line terminator can only ever sit in the middle: the first two and last two characters are
+ * underscores by the time the scan runs, so scanning the whole key is the same test as scanning
+ * between the markers, and is cheaper. The length test keeps the two `__` markers from overlapping,
+ * so `___` stays legal.
+ */
+private fun String.isReservedShape(): Boolean {
+  if (length < 4 || !startsWith("__") || !endsWith("__")) return false
+  for (index in indices) {
+    if (this[index] in JS_LINE_TERMINATORS) return false
+  }
+  return true
 }
 
 /**

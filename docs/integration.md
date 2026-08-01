@@ -193,6 +193,22 @@ val result = client.checkScammer(query)
 Validation runs before any network call, deliberately: a malformed key cannot possibly hit, and a
 miss is still billed.
 
+`e.reason` is a stable machine-readable token, identical in the Flutter and Swift SDKs; the message
+wording is not, so branch on the token. The ones a user's typing can produce:
+
+| `reason` | Builder | Means |
+| --- | --- | --- |
+| `not_e164` | `phone` | Not E.164 once punctuation is stripped. A local number such as `081234567891` is refused rather than guessed at — the SDK does not know the dial code. |
+| `not_an_email` | `email` | No `@` anywhere in the value. The check is `@`-presence only, so odd-but-real addresses still go through. |
+| `empty_value` | `email` | The value folded away to nothing. |
+| `country_not_alpha3` | `bankAccount` | The country is not `^[A-Z]{3}$` — usually an alpha-2 code such as `ID` where `IDN` was meant. |
+| `empty_bank_code`, `empty_account_id` | `bankAccount`, `iban` | The field folded away to nothing. |
+| `empty_chain`, `empty_address` | `crypto` | The chain code, or the wallet address, folded away to nothing. |
+| `empty_platform`, `empty_handle` | `username` | The platform, or the handle, folded away to nothing. |
+| `invalid_document_id` | any | The folded key is not one the API can store under: it holds a `/`, an unpaired surrogate, or exceeds 1500 UTF-8 bytes. Not usually reachable from a builder. |
+
+Neither the token nor the message ever carries the rejected input, so both are safe to log.
+
 Reading the result:
 
 ```kotlin

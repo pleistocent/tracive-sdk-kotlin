@@ -116,6 +116,12 @@ Swift SDKs produce for the same input, pinned by a shared fixture (`query-gramma
 that all three repos vendor verbatim. Invalid input throws `TraciveQueryException` **before**
 anything is sent, because a key that cannot possibly hit would still be billed.
 
+That is also why two of the builders check shape and not just emptiness. `phone()` requires E.164,
+and `email()` requires an `@`. Neither is validated server-side, so `EMAIL_budi` and
+`PHONE_081234567891` are legal keys: without the client-side check they would be looked up, missed,
+and charged for. The email check is `@`-presence only — a fuller address grammar would reject
+addresses the server would have matched, which is the worse mistake.
+
 **There is no `domain()` builder.** The Tracive API never shipped a DOMAIN type, so no record with
 a `DOMAIN_` id exists. Building such a key would guarantee a miss, and misses cost money.
 

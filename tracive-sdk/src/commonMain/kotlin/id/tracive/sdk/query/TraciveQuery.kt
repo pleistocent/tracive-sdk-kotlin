@@ -70,7 +70,10 @@ private constructor(
      * An email address. Case and Unicode composition are folded, so `Budi@Gmail.com` and
      * `budi@gmail.com` are one entity.
      *
-     * @throws TraciveQueryException [TraciveQueryException.EMPTY_VALUE] if the address is blank.
+     * @throws TraciveQueryException [TraciveQueryException.EMPTY_VALUE] if the address is blank, or
+     *   [TraciveQueryException.NOT_AN_EMAIL] if it contains no `@`. The server validates no shape,
+     *   so a bare `budi` would be looked up, missed and billed. The test is `@`-presence only: a
+     *   fuller grammar would reject addresses the server would have matched, which is worse.
      */
     fun email(value: String): TraciveQuery = TraciveQuery(foldEmailKey(value))
 
@@ -103,7 +106,7 @@ private constructor(
      * produces a different, invalid address.
      *
      * @throws TraciveQueryException [TraciveQueryException.EMPTY_CHAIN] or
-     *   [TraciveQueryException.EMPTY_VALUE].
+     *   [TraciveQueryException.EMPTY_ADDRESS], each naming the field that was empty.
      */
     fun crypto(chain: String, address: String): TraciveQuery =
       TraciveQuery(foldCryptoKey(chain, address))
@@ -115,7 +118,7 @@ private constructor(
      * entities there, and stripping it here would miss every report filed with it.
      *
      * @throws TraciveQueryException [TraciveQueryException.EMPTY_HANDLE] or
-     *   [TraciveQueryException.EMPTY_VALUE].
+     *   [TraciveQueryException.EMPTY_PLATFORM], each naming the field that was empty.
      */
     fun username(platform: String, handle: String): TraciveQuery =
       TraciveQuery(foldUsernameKey(platform, handle))

@@ -166,11 +166,14 @@ public final class id/tracive/sdk/TraciveQueryException : id/tracive/sdk/Tracive
 	public static final field COUNTRY_NOT_ALPHA3 Ljava/lang/String;
 	public static final field Companion Lid/tracive/sdk/TraciveQueryException$Companion;
 	public static final field EMPTY_ACCOUNT_ID Ljava/lang/String;
+	public static final field EMPTY_ADDRESS Ljava/lang/String;
 	public static final field EMPTY_BANK_CODE Ljava/lang/String;
 	public static final field EMPTY_CHAIN Ljava/lang/String;
 	public static final field EMPTY_HANDLE Ljava/lang/String;
+	public static final field EMPTY_PLATFORM Ljava/lang/String;
 	public static final field EMPTY_VALUE Ljava/lang/String;
 	public static final field INVALID_DOCUMENT_ID Ljava/lang/String;
+	public static final field NOT_AN_EMAIL Ljava/lang/String;
 	public static final field NOT_E164 Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;)V
 	public final fun getReason ()Ljava/lang/String;

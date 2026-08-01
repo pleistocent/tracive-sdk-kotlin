@@ -11,6 +11,15 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Added
 
+- **`TraciveQuery.email()` rejects a value containing no `@`**, with the new reason token
+  `not_an_email` (`TraciveQueryException.NOT_AN_EMAIL`). It previously rejected only the empty
+  string, so `email("budi")` built `EMAIL_budi` — and the server applies no shape validation to an
+  email, so that is a perfectly legal record key: it was sent, looked up, missed, and **billed**.
+  Rejecting client-side is the only thing that prevents the charge, exactly as `phone()` already
+  does with its E.164 test. The check is `@`-presence and deliberately nothing more: a fuller
+  address grammar would reject addresses the server would happily have matched, and refusing to
+  search for a scammer somebody really did report is the worse of the two failures. `a@b`, `@`,
+  `budi@`, `budi@gmail..com` and a quoted local part all still build a query, and a test pins that.
 - The install link opened when the Tracive app is missing now carries `utm_source=tracive-sdk-kotlin`
   alongside the existing `ref` attribution tag, matching the link contract shared with the other
   Tracive SDKs. Both parameters are optional and non-sensitive; the link still carries no OAuth
@@ -19,6 +28,15 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Fixed
 
+- **The document-id guard no longer refuses `__a\nb__`, a key the API accepts.** The reserved-id
+  pattern is `^__.*__$`, and a regex `.` does not match a line terminator unless the `s` flag is
+  set — which it is not. The guard was written as `startsWith("__") && endsWith("__")`, which has no
+  notion of a line terminator, so it was stricter than the server and rejected keys the server would
+  have answered. Over-strictness is not the safe direction here: the caller was told their
+  identifier was invalid when it was not, and lost a lookup that was available. The guard now
+  ignores the enclosing `__…__` shape when a U+000A, U+000D, U+2028 or U+2029 sits between the
+  markers; `__proto__`, `__a__` and `____` are still reserved, and a tab or a plain space between
+  the markers still is too, because `.` matches those.
 - **The OAuth scope names were wrong and no integration using them could ever have authorized.** The
   SDK asked for `check:read` and `profile:read`. The authorization server's scopes are
   dot-separated, and the first one is not called `check` at all: they are `scammer.check`,
@@ -52,6 +70,14 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Changed
 
+- **Breaking (reason token):** an empty crypto address now reports `empty_address` and an empty
+  username platform now reports `empty_platform`, instead of both reporting the generic
+  `empty_value`. The behaviour is unchanged — both were already refused, because `CRYPTO_ETH_` and
+  `USERNAME__scammerx` can only miss and a miss is billed — but the borrowed token made two
+  different mistakes indistinguishable, so a caller could not tell which field to point the user at.
+  `TraciveQueryException.EMPTY_ADDRESS` and `EMPTY_PLATFORM` hold the new tokens; `EMPTY_VALUE` now
+  means one thing only, an email that folded away to nothing. Code branching on `EMPTY_VALUE` for a
+  crypto or username query needs updating.
 - **Breaking:** `AppPresenceChecker.isTraciveAppInstalled`, `AuthorizeLauncher.launchAuthorize` and
   `AuthorizeLauncher.launchInstall` are now `suspend`, so the iOS implementations can reach the main
   queue. A custom implementation needs `suspend` added.
@@ -66,6 +92,10 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 - `apiCheck` now validates the **Android** public surface as well, against
   `api/tracive-sdk.android.api`. It previously covered only the Kotlin/Native klib ABI, so no change
   to `TraciveAndroid`, `TraciveInitProvider` or the Android platform classes could fail CI.
+- `query-grammar-vectors.json` updated to **version 5**: 14 rejection vectors (3 new) and 9
+  document-id guard cases (1 new), covering `not_an_email`, `empty_address`, `empty_platform` and
+  the `__a\nb__` key the API accepts. Every one of them was settled by running the API's own
+  canonical key normalizer, so where the SDK and the fixture disagreed, the SDK was wrong.
 - `query-grammar-vectors.json` updated to **version 3**: `crossLanguageSemantics.nfcScope` no longer
   contradicts the `rules` section about NFC on the bank code, and a 34th vector pins the difference.
 - One SHA-256 implementation instead of two, and one lower-case hex encoder instead of two.
