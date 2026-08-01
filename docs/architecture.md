@@ -217,6 +217,12 @@ Validation runs first and it runs locally: a `TraciveQuery` that exists has alre
 unusable identifier raises `TraciveQueryException` before a single byte is sent. Only then does the
 routing below apply.
 
+Between the routing and the request sits a latch. Two checks for the same record key, detail and
+locale — a double-tapped button, or the same number appearing twice in a list — become one request
+and one bill rather than two. Your own `idempotencyKey` is part of the latch key, so two callers who
+deliberately keyed themselves apart stay apart; a caller who passes no key changes nothing. The cache
+write happens inside the flight, so a collapsed check is also stored once.
+
 ```mermaid
 flowchart TD
     Build["TraciveQuery.phone, email, bankAccount, iban, crypto, username"] --> Valid{"folds and validates"}
@@ -230,11 +236,12 @@ flowchart TD
     OnlyDetail -->|"MINIMAL"| Read["cache.get keyed on SHA-256 of searchQueryIndex"]
     Route -->|"Source.CACHE_FIRST"| FirstDetail{"detail"}
     FirstDetail -->|"MINIMAL"| Read
-    FirstDetail -->|"FULL"| Net["POST /scammer-checks sending the folded query"]
-    Route -->|"Source.SERVER or Source.SERVER_FIRST"| Net
+    FirstDetail -->|"FULL"| Latch["Join the check already in flight, or start one.<br/>Keyed on the record key, the detail, the locale,<br/>and your idempotencyKey when you supplied one."]
+    Route -->|"Source.SERVER or Source.SERVER_FIRST"| Latch
+    Latch --> Net["POST /scammer-checks sending the folded query"]
     Read -->|"live entry"| Hit["CheckResult with origin CACHE and its original fetchedAt. No network, no credit."]
     Read -->|"nothing live, Source.CACHE"| CacheMiss
-    Read -->|"nothing live, Source.CACHE_FIRST"| Net
+    Read -->|"nothing live, Source.CACHE_FIRST"| Latch
     Net -->|"2xx"| Fresh["CheckResult with origin SERVER and fetchedAt now"]
     Net -->|"failure under Source.SERVER_FIRST"| Fallback["A live cache entry if there is one, otherwise rethrow the failure"]
     Net -->|"failure otherwise"| Fail["Throw the mapped TraciveException"]
