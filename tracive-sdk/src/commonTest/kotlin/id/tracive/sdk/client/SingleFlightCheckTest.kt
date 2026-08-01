@@ -113,6 +113,121 @@ class SingleFlightCheckTest {
   }
 
   /**
+   * And the caller's own idempotency key. Two overlapping checks carrying different keys are the
+   * caller saying these are two billable transactions, and the latch does not get to overrule that:
+   * collapsing them charges one answer to a transaction that never asked a question, and sends the
+   * first caller's key for both.
+   */
+  @Test
+  fun checksWithDifferentCallerKeysDoNotShareARequest() = runSdkTest {
+    val gate = CompletableDeferred<Unit>()
+    val transport = FakeHttpTransport {
+      gate.await()
+      jsonResponse(checkResultJson())
+    }
+    val client = testClient(transport)
+
+    val first =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        client.checkScammer(testQuery(), idempotencyKey = "txn-1")
+      }
+    val second =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        client.checkScammer(testQuery(), idempotencyKey = "txn-2")
+      }
+    gate.complete(Unit)
+    first.await()
+    second.await()
+
+    val keys =
+      transport.requestsTo("/scammer-checks").map {
+        it.header(TraciveClient.HEADER_IDEMPOTENCY_KEY)
+      }
+    assertEquals(
+      2,
+      keys.size,
+      "two checks the caller deliberately keyed apart were collapsed into one transaction",
+    )
+    assertEquals(
+      setOf("txn-1", "txn-2"),
+      keys.toSet(),
+      "a shared flight sent one caller's idempotency key for both of them",
+    )
+  }
+
+  /**
+   * The mixed case, and the expensive half of it. Only a caller-supplied key grants a retry budget
+   * on a 5xx or a timeout, so a keyed call that joins an unkeyed flight is handed an answer with no
+   * budget behind it — and nothing about the joined call says so.
+   */
+  @Test
+  fun aKeyedCheckDoesNotJoinAnUnkeyedFlight() = runSdkTest {
+    val gate = CompletableDeferred<Unit>()
+    val transport = FakeHttpTransport {
+      gate.await()
+      jsonResponse(checkResultJson())
+    }
+    val client = testClient(transport)
+
+    val unkeyed = async(start = CoroutineStart.UNDISPATCHED) { client.checkScammer(testQuery()) }
+    val keyed =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        client.checkScammer(testQuery(), idempotencyKey = "txn-1")
+      }
+    gate.complete(Unit)
+    unkeyed.await()
+    keyed.await()
+
+    val keys =
+      transport.requestsTo("/scammer-checks").map {
+        it.header(TraciveClient.HEADER_IDEMPOTENCY_KEY)
+      }
+    assertEquals(
+      2,
+      keys.size,
+      "a caller who supplied an idempotency key joined a flight started by one who did not, and " +
+        "silently lost the retry budget only their own key grants",
+    )
+    assertTrue(keys.contains("txn-1"), "the caller's own key never reached the server: $keys")
+    assertTrue(
+      keys.any { it?.startsWith(TraciveClient.GENERATED_IDEMPOTENCY_KEY_PREFIX) == true },
+      "the unkeyed check went out without a generated key of its own: $keys",
+    )
+  }
+
+  /**
+   * The other side of the same rule: one key is one transaction, so two overlapping calls carrying
+   * it are one question asked twice and share a flight exactly as two unkeyed calls do.
+   */
+  @Test
+  fun checksWithTheSameCallerKeyStillShareARequest() = runSdkTest {
+    val gate = CompletableDeferred<Unit>()
+    val transport = FakeHttpTransport {
+      gate.await()
+      jsonResponse(checkResultJson())
+    }
+    val client = testClient(transport)
+
+    val first =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        client.checkScammer(testQuery(), idempotencyKey = "txn-1")
+      }
+    val second =
+      async(start = CoroutineStart.UNDISPATCHED) {
+        client.checkScammer(testQuery(), idempotencyKey = "txn-1")
+      }
+    gate.complete(Unit)
+
+    assertTrue(first.await().found)
+    assertTrue(second.await().found)
+    assertEquals(
+      1,
+      transport.requestsTo("/scammer-checks").size,
+      "one transaction was checked twice at once and billed twice",
+    )
+  }
+
+  /**
    * The latch collapses *overlapping* checks and nothing else. A check made after the first one
    * answered is a second question, and the caller is entitled to a fresh answer to it — a latch
    * that outlived its request would turn into an invisible, unbounded cache with no TTL.

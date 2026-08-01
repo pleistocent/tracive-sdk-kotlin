@@ -78,9 +78,15 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   same identifier both read the cache, both missed, both POSTed: the cache write is the only thing
   that serialises them, and it happens after both requests have already gone out. A double-tapped
   button, or a list screen rendering the same identifier in two cells, doubled the bill. Overlapping
-  checks now share one request, latched on the record key together with the detail level and the
-  locale — a minimal answer must never be handed to a caller who asked for full detail, and `tags`
-  and `disclaimer` come back in the language that was asked for. The shared request belongs to no
+  checks now share one request, latched on the record key together with the detail level, the locale
+  and the caller's own `idempotencyKey` when they supplied one. A minimal answer must never be
+  handed to a caller who asked for full detail, and `tags` and `disclaimer` come back in the
+  language that was asked for. A key is the caller's explicit statement about a billable
+  transaction, so it belongs in the latch on the same terms: two overlapping checks carrying
+  different keys are two transactions and are sent separately, and a call that supplies a key never
+  joins a flight started by one that did not — which would silently cost it the retry budget that
+  only its own key grants. A caller who supplies no key is unaffected, which is what keeps the
+  everyday cases above sharing one flight. The shared request belongs to no
   single caller: it runs under a job of its own, so one caller giving up cannot cancel a check
   another is still waiting for, and it is cancelled when the last caller waiting for it leaves, so
   sharing never removes a caller's ability to stop a check. Sequential checks are unaffected — the

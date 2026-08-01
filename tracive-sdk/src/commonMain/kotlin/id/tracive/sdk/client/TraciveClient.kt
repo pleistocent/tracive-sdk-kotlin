@@ -224,11 +224,17 @@ class TraciveClient(
    *
    * ### Concurrent identical checks
    *
-   * Overlapping calls for the same identifier, at the same detail level and locale, share **one**
-   * request and one charge. A double-tapped button and a list screen rendering the same identifier
-   * in two cells are the everyday cases, and before the latch existed each of them was billed twice
-   * — the cache write is the only serialisation point, and it happens after both requests have
-   * already gone out. See [latchedCheck] for what the sharing deliberately does not do.
+   * Overlapping calls for the same identifier, at the same detail level and locale and under the
+   * same [idempotencyKey] — including none at all — share **one** request and one charge. A
+   * double-tapped button and a list screen rendering the same identifier in two cells are the
+   * everyday cases, and before the latch existed each of them was billed twice — the cache write is
+   * the only serialisation point, and it happens after both requests have already gone out.
+   *
+   * Two overlapping checks carrying **different** caller keys are two deliberate transactions and
+   * are sent separately, and a call that supplies a key never joins a flight started by one that
+   * did not: the key is the caller's own statement about what is being billed, and only their key
+   * grants the retry budget above. See [latchedCheck] for what else the sharing deliberately does
+   * not do.
    *
    * @param source where to read from. Defaults to [defaultSource].
    * @param detail how much to return. [Detail.FULL] needs a scope most integrations do not have.
@@ -343,6 +349,22 @@ class TraciveClient(
    * rather than as "this field was not fetched". The locale is in the key for the same reason one
    * step further in: `tags` and `disclaimer` come back in the language that was asked for.
    *
+   * And the caller's own idempotency key, whenever there is one. That key is an explicit statement
+   * about a billable transaction, and leaving it out of the latch overrode it twice over. A caller
+   * who supplied a key could join a flight started by one who did not, and lose the retry budget
+   * that only a caller-supplied key grants — silently, since the joined call looks like an ordinary
+   * success right up to the 5xx it is no longer allowed to repeat. And two overlapping checks
+   * carrying *different* keys are the caller saying these are two billable transactions; collapsing
+   * them into one sent the first caller's key for both. It is the same rule
+   * [generatedIdempotencyKey] states for the neighbouring case — a key must never be derived from
+   * the query, because that collapses two deliberate re-checks of one identifier into a single
+   * answer — reaching the same place through another door.
+   *
+   * A caller who supplies no key changes nothing: the latch key is exactly what it was, so the
+   * everyday cases this exists for still share one flight. A double-tapped button and a list
+   * rendering the same identifier twice both go through one code path with one set of options, so
+   * neither carries a key the other does not.
+   *
    * The registration and the lookup happen under [inFlightMutex] with no suspension between them,
    * which is the whole mechanism — two callers that both observed an empty map would both start a
    * flight, and the latch would be decorative.
@@ -377,9 +399,14 @@ class TraciveClient(
     locale: String?,
     idempotencyKey: String?,
   ): CheckResult {
+    // Blank is not a key, and [fetchCheck] already reads it that way. The two have to agree: a
+    // latch that treated a blank string as a distinguishing value would split a flight for a caller
+    // who gains nothing from the split, because a blank key grants no retry budget either.
+    val callerKey = idempotencyKey?.takeIf { it.isNotBlank() }
     // The hashed record key, not the identifier: a phone number or a wallet address does not belong
     // in a long-lived map key, for the same reason it is not a column in the cache database.
-    val latchKey = "${cacheKeyFor(query)}|${detail.name}|${locale.orEmpty()}"
+    val sharedKey = "${cacheKeyFor(query)}|${detail.name}|${locale.orEmpty()}"
+    val latchKey = if (callerKey == null) sharedKey else "$sharedKey|$callerKey"
     val callerContext = currentCoroutineContext()
 
     val flight = inFlightMutex.withLock {
@@ -387,7 +414,7 @@ class TraciveClient(
         inFlightChecks[latchKey]
           ?: InFlightCheck(
               CoroutineScope(callerContext + Job()).async(start = CoroutineStart.UNDISPATCHED) {
-                fetchCheck(query, detail, locale, idempotencyKey)
+                fetchCheck(query, detail, locale, callerKey)
               }
             )
             .also { inFlightChecks[latchKey] = it }
@@ -419,11 +446,18 @@ class TraciveClient(
     }
   }
 
+  /**
+   * One check on the wire.
+   *
+   * [callerKey] is the caller's own idempotency key, already reduced to null by [latchedCheck] when
+   * they supplied none or supplied a blank one. Both the latch and the retry rule turn on that same
+   * reading, so it is made in one place rather than in two that could drift apart.
+   */
   private suspend fun fetchCheck(
     query: TraciveQuery,
     detail: Detail,
     locale: String?,
-    idempotencyKey: String?,
+    callerKey: String?,
   ): CheckResult {
     val body =
       SdkJson.encodeToString(
@@ -436,8 +470,6 @@ class TraciveClient(
           query = query.searchQueryIndex,
         ),
       )
-
-    val callerKey = idempotencyKey?.takeIf { it.isNotBlank() }
 
     val response =
       send(
