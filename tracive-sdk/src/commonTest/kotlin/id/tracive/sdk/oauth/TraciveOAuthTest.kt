@@ -16,6 +16,7 @@ import id.tracive.sdk.model.ClientType
 import id.tracive.sdk.model.TraciveEnvironment
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
@@ -357,6 +358,39 @@ class TraciveOAuthTest {
     oauth.signOut()
 
     assertTrue(transport.requests.isEmpty())
+  }
+
+  // ----------------------------------------------------------- token storage ----
+
+  /**
+   * A refresh whose result cannot be stored must fail, not return the new token.
+   *
+   * Returning it would mean the caller carries on with an access token that exists only in memory
+   * while the device's stored refresh token is the one the server has just retired. The next
+   * refresh presents the retired token, the server reads that as a replay, and the whole grant is
+   * revoked. Failing here costs one visible error instead.
+   */
+  @Test
+  fun aRefreshThatCannotBeStoredFailsInsteadOfReturningTheNewToken() = runSdkTest {
+    val store = RefusingTokenStore(TokenSet(accessToken = "access-1", refreshToken = "refresh-1"))
+    val transport = FakeHttpTransport {
+      jsonResponse(tokenJson(accessToken = "access-2", refreshToken = "refresh-2"))
+    }
+    val oauth = oauthUnderTest(transport, RecordingAuthorizeLauncher(), tokenStore = store)
+
+    assertFailsWith<TraciveException.TokenStorageFailed> { oauth.refreshedToken("access-1") }
+    // The grant on the device is untouched, which is the only state the server still agrees with.
+    assertEquals("access-1", assertNotNull(store.load()).accessToken)
+  }
+
+  /** A [TokenStore] whose backing store is broken, as a locked Keychain or a full disk would be. */
+  private class RefusingTokenStore(private val stored: TokenSet) : TokenStore {
+    override suspend fun load(): TokenSet = stored
+
+    override suspend fun save(tokens: TokenSet): Unit =
+      throw TraciveException.TokenStorageFailed(platformStatus = -25308)
+
+    override suspend fun clear() = Unit
   }
 
   // ---------------------------------------------------------------- internals ----

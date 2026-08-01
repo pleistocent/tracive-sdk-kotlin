@@ -100,6 +100,14 @@ interface TokenStore {
    * Atomic with respect to [load]: a reader must never observe the new access token next to the old
    * refresh token. Sending a superseded refresh token is what trips the server's reuse detection,
    * and that revokes the entire grant rather than failing one call.
+   *
+   * **Must throw when it did not store.** Returning normally is the SDK's only signal that the
+   * grant is safe on the device, and the caller acts on that signal by discarding the previous
+   * tokens. An implementation that swallows a write failure leaves the device holding a refresh
+   * token the server has already retired, which the server reads as theft the next time it is
+   * presented. Throw
+   * [TraciveException.TokenStorageFailed][id.tracive.sdk.TraciveException.TokenStorageFailed] —
+   * carrying the platform's numeric status and never the tokens themselves.
    */
   suspend fun save(tokens: TokenSet)
 

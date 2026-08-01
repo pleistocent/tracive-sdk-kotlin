@@ -246,6 +246,24 @@ sealed class TraciveException(
   class NotImplemented(message: String) : TraciveException(message)
 
   /**
+   * The grant could not be written to the platform's secure store.
+   *
+   * Raised rather than returned quietly, and the distinction is the whole point. A refresh rotates
+   * the refresh token: the server issues a new one and retires the old one at the same moment. If
+   * the replacement cannot be persisted and the caller is told the save succeeded, this device is
+   * left holding a token the server has already retired. Presenting it again is indistinguishable
+   * from a stolen-token replay, so the server revokes the entire grant and the user is signed out
+   * of an app that did nothing wrong — with nothing anywhere to explain it. Failing here means the
+   * caller finds out *before* the retired token is sent.
+   *
+   * [platformStatus] carries the operating system's own numeric code when there was one — an
+   * `OSStatus` from the iOS Keychain — and nothing else. Neither it nor the message ever holds the
+   * value that failed to store, because both end up in crash reports.
+   */
+  class TokenStorageFailed(val platformStatus: Int? = null, message: String? = null) :
+    TraciveException(message ?: "The authorization grant could not be stored on this device.")
+
+  /**
    * `Source.CACHE` was requested and no live cache entry exists.
    *
    * A cache-only read never falls through to the network and never fabricates an empty result: an

@@ -966,6 +966,13 @@ sealed class id.tracive.sdk/TraciveException : kotlin/Exception { // id.tracive.
         constructor <init>(kotlin/Int, kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.Server.<init>|<init>(kotlin.Int;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
     }
 
+    final class TokenStorageFailed : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.TokenStorageFailed|null[0]
+        constructor <init>(kotlin/Int? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.TokenStorageFailed.<init>|<init>(kotlin.Int?;kotlin.String?){}[0]
+
+        final val platformStatus // id.tracive.sdk/TraciveException.TokenStorageFailed.platformStatus|{}platformStatus[0]
+            final fun <get-platformStatus>(): kotlin/Int? // id.tracive.sdk/TraciveException.TokenStorageFailed.platformStatus.<get-platformStatus>|<get-platformStatus>(){}[0]
+    }
+
     final class Unknown : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.Unknown|null[0]
         constructor <init>(kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.Unknown.<init>|<init>(kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
     }

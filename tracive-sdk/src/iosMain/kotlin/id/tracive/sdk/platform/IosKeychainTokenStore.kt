@@ -1,5 +1,6 @@
 package id.tracive.sdk.platform
 
+import id.tracive.sdk.TraciveException
 import id.tracive.sdk.oauth.TokenSet
 import id.tracive.sdk.oauth.TokenSetCodec
 import id.tracive.sdk.oauth.TokenStore
@@ -33,6 +34,8 @@ import platform.Security.SecItemAdd
 import platform.Security.SecItemCopyMatching
 import platform.Security.SecItemDelete
 import platform.Security.SecItemUpdate
+import platform.Security.errSecAllocate
+import platform.Security.errSecDuplicateItem
 import platform.Security.errSecItemNotFound
 import platform.Security.errSecSuccess
 import platform.Security.kSecAttrAccessible
@@ -45,6 +48,7 @@ import platform.Security.kSecMatchLimit
 import platform.Security.kSecMatchLimitOne
 import platform.Security.kSecReturnData
 import platform.Security.kSecValueData
+import platform.darwin.OSStatus
 
 /**
  * The iOS token store: one generic-password Keychain item, protected by the system.
@@ -134,46 +138,70 @@ internal class IosKeychainTokenStore(
     bytes.decodeToString()
   }
 
+  /**
+   * Stores [text], or throws.
+   *
+   * Every Keychain call below is checked. The Security framework reports failure only through its
+   * return value, so a discarded `OSStatus` turns `errSecInteractionNotAllowed` (the device has not
+   * been unlocked since boot), `errSecAuthFailed`, or a full keychain into a save that looks
+   * exactly like a successful one — see [TraciveException.TokenStorageFailed] for what that costs.
+   */
   private fun write(text: String) {
-    val data = cfData(text.encodeToByteArray()) ?: return
+    // A null here is `CFDataCreate` refusing the allocation. Returning quietly would report a
+    // successful save of nothing at all.
+    val data =
+      cfData(text.encodeToByteArray())
+        ?: throw TraciveException.TokenStorageFailed(
+          message = "The Tracive SDK could not allocate the Keychain payload."
+        )
 
-    // Update in place when an item already exists. Deleting first and re-adding would leave a
-    // window — however short — in which the device has no grant at all, and a crash inside it would
-    // sign the user out for no reason.
+    try {
+      // Update in place when an item already exists. Deleting first and re-adding would leave a
+      // window — however short — in which the device has no grant at all, and a crash inside it
+      // would sign the user out for no reason.
+      var status = update(data)
+      if (status == errSecItemNotFound) {
+        status = insert(data)
+        // Another writer added the item between the update above and this add. The item now exists,
+        // so updating it is the correct operation and the race has already resolved itself; retry
+        // once rather than failing a save that can still succeed.
+        if (status == errSecDuplicateItem) status = update(data)
+      }
+      keychainWriteFailure(status)?.let { throw it }
+    } finally {
+      // The dictionaries retained the payload for as long as they needed it; this drops the
+      // reference created above. Leaving it would leak the token bytes for the life of the process,
+      // which is the one thing they must not do.
+      CFRelease(data)
+    }
+  }
+
+  /** `SecItemUpdate` of this app's one item, replacing its payload with [data]. */
+  private fun update(data: CFDataRef): OSStatus {
     val attributes =
       CFDictionaryCreateMutable(
         kCFAllocatorDefault,
         DICTIONARY_CAPACITY.convert(),
         kCFTypeDictionaryKeyCallBacks.ptr,
         kCFTypeDictionaryValueCallBacks.ptr,
-      )
-    if (attributes == null) {
-      CFRelease(data)
-      return
-    }
+      ) ?: return errSecAllocate
     CFDictionarySetValue(attributes, kSecValueData, data)
 
     val existing = identity()
-    val updated = SecItemUpdate(existing, attributes)
+    val status = SecItemUpdate(existing, attributes)
     CFRelease(existing)
     CFRelease(attributes)
+    return status
+  }
 
-    if (updated == errSecItemNotFound) {
-      val insert = identity()
-      CFDictionarySetValue(insert, kSecValueData, data)
-      CFDictionarySetValue(
-        insert,
-        kSecAttrAccessible,
-        kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly,
-      )
-      SecItemAdd(insert, null)
-      CFRelease(insert)
-    }
-
-    // The dictionaries retained the payload for as long as they needed it; this drops the reference
-    // created above. Leaving it would leak the token bytes for the life of the process, which is
-    // the one thing they must not do.
-    CFRelease(data)
+  /** `SecItemAdd` of a new item carrying [data] and this store's protection class. */
+  private fun insert(data: CFDataRef): OSStatus {
+    val item = identity()
+    CFDictionarySetValue(item, kSecValueData, data)
+    CFDictionarySetValue(item, kSecAttrAccessible, kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
+    val status = SecItemAdd(item, null)
+    CFRelease(item)
+    return status
   }
 
   private fun delete() {
@@ -237,6 +265,22 @@ internal class IosKeychainTokenStore(
     const val DICTIONARY_CAPACITY = 6
   }
 }
+
+/**
+ * The failure for a Keychain write that returned [status], or null when it succeeded.
+ *
+ * A free function so the decision can be pinned by a test: a Kotlin/Native test binary is not an
+ * app bundle, so it cannot be relied on to reach a real Keychain, and the mapping from `OSStatus`
+ * to "this save did not happen" is the part that must not regress.
+ *
+ * The numeric status travels with the exception and nothing else does.
+ * `errSecInteractionNotAllowed` (-25308) and `errSecAuthFailed` (-25293) are the two a support
+ * engineer will actually see, and they are the difference between "the device was locked" and
+ * "something is wrong with this grant".
+ */
+@OptIn(ExperimentalForeignApi::class)
+internal fun keychainWriteFailure(status: OSStatus): TraciveException.TokenStorageFailed? =
+  if (status == errSecSuccess) null else TraciveException.TokenStorageFailed(status)
 
 /**
  * The Keychain-backed token store.

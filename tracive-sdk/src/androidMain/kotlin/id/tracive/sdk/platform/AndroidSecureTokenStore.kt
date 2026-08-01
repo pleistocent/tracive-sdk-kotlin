@@ -6,6 +6,7 @@ import android.os.Build
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import id.tracive.sdk.TraciveAndroid
+import id.tracive.sdk.TraciveException
 import id.tracive.sdk.oauth.TokenSet
 import id.tracive.sdk.oauth.TokenSetCodec
 import id.tracive.sdk.oauth.TokenStore
@@ -65,8 +66,15 @@ internal class AndroidKeystoreTokenStore(context: Context) : TokenStore {
         val blob = encrypt(TokenSetCodec.encode(tokens))
         // commit(), not apply(): the caller has just spent a rotating refresh token, and losing the
         // replacement to a process death would leave this device holding a token the server has
-        // already retired — which its reuse detection reads as theft.
-        preferences.edit().putString(PREFERENCE_KEY, blob).commit()
+        // already retired — which its reuse detection reads as theft. commit() also *reports*
+        // whether the write reached disk, which apply() cannot, and that report is the only
+        // difference between failing now and failing later with the whole grant revoked.
+        val stored = preferences.edit().putString(PREFERENCE_KEY, blob).commit()
+        if (!stored) {
+          throw TraciveException.TokenStorageFailed(
+            message = "The Tracive SDK could not write the authorization grant to disk."
+          )
+        }
       }
     }
   }
