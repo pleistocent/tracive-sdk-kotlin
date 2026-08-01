@@ -684,13 +684,7 @@ final class id.tracive.sdk.oauth/TokenSet { // id.tracive.sdk.oauth/TokenSet|nul
     final val tokenType // id.tracive.sdk.oauth/TokenSet.tokenType|{}tokenType[0]
         final fun <get-tokenType>(): kotlin/String // id.tracive.sdk.oauth/TokenSet.tokenType.<get-tokenType>|<get-tokenType>(){}[0]
 
-    final fun isExpiredAt(kotlinx.datetime/Instant, kotlin.time/Duration = ...): kotlin/Boolean // id.tracive.sdk.oauth/TokenSet.isExpiredAt|isExpiredAt(kotlinx.datetime.Instant;kotlin.time.Duration){}[0]
     final fun toString(): kotlin/String // id.tracive.sdk.oauth/TokenSet.toString|toString(){}[0]
-
-    final object Companion { // id.tracive.sdk.oauth/TokenSet.Companion|null[0]
-        final val DEFAULT_EXPIRY_SKEW // id.tracive.sdk.oauth/TokenSet.Companion.DEFAULT_EXPIRY_SKEW|{}DEFAULT_EXPIRY_SKEW[0]
-            final fun <get-DEFAULT_EXPIRY_SKEW>(): kotlin.time/Duration // id.tracive.sdk.oauth/TokenSet.Companion.DEFAULT_EXPIRY_SKEW.<get-DEFAULT_EXPIRY_SKEW>|<get-DEFAULT_EXPIRY_SKEW>(){}[0]
-    }
 }
 
 final class id.tracive.sdk.oauth/TraciveOAuth { // id.tracive.sdk.oauth/TraciveOAuth|null[0]

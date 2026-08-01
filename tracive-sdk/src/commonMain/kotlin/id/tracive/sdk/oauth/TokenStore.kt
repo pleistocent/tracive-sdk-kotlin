@@ -1,7 +1,5 @@
 package id.tracive.sdk.oauth
 
-import kotlin.time.Duration
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Instant
@@ -33,7 +31,14 @@ class TokenSet(
    */
   val refreshToken: String? = null,
 
-  /** When [accessToken] stops being accepted, when the server said. Null when it did not. */
+  /**
+   * When [accessToken] stops being accepted, when the server said. Null when it did not.
+   *
+   * The SDK never reads this to decide whether to send the token. It sends it and refreshes on the
+   * 401, single-flight, which costs one wasted round trip per expiry and is worth it: a device
+   * clock running fast would otherwise make every call refresh first, rotating the refresh token
+   * far more often than the grant needs. Compare it yourself if you want to pre-warm a session.
+   */
   val expiresAt: Instant? = null,
 
   /**
@@ -53,28 +58,13 @@ class TokenSet(
   }
 
   /**
-   * Whether [accessToken] is past its stated lifetime at [now], counting [skew] as already spent.
+   * Redacted. Neither token ever reaches a log line, a crash report or a watch window.
    *
-   * The skew exists because the token is checked here and validated on the server a round trip
-   * later, against a clock this device does not control. A token with two seconds left is not worth
-   * sending.
-   *
-   * An unknown expiry ([expiresAt] null) reports `false`: the SDK cannot know, and finding out
-   * costs one 401 that it already handles by refreshing.
+   * [expiresAt] is safe to print and is left in: it is a timestamp, not a credential, and it is
+   * usually the field someone is squinting at when they look at one of these.
    */
-  fun isExpiredAt(now: Instant, skew: Duration = DEFAULT_EXPIRY_SKEW): Boolean {
-    val expiry = expiresAt ?: return false
-    return now + skew >= expiry
-  }
-
-  /** Redacted. Neither token ever reaches a log line, a crash report or a watch window. */
   override fun toString(): String =
     "TokenSet(tokenType=$tokenType, scopes=$grantedScopes, expiresAt=$expiresAt, tokens=redacted)"
-
-  companion object {
-    /** How early a token counts as expired, to cover clock drift and the round trip. */
-    val DEFAULT_EXPIRY_SKEW: Duration = 30.seconds
-  }
 }
 
 /**
