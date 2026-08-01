@@ -243,6 +243,15 @@ final class id.tracive.sdk.client/KtorTransport : id.tracive.sdk.client/HttpTran
 
     final fun close() // id.tracive.sdk.client/KtorTransport.close|close(){}[0]
     final suspend fun execute(id.tracive.sdk.client/HttpRequest): id.tracive.sdk.client/HttpResponse // id.tracive.sdk.client/KtorTransport.execute|execute(id.tracive.sdk.client.HttpRequest){}[0]
+
+    final object Companion { // id.tracive.sdk.client/KtorTransport.Companion|null[0]
+        final const val CONNECT_TIMEOUT_MS // id.tracive.sdk.client/KtorTransport.Companion.CONNECT_TIMEOUT_MS|{}CONNECT_TIMEOUT_MS[0]
+            final fun <get-CONNECT_TIMEOUT_MS>(): kotlin/Long // id.tracive.sdk.client/KtorTransport.Companion.CONNECT_TIMEOUT_MS.<get-CONNECT_TIMEOUT_MS>|<get-CONNECT_TIMEOUT_MS>(){}[0]
+        final const val REQUEST_TIMEOUT_MS // id.tracive.sdk.client/KtorTransport.Companion.REQUEST_TIMEOUT_MS|{}REQUEST_TIMEOUT_MS[0]
+            final fun <get-REQUEST_TIMEOUT_MS>(): kotlin/Long // id.tracive.sdk.client/KtorTransport.Companion.REQUEST_TIMEOUT_MS.<get-REQUEST_TIMEOUT_MS>|<get-REQUEST_TIMEOUT_MS>(){}[0]
+        final const val SOCKET_TIMEOUT_MS // id.tracive.sdk.client/KtorTransport.Companion.SOCKET_TIMEOUT_MS|{}SOCKET_TIMEOUT_MS[0]
+            final fun <get-SOCKET_TIMEOUT_MS>(): kotlin/Long // id.tracive.sdk.client/KtorTransport.Companion.SOCKET_TIMEOUT_MS.<get-SOCKET_TIMEOUT_MS>|<get-SOCKET_TIMEOUT_MS>(){}[0]
+    }
 }
 
 final class id.tracive.sdk.client/RetryPolicy { // id.tracive.sdk.client/RetryPolicy|null[0]

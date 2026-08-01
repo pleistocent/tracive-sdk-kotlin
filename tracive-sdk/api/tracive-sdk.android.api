@@ -311,11 +311,18 @@ public final class id/tracive/sdk/client/HttpTransport$DefaultImpls {
 }
 
 public final class id/tracive/sdk/client/KtorTransport : id/tracive/sdk/client/HttpTransport {
+	public static final field CONNECT_TIMEOUT_MS J
+	public static final field Companion Lid/tracive/sdk/client/KtorTransport$Companion;
+	public static final field REQUEST_TIMEOUT_MS J
+	public static final field SOCKET_TIMEOUT_MS J
 	public fun <init> ()V
 	public fun <init> (Lio/ktor/client/HttpClient;Z)V
 	public synthetic fun <init> (Lio/ktor/client/HttpClient;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public fun close ()V
 	public fun execute (Lid/tracive/sdk/client/HttpRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class id/tracive/sdk/client/KtorTransport$Companion {
 }
 
 public final class id/tracive/sdk/client/RetryPolicy {
