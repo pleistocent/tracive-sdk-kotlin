@@ -33,9 +33,10 @@ import kotlinx.serialization.json.jsonPrimitive
  * semantics: `trim`, `\s`, `\d` and the case mappings all differ somewhere. Those two sections are
  * driven here as well, so "the SDK uses its platform default" cannot pass silently.
  *
- * Fixture version 3 corrected `crossLanguageSemantics.nfcScope`, which used to leave the bank code
- * out of the list of fields NFC applies to while the `rules` section put it in, and added the
- * vector that tells the two readings apart.
+ * Fixture version 4 removed forward-looking product detail from the DOMAIN note, leaving only the
+ * operative rule. Version 3 corrected `crossLanguageSemantics.nfcScope`, which used to leave the
+ * bank code out of the list of fields NFC applies to while the `rules` section put it in, and added
+ * the vector that tells the two readings apart.
  *
  * Nothing here touches the network. Folding happens entirely on the client, by design.
  */
@@ -54,7 +55,7 @@ class QueryGrammarTest {
 
   @Test
   fun theEmbeddedFixtureIsTheWholeVendoredFile() {
-    assertEquals(3, fixture.getValue("version").jsonPrimitive.int, "fixture schema version")
+    assertEquals(4, fixture.getValue("version").jsonPrimitive.int, "fixture schema version")
     assertEquals(34, vectors.size, "vector count — did the embedded copy get truncated?")
     assertEquals(11, rejected.size, "rejected count — did the embedded copy get truncated?")
     assertTrue(
