@@ -49,6 +49,55 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Fixed
 
+- **`SERVER_FIRST` fell back to the cache on every failure, not only the ones worth falling back
+  from.** A 403 `missing_scope`, a 402 or a revoked grant degraded to a cached verdict exactly like
+  a 503 would. A partner whose access had been withdrawn kept being served fraud verdicts, and the
+  withdrawal was invisible for as long as the cache held. The fallback is now gated on
+  transport-shaped failures — network error, 429, 5xx — and everything else is rethrown.
+
+- **A non-production application id shipped inside the published AAR.** `androidMain`'s manifest
+  declared `com.pleistocent.tracive.dev` alongside the real one, and that manifest merges into every
+  integrator's app. A host that genuinely needs to probe another build passes the id to
+  `AndroidAppPresenceChecker` and declares it in its own manifest instead.
+
+- **The OAuth `state` was compared with `!=`.** Now constant-time, matching the other three SDKs.
+  Exploiting a timing side channel on a 32-byte random value from an on-device caller is not a
+  realistic threat; the point is not to diverge by accident on a comparison whose whole job is to be
+  a security check.
+
+- **A token round trip already in flight could rewrite the grant after `signOut()`.** A refresh or a
+  code exchange that started before the sign-out and finished after it wrote its tokens back, and
+  the user was signed in again without asking. Guarded by a credential generation, the same shape
+  Swift and Flutter use.
+
+- **A negative `cacheTtlSeconds` kept the old answer alive instead of retracting it.** The guard
+  read `>= 0`, so a negative value fell through to the tier default and a `HIGH` verdict the server
+  had withdrawn went on being served for up to thirty days. Non-positive now means delete, which is
+  what a zero already meant.
+
+- **A check could be replayed after a token refresh with no `Idempotency-Key`.** The SDK re-sends
+  the same POST once the refresh lands, and without a key the server has nothing to tell that replay
+  from a second check. One is now generated per call when the caller supplies none. A caller-supplied
+  key still means more: it is the only thing that grants a retry budget on a 5xx or a timeout.
+
+- **Only an exact `expired_token` body triggered a refresh.** A bare 401 — no body, or a
+  `WWW-Authenticate` header and nothing else — is what CDNs, API gateways and misconfigured reverse
+  proxies emit, and this SDK is designed to sit behind a partner gateway. Requiring the exact code
+  left the client permanently stuck there: never refreshing, every call failing identically. Any 401
+  that is not `grant_revoked` or `invalid_token` now refreshes once and replays.
+
+- **A refresh token could be presented twice after a refresh that got no answer.** A socket timeout
+  is indistinguishable from a success whose reply was lost, so the server may already have rotated
+  the token and be waiting to see the new one. Sending it again is what reuse detection is looking
+  for, and it costs the whole grant rather than one call. The SDK now remembers which tokens it has
+  put on the wire and refuses to send one twice; a complete HTTP reply of any status releases the
+  token again, since an error reply issues no tokens (RFC 6749 §5.2).
+
+  **Visible change:** a refresh whose transport fails now raises `TraciveException.InvalidToken`
+  rather than `Network`, and the grant is unrefreshable for the rest of the process. That is the
+  trade: one consent the user may not have strictly needed, against a revocation event on top of a
+  grant that already needed re-authorizing.
+
 - **A stored grant whose access token is blank is now repaired from its refresh token instead of
   being thrown away.** A partial write, a keystore save interrupted by the process being killed, or
   a restored backup can leave that field empty next to a refresh token that still works. Two things
