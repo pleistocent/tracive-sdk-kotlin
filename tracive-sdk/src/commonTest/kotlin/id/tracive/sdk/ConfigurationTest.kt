@@ -58,11 +58,11 @@ class ConfigurationTest {
       TraciveMode.OAuth(
         clientId = "cli_1",
         redirectUri = "https://partner.test/oauth/callback",
-        scopes = listOf("checks:read"),
+        scopes = listOf("check:read"),
         partnerUserId = null,
       )
     assertEquals(ClientType.PUBLIC, mode.clientType)
-    assertEquals(listOf("checks:read"), mode.scopes)
+    assertEquals(listOf("check:read"), mode.scopes)
   }
 
   @Test
