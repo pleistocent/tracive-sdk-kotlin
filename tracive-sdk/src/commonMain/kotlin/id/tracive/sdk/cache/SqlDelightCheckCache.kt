@@ -173,14 +173,20 @@ internal class SqlDelightCacheRecordStore(
     withContext(ioContext) { queries.deleteAllEntries() }
   }
 
-  override suspend fun deleteExpired(nowEpochMs: Long): Int =
+  override suspend fun deleteExpired(nowEpochMs: Long, maxEntries: Int): Int =
     withContext(ioContext) {
       queries
         .transactionWithResult {
           queries.deleteExpiredEntries(nowEpochMs)
           // `changes()` reports the rows touched by the statement before it, so it has to be read
-          // inside the same transaction.
-          queries.selectChanges().executeAsOne()
+          // inside the same transaction — and before the eviction below runs, or the first count
+          // would be overwritten by the second.
+          var removed = queries.selectChanges().executeAsOne()
+          if (maxEntries > 0) {
+            queries.deleteEntriesOverCap(maxEntries.toLong())
+            removed += queries.selectChanges().executeAsOne()
+          }
+          removed
         }
         .toInt()
     }

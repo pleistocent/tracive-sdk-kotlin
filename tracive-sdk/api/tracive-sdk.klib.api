@@ -366,7 +366,7 @@ final class id.tracive.sdk.model/Billing { // id.tracive.sdk.model/Billing|null[
 }
 
 final class id.tracive.sdk.model/CachePolicy { // id.tracive.sdk.model/CachePolicy|null[0]
-    constructor <init>(kotlin/Boolean = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Boolean = ...) // id.tracive.sdk.model/CachePolicy.<init>|<init>(kotlin.Boolean;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.Boolean){}[0]
+    constructor <init>(kotlin/Boolean = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Boolean = ..., kotlin/Int = ...) // id.tracive.sdk.model/CachePolicy.<init>|<init>(kotlin.Boolean;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.Boolean;kotlin.Int){}[0]
 
     final val cautionTtl // id.tracive.sdk.model/CachePolicy.cautionTtl|{}cautionTtl[0]
         final fun <get-cautionTtl>(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.cautionTtl.<get-cautionTtl>|<get-cautionTtl>(){}[0]
@@ -378,6 +378,8 @@ final class id.tracive.sdk.model/CachePolicy { // id.tracive.sdk.model/CachePoli
         final fun <get-highTtl>(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.highTtl.<get-highTtl>|<get-highTtl>(){}[0]
     final val honorServerTtlOverride // id.tracive.sdk.model/CachePolicy.honorServerTtlOverride|{}honorServerTtlOverride[0]
         final fun <get-honorServerTtlOverride>(): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.honorServerTtlOverride.<get-honorServerTtlOverride>|<get-honorServerTtlOverride>(){}[0]
+    final val maxEntries // id.tracive.sdk.model/CachePolicy.maxEntries|{}maxEntries[0]
+        final fun <get-maxEntries>(): kotlin/Int // id.tracive.sdk.model/CachePolicy.maxEntries.<get-maxEntries>|<get-maxEntries>(){}[0]
     final val noneTtl // id.tracive.sdk.model/CachePolicy.noneTtl|{}noneTtl[0]
         final fun <get-noneTtl>(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.noneTtl.<get-noneTtl>|<get-noneTtl>(){}[0]
 
@@ -387,7 +389,8 @@ final class id.tracive.sdk.model/CachePolicy { // id.tracive.sdk.model/CachePoli
     final fun component4(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.component4|component4(){}[0]
     final fun component5(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.component5|component5(){}[0]
     final fun component6(): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.component6|component6(){}[0]
-    final fun copy(kotlin/Boolean = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Boolean = ...): id.tracive.sdk.model/CachePolicy // id.tracive.sdk.model/CachePolicy.copy|copy(kotlin.Boolean;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.Boolean){}[0]
+    final fun component7(): kotlin/Int // id.tracive.sdk.model/CachePolicy.component7|component7(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Boolean = ..., kotlin/Int = ...): id.tracive.sdk.model/CachePolicy // id.tracive.sdk.model/CachePolicy.copy|copy(kotlin.Boolean;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.Boolean;kotlin.Int){}[0]
     final fun effectiveTtl(id.tracive.sdk.model/RiskTier, kotlin/Long?): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.effectiveTtl|effectiveTtl(id.tracive.sdk.model.RiskTier;kotlin.Long?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // id.tracive.sdk.model/CachePolicy.hashCode|hashCode(){}[0]

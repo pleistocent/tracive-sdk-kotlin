@@ -41,6 +41,17 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   address grammar would reject addresses the server would happily have matched, and refusing to
   search for a scammer somebody really did report is the worse of the two failures. `a@b`, `@`,
   `budi@`, `budi@gmail..com` and a quoted local part all still build a query, and a test pins that.
+- **`CachePolicy.maxEntries`, defaulting to 5000, bounds the cache.** There was previously no way to
+  cap it at all, deliberately or otherwise: nothing but a TTL ever removed a row, and a `HIGH`
+  verdict lives thirty days, so an app that checks every number in an incoming call log grew an
+  encrypted database on the user's device that no one asked for and no one was watching. The cap is
+  enforced by the prune pass — when the cache is opened, and on every `CheckCache.prune()` — rather
+  than on every write, which would put a second query in the path of every check for a bound that is
+  about disk space rather than correctness. Eviction drops the rows **closest to expiry first**: they
+  have the least value left, so a `NONE` answer (one hour) goes long before a `HIGH` one (thirty
+  days), which is also the right way round for the bill. Zero or less means no cap, for a host that
+  would rather manage the file itself. The number and the eviction rule match the Flutter SDK.
+
 - The install link opened when the Tracive app is missing now carries `utm_source=tracive-sdk-kotlin`
   alongside the existing `ref` attribution tag, matching the link contract shared with the other
   Tracive SDKs. Both parameters are optional and non-sensitive; the link still carries no OAuth

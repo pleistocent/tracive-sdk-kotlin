@@ -69,10 +69,13 @@ interface CheckCache {
   suspend fun clear()
 
   /**
-   * Deletes expired entries and returns how many went.
+   * Deletes expired entries, evicts anything over [id.tracive.sdk.model.CachePolicy.maxEntries],
+   * and returns how many rows went in total.
    *
    * Expiry is enforced lazily on read as well, so this is housekeeping for disk space rather than
-   * for correctness. Implementations also prune once when the cache is first opened.
+   * for correctness. Implementations also prune once when the cache is first opened, which is where
+   * the entry cap is normally applied; a host that writes thousands of entries in a single session
+   * should call this on a schedule rather than wait for the next launch.
    */
   suspend fun prune(): Int
 

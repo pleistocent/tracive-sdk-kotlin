@@ -40,6 +40,28 @@ data class CachePolicy(
    * is the only way to do it without shipping a release. Turning it off opts this app out of that.
    */
   val honorServerTtlOverride: Boolean = true,
+
+  /**
+   * The most entries the cache keeps. Zero or less means no cap.
+   *
+   * Without a bound the store grows for the life of the install: nothing but a TTL ever removes a
+   * row, and a `HIGH` verdict lives thirty days, so an app that checks every number in an incoming
+   * call log accumulates an encrypted database on the user's phone that no one asked for and no one
+   * is watching. 5000 rows is the same default the other Tracive SDKs use.
+   *
+   * It is a **soft** cap, enforced by the prune pass — when the cache is opened, and on every
+   * explicit `prune()` — rather than on every write. A write already does one insert and, on a
+   * persistent store, one disk flush; making it also count rows and delete the loser would put a
+   * second query in the path of every check for a bound that is about disk space rather than
+   * correctness. A host that expects to write thousands of entries in one session should call
+   * `prune()` on a schedule, which is what that method is reachable for.
+   *
+   * Eviction drops the rows **closest to expiry first**, because they have the least value left. In
+   * practice that means a `NONE` answer (one hour) goes long before a `HIGH` one (thirty days),
+   * which is also the right way round for the bill: a `HIGH` verdict is the one a user is most
+   * likely to ask about twice.
+   */
+  val maxEntries: Int = 5000,
 ) {
 
   /** The default lifetime for [riskTier], ignoring any server override. */

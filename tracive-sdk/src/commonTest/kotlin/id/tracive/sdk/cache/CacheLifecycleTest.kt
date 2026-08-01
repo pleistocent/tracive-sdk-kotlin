@@ -293,6 +293,67 @@ class CacheLifecycleTest {
     assertNull(store.readMeta())
   }
 
+  // ------------------------------------------------------------- entry cap ----
+
+  /**
+   * The cap is the only thing that bounds the file. Nothing but a TTL ever removes a row otherwise,
+   * and a `HIGH` verdict lives thirty days, so an app that checks every number it sees would grow
+   * an encrypted database on the user's device that nobody is watching.
+   */
+  @Test
+  fun pruningEvictsDownToTheEntryCap() = runTest {
+    val clock = TestClock.atStart()
+    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy(maxEntries = 2), clock)
+    val shortest = TraciveQuery.phone("+6281111111111")
+    val middle = TraciveQuery.phone("+6282222222222")
+    val longest = TraciveQuery.phone("+6283333333333")
+
+    cache.put(shortest, serverResult(riskTier = RiskTier.NONE)) // 1 hour
+    cache.put(middle, serverResult(riskTier = RiskTier.CAUTION)) // 24 hours
+    cache.put(longest, serverResult(riskTier = RiskTier.HIGH)) // 30 days
+    assertEquals(3, cache.size())
+
+    assertEquals(1, cache.prune(), "prune reports the rows it removed, eviction included")
+
+    assertEquals(2, cache.size())
+    // Closest to expiry goes first: it is the row with the least value left, and the cheapest to
+    // re-fetch if the user does ask again.
+    assertNull(cache.get(shortest), "the entry nearest expiry survived the cap")
+    assertNotNull(cache.get(middle))
+    assertNotNull(cache.get(longest))
+  }
+
+  @Test
+  fun aCacheThatIsWithinItsCapLosesNothing() = runTest {
+    // The control. A cap that evicted whether or not the cache was over it would look identical in
+    // the test above and would throw away answers the user has already paid for.
+    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy(maxEntries = 5), TestClock.atStart())
+    cache.put(query, serverResult(riskTier = RiskTier.HIGH))
+    cache.put(TraciveQuery.email("budi@gmail.com"), serverResult(riskTier = RiskTier.NONE))
+
+    assertEquals(0, cache.prune())
+    assertEquals(2, cache.size())
+  }
+
+  @Test
+  fun anEntryCapOfZeroMeansNoCapAtAll() = runTest {
+    // The opt-out for a host that would rather manage the file itself. It has to mean "unbounded"
+    // rather than "keep nothing", or turning the cap off would empty the cache on every open.
+    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy(maxEntries = 0), TestClock.atStart())
+    (0 until 12).forEach {
+      cache.put(TraciveQuery.phone("+62812345670${it.toString().padStart(2, '0')}"), serverResult())
+    }
+
+    assertEquals(0, cache.prune())
+    assertEquals(12, cache.size())
+  }
+
+  /** The default is a bound, not the absence of one, and it is the same number in all four SDKs. */
+  @Test
+  fun theDefaultPolicyIsBounded() {
+    assertEquals(5000, CachePolicy.Default.maxEntries)
+  }
+
   @Test
   fun theDisabledCacheAlwaysMisses() = runTest {
     // The honest opt-out for a host that would rather pay per check than keep any check history.

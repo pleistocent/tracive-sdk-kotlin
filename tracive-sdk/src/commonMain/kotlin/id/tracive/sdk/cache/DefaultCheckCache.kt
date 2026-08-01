@@ -163,7 +163,9 @@ internal class DefaultCheckCache(
     }
   }
 
-  override suspend fun prune(): Int = mutex.withLock { store.deleteExpired(nowEpochMs()) }
+  override suspend fun prune(): Int = mutex.withLock {
+    store.deleteExpired(nowEpochMs(), policy.maxEntries)
+  }
 
   override suspend fun size(): Int = mutex.withLock { store.count() }
 
@@ -201,8 +203,9 @@ internal class DefaultCheckCache(
 
     // The prune pass on open. Lazy expiry already keeps reads correct; this is about the rows
     // nobody will ever read again, which would otherwise sit in the file until the app is
-    // uninstalled.
-    store.deleteExpired(nowEpochMs())
+    // uninstalled. It is also where `CachePolicy.maxEntries` is enforced, so a cache that grew past
+    // its bound in one session comes back within it on the next launch.
+    store.deleteExpired(nowEpochMs(), policy.maxEntries)
 
     // `CacheDataKey.bytes` hands out a fresh copy on every read and the cipher copies it again, so
     // this array is a second live copy of the data key that nothing else will ever touch. Wiping it

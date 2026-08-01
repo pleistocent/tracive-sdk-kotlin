@@ -86,6 +86,21 @@ deleteExpiredEntries:
 DELETE FROM checkCacheEntry
 WHERE expiresAtEpochMs <= ?;
 
+-- Evicts down to a row count. The rows that survive are the ones with the most life left, because a
+-- row about to expire is the one worth least: a `NONE` answer lives an hour and a `HIGH` verdict
+-- thirty days, so this drops the cheap ones and keeps the ones a user is most likely to ask about
+-- again. `LIMIT -1 OFFSET ?` is SQLite's "everything after the first N". The `cacheKey` tie-break is
+-- arbitrary and only there so two rows with the same expiry are ordered the same way here as in
+-- `InMemoryCacheRecordStore`.
+deleteEntriesOverCap:
+DELETE FROM checkCacheEntry
+WHERE cacheKey IN (
+  SELECT cacheKey
+  FROM checkCacheEntry
+  ORDER BY expiresAtEpochMs DESC, cacheKey DESC
+  LIMIT -1 OFFSET ?
+);
+
 countEntries:
 SELECT count(*)
 FROM checkCacheEntry;

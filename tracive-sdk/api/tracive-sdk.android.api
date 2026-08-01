@@ -463,16 +463,17 @@ public final class id/tracive/sdk/model/Billing$Companion {
 public final class id/tracive/sdk/model/CachePolicy {
 	public static final field Companion Lid/tracive/sdk/model/CachePolicy$Companion;
 	public static final field SCHEMA_VERSION I
+	public synthetic fun <init> (ZJJJJZIILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (ZJJJJZILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (ZJJJJZLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2-UwyO8pc ()J
 	public final fun component3-UwyO8pc ()J
 	public final fun component4-UwyO8pc ()J
 	public final fun component5-UwyO8pc ()J
 	public final fun component6 ()Z
-	public final fun copy-lJiDeV0 (ZJJJJZ)Lid/tracive/sdk/model/CachePolicy;
-	public static synthetic fun copy-lJiDeV0$default (Lid/tracive/sdk/model/CachePolicy;ZJJJJZILjava/lang/Object;)Lid/tracive/sdk/model/CachePolicy;
+	public final fun component7 ()I
+	public final fun copy-Q6g4sA0 (ZJJJJZI)Lid/tracive/sdk/model/CachePolicy;
+	public static synthetic fun copy-Q6g4sA0$default (Lid/tracive/sdk/model/CachePolicy;ZJJJJZIILjava/lang/Object;)Lid/tracive/sdk/model/CachePolicy;
 	public final fun effectiveTtl-3nIYWDw (Lid/tracive/sdk/model/RiskTier;Ljava/lang/Long;)J
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCautionTtl-UwyO8pc ()J
@@ -480,6 +481,7 @@ public final class id/tracive/sdk/model/CachePolicy {
 	public final fun getEnabled ()Z
 	public final fun getHighTtl-UwyO8pc ()J
 	public final fun getHonorServerTtlOverride ()Z
+	public final fun getMaxEntries ()I
 	public final fun getNoneTtl-UwyO8pc ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

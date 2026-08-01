@@ -39,8 +39,16 @@ internal interface CacheRecordStore {
   /** Removes every row. Must leave the metadata row — and therefore the nonce counter — intact. */
   suspend fun deleteAll()
 
-  /** Removes every row whose expiry is at or before [nowEpochMs], returning how many went. */
-  suspend fun deleteExpired(nowEpochMs: Long): Int
+  /**
+   * Removes every row whose expiry is at or before [nowEpochMs], then evicts down to [maxEntries].
+   * Returns how many rows went in total.
+   *
+   * [maxEntries] of zero or less means no cap. Eviction keeps the rows that live longest and drops
+   * the ones closest to expiry, which have the least value left; ties break on [CacheRow.cacheKey]
+   * descending, arbitrarily but identically in every implementation, so the two stores cannot
+   * disagree about which row survived.
+   */
+  suspend fun deleteExpired(nowEpochMs: Long, maxEntries: Int): Int
 
   /** How many rows the store holds, expired ones included. */
   suspend fun count(): Int
@@ -113,10 +121,21 @@ internal class InMemoryCacheRecordStore : CacheRecordStore {
     rows.clear()
   }
 
-  override suspend fun deleteExpired(nowEpochMs: Long): Int {
+  override suspend fun deleteExpired(nowEpochMs: Long, maxEntries: Int): Int {
     val doomed = rows.values.filter { it.expiresAtEpochMs <= nowEpochMs }.map { it.cacheKey }
     doomed.forEach { rows.remove(it) }
-    return doomed.size
+    if (maxEntries <= 0 || rows.size <= maxEntries) return doomed.size
+
+    // Same order as the SQL store: keep the longest-lived rows, drop the ones closest to expiry.
+    val overCap =
+      rows.values
+        .sortedWith(
+          compareByDescending<CacheRow> { it.expiresAtEpochMs }.thenByDescending { it.cacheKey }
+        )
+        .drop(maxEntries)
+        .map { it.cacheKey }
+    overCap.forEach { rows.remove(it) }
+    return doomed.size + overCap.size
   }
 
   override suspend fun count(): Int = rows.size
