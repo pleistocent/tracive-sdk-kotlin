@@ -60,6 +60,20 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Fixed
 
+- **A refresh reply that omitted `refresh_token` was read as the grant no longer having one.** RFC
+  6749 §6 lets the token endpoint leave that field out of a refresh reply, and leaving it out means
+  "keep the one you have" — so a fully conforming server could answer with an access token and
+  nothing else, and the SDK stored a null refresh token beside it. Nothing failed at the time; the
+  next expiry did. There was no token left to present, the call surfaced `InvalidToken`, and the
+  user was sent back through the consent screen for a grant that had never ended. The previous
+  refresh token is now carried forward whenever the reply omits one, which is what the Flutter and
+  Swift SDKs already did. Only the refresh path has a previous token to carry: the code exchange is
+  the grant's first round trip, so a reply with no refresh token there really does mean the grant
+  has none, and that case is unchanged. A carried-forward token is also taken back out of the
+  spent-token history, because a reply that issues no refresh token has not retired the one it was
+  given — leaving it marked would have made the very next refresh refuse the only token the grant
+  had.
+
 - **Concurrent identical checks were sent twice and billed twice.** Two overlapping calls for the
   same identifier both read the cache, both missed, both POSTed: the cache write is the only thing
   that serialises them, and it happens after both requests have already gone out. A double-tapped

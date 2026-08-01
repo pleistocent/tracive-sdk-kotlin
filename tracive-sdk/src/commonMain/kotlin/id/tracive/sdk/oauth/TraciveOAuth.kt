@@ -199,9 +199,11 @@ class TraciveOAuth(
    * already replaced.
    *
    * It is keyed on the token that was actually sent, which is safe because the Tracive API rotates
-   * on every refresh. RFC 6749 §6 does allow a reply carrying no `refresh_token`, meaning "keep the
-   * one you have"; nothing here carries one forward today — [tokenSetFrom] takes the reply's — and
-   * anything that starts to must release the mark on success, or the next refresh would be refused.
+   * on every refresh. RFC 6749 §6 also allows a reply that carries no `refresh_token` at all, which
+   * means "keep the one you have", and [tokenSetFrom] carries the previous token forward when that
+   * happens. Such a token is one the server did not retire, so [refreshedToken] takes its mark off
+   * again on that path. Leaving it marked would make the very next refresh refuse the only token
+   * the grant has left, which is the opposite of what this history is for.
    *
    * Replaced wholesale rather than mutated in place, so a reader on another thread sees either the
    * old list or the new one and never a half-updated one. [markRefreshTokenSpent] and
@@ -831,7 +833,19 @@ class TraciveOAuth(
       }
 
       val refreshed =
-        tokenSetFrom(decodeTokenResponse(response), fallbackScopes = current.grantedScopes)
+        tokenSetFrom(
+          decodeTokenResponse(response),
+          fallbackScopes = current.grantedScopes,
+          previousRefreshToken = refreshToken,
+        )
+      if (refreshed.refreshToken == refreshToken) {
+        // The reply carried no `refresh_token`, so the one just sent was carried forward and is
+        // what the next refresh will present. The server answered, and an answer that issues no
+        // refresh token has not rotated the one it was given — so the mark set before the request
+        // comes off. Leaving it on would make the next refresh refuse the grant's only token, which
+        // is the failure this whole history exists to avoid rather than to cause.
+        releaseRefreshToken(refreshToken)
+      }
       // The grant may have been discarded while this round trip was in flight. Writing now would
       // undo a sign-out the user has already been told succeeded, and would leave the *rotated*
       // refresh token — the newest one the server ever issued for this grant — on a device the
@@ -1015,10 +1029,25 @@ class TraciveOAuth(
       )
     }
 
-  private fun tokenSetFrom(response: TokenResponse, fallbackScopes: List<String>): TokenSet =
+  /**
+   * The reply as a [TokenSet], filling in what a conforming server is allowed to leave out.
+   *
+   * @param fallbackScopes what to record when the reply names no scope.
+   * @param previousRefreshToken the refresh token this round trip presented, or null when there was
+   *   none to present. Only the refresh path has one; the code exchange is the grant's first round
+   *   trip, so a reply that carries no refresh token there really does mean the grant has none.
+   */
+  private fun tokenSetFrom(
+    response: TokenResponse,
+    fallbackScopes: List<String>,
+    previousRefreshToken: String? = null,
+  ): TokenSet =
     TokenSet(
       accessToken = response.accessToken,
-      refreshToken = response.refreshToken,
+      // A server that omits `refresh_token` is saying "keep the one you have" (RFC 6749 §6), not
+      // "you no longer have one". Dropping it would leave the next refresh with nothing to present,
+      // and the user would be sent back through consent for a grant that never ended.
+      refreshToken = response.refreshToken ?: previousRefreshToken,
       expiresAt = response.expiresIn?.let { clock.now() + it.seconds },
       // A server that omits `scope` granted what was asked for (RFC 6749 §5.1).
       grantedScopes = response.scope?.split(' ')?.filter { it.isNotBlank() } ?: fallbackScopes,
