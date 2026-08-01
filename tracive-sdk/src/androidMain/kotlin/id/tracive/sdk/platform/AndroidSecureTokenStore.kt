@@ -6,6 +6,8 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyProperties
 import id.tracive.sdk.TraciveAndroid
 import id.tracive.sdk.TraciveException
+import id.tracive.sdk.oauth.PendingAuthorization
+import id.tracive.sdk.oauth.PendingAuthorizationCodec
 import id.tracive.sdk.oauth.TokenSet
 import id.tracive.sdk.oauth.TokenSetCodec
 import id.tracive.sdk.oauth.TokenStore
@@ -32,7 +34,11 @@ import kotlinx.coroutines.withContext
  * server treats a *reused* one as evidence of theft by revoking the whole grant — so a leaked copy
  * costs the user their session even if the thief never spends it.
  *
- * All three operations run off the caller's thread: Keystore work involves IPC to `keystore2` and
+ * The pending authorization is kept the same way, in a second entry under the same Keystore key. It
+ * carries a PKCE verifier, which is the value that makes a returned authorization code redeemable,
+ * so nothing about it may be written in the clear either.
+ *
+ * Every operation runs off the caller's thread: Keystore work involves IPC to `keystore2` and
  * occasionally hardware, neither of which belongs on a UI thread.
  */
 internal class AndroidKeystoreTokenStore(context: Context) : TokenStore {
@@ -81,11 +87,50 @@ internal class AndroidKeystoreTokenStore(context: Context) : TokenStore {
   override suspend fun clear() {
     withContext(Dispatchers.IO) {
       mutex.withLock {
-        preferences.edit().remove(PREFERENCE_KEY).commit()
+        preferences.edit().remove(PREFERENCE_KEY).remove(PENDING_KEY).commit()
         try {
           keyStore().deleteEntry(KEY_ALIAS)
         } catch (_: Throwable) {
           // A missing key is the desired end state; the ciphertext is already gone regardless.
+        }
+      }
+    }
+  }
+
+  override suspend fun loadPending(): PendingAuthorization? =
+    withContext(Dispatchers.IO) {
+      mutex.withLock {
+        val blob = preferences.getString(PENDING_KEY, null) ?: return@withLock null
+        val plaintext = decrypt(blob)
+        if (plaintext == null) {
+          // Same reasoning as the grant: an unreadable blob can only ever fail again, so drop it
+          // rather than keep answering a question with a value nothing can use.
+          preferences.edit().remove(PENDING_KEY).apply()
+          return@withLock null
+        }
+        PendingAuthorizationCodec.decode(plaintext)
+      }
+    }
+
+  override suspend fun savePending(pending: PendingAuthorization?) {
+    withContext(Dispatchers.IO) {
+      mutex.withLock {
+        val editor = preferences.edit()
+        if (pending == null) {
+          editor.remove(PENDING_KEY)
+        } else {
+          editor.putString(PENDING_KEY, encrypt(PendingAuthorizationCodec.encode(pending)))
+        }
+        // commit(), not apply(), for the same reason the grant uses it — more sharply here. This
+        // record exists to survive a process death that can happen the instant the browser takes
+        // the foreground, and apply() writes on a background thread that such a death would take
+        // with it. commit() also reports whether the write landed, which is the only way the caller
+        // can know its recovery guarantee is real.
+        val stored = editor.commit()
+        if (!stored) {
+          throw TraciveException.TokenStorageFailed(
+            message = "The Tracive SDK could not write the pending authorization to disk."
+          )
         }
       }
     }
@@ -151,6 +196,14 @@ internal class AndroidKeystoreTokenStore(context: Context) : TokenStore {
   private companion object {
     const val PREFERENCES_NAME = "id.tracive.sdk.tokens"
     const val PREFERENCE_KEY = "grant.v1"
+
+    /**
+     * The in-flight authorization, under the same Keystore key as the grant.
+     *
+     * A separate entry rather than a field inside the grant blob: the two have unrelated lifetimes,
+     * and a pending record is written and deleted several times over the life of one grant.
+     */
+    const val PENDING_KEY = "pending.v1"
     const val KEY_ALIAS = "id.tracive.sdk.token_key.v1"
     const val ANDROID_KEYSTORE = "AndroidKeyStore"
     const val TRANSFORMATION = "AES/GCM/NoPadding"

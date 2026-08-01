@@ -28,15 +28,19 @@ authorize()
   yes
   │
   ├─ generate code_verifier + code_challenge (S256) + state
-  ├─ open the authorize URL in a Custom Tab / Universal Link       [never a WebView]
+  ├─ TokenStore.savePending(state, verifier, redirectUri, createdAt)   [before the browser, always]
+  ├─ open the authorize URL in a Custom Tab / Universal Link           [never a WebView]
   │
   ⋮  (user consents in the Tracive app)
   │
   ├─ redirect arrives ──> handleCallback(url)
-  │     └─ state mismatch ──> AuthResult.Failed(InvalidRequest)
+  │     ├─ state mismatch ──> AuthResult.Failed(InvalidRequest)
+  │     └─ older than 10 minutes ──> AuthResult.Failed(InvalidRequest)
   │
   ├─ ClientType.PUBLIC       ──> POST /oauth/token with code + verifier ──> Authorized(scopes)
   └─ ClientType.CONFIDENTIAL ──> CodeReceived(code, codeVerifier, redirectUri)
+        │
+        └─ every one of those outcomes ──> TokenStore.savePending(null)
 ```
 
 ### 1. The install pre-check comes first
@@ -130,6 +134,54 @@ Calling `authorize()` again while one is pending supersedes the first, which ret
 `AuthResult.Failed` rather than hanging forever. Only one `state` can be outstanding, and honouring a
 stale callback is the exact confusion `state` exists to prevent.
 
+### 5. The pending authorization is written down, and it expires
+
+Consent happens in the *Tracive* app, so your app is in the background for the whole of it — which on
+Android makes it an ordinary candidate for being killed. The `code_verifier` never leaves the device,
+so a verifier held only in memory dies with the process, and the returning redirect then names a
+`state` nothing can match and carries a code nobody can redeem.
+
+So before the browser opens — never after — the SDK writes a `PendingAuthorization` to the same
+`TokenStore` that holds the tokens:
+
+```kotlin
+class PendingAuthorization(
+  val state: String,        // the CSRF nonce that has to come back unchanged
+  val codeVerifier: String, // the half of the PKCE pair that stays here
+  val redirectUri: String,  // repeated verbatim in the token exchange, per RFC 6749 §4.1.3
+  val createdAt: Instant,   // when the attempt started
+)
+```
+
+**It is a secret.** `codeVerifier` is exactly what makes a returned authorization code redeemable, so
+it belongs in the Keystore / Keychain beside the refresh token — never in `SharedPreferences`,
+`UserDefaults` or a plain file. If you supply your own `TokenStore`, its `savePending` has to meet
+that bar. Nothing in the record reaches a log line: `toString()` redacts both the verifier and the
+`state`.
+
+**It expires after ten minutes** (`TraciveOAuth.DEFAULT_PENDING_AUTHORIZATION_MAX_AGE`). A callback
+arriving later is refused as `AuthResult.Failed(InvalidRequest)` and no request is sent. Ten is not a
+guess: it is the authorization code's own server-side lifetime, so past it the code the redirect
+carries is already dead and holding the verifier longer buys nothing — it only leaves a secret on
+disk and turns a hopeless attempt into a round trip that can come back nothing but `invalid_grant`.
+Pass `pendingAuthorizationMaxAge` to narrow it; the Flutter and React Native SDKs expose the same
+knob.
+
+**Every terminal outcome erases it** — a completed exchange, a code handed back to a confidential
+client, a denial, a `state` mismatch, an expiry, `cancelPendingAuthorization()`, a failed exchange, a
+browser that would not open, and `signOut()`. A spent attempt cannot be replayed by a redirect that
+turns up afterwards.
+
+**What this does not yet do.** The record survives a process death; the suspended `authorize()` call
+does not. There is no continuation left to resume, so a redirect that arrives in a *new* process
+still answers `false` and the user has to start again. Persisting the record is the half that cannot
+be reconstructed later — completing a recovered authorization needs an API this SDK does not have
+yet, and the Flutter and React Native SDKs get it by returning the outcome from `handleCallback`
+instead of from `authorize`.
+
+A `TokenStore` that cannot write the record does not fail the authorization. Only process-death
+survival is lost, and the in-flight call still resolves normally.
+
 ## Redirect URI: App Link over custom scheme
 
 Register an **https App Link (Android) / Universal Link (iOS)** if you control a domain.
@@ -178,8 +230,9 @@ refresh, and an expiry surfaces as `TraciveException.InvalidToken` for you to ha
 
 **Access token** — JWT, ~1 hour. **Refresh token** — opaque, rotating.
 
-Both live in the Android Keystore / iOS Keychain. **Never** in `SharedPreferences`, `UserDefaults`,
-or a plain file. You do not manage them; `TokenStore` is injectable only as a test seam.
+Both live in the Android Keystore / iOS Keychain, and so does the `PendingAuthorization` above.
+**Never** in `SharedPreferences`, `UserDefaults`, or a plain file. You do not manage them;
+`TokenStore` is injectable only as a test seam.
 
 ### Refresh is automatic and single-flight
 

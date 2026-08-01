@@ -561,6 +561,11 @@ class TraciveOAuthTest {
       throw TraciveException.TokenStorageFailed(platformStatus = -25308)
 
     override suspend fun clear() = Unit
+
+    override suspend fun loadPending(): PendingAuthorization? = null
+
+    override suspend fun savePending(pending: PendingAuthorization?): Unit =
+      throw TraciveException.TokenStorageFailed(platformStatus = -25308)
   }
 
   // ---------------------------------------------------------------- internals ----

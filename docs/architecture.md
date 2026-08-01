@@ -58,10 +58,18 @@ not fire from an in-app WebView, and RFC 8252 forbids embedded user agents for O
 PKCE is `S256` only. The verifier stays on the device and only its SHA-256 digest travels in the
 authorize URL, which is what stops an intercepted authorization code from being redeemable.
 
+The verifier is also written to the token store *before* the browser opens, as a
+`PendingAuthorization` carrying `state`, the verifier, the redirect URI and a timestamp. Consent
+happens in another app, so this process is in the background throughout and may be killed; the
+record is the part that cannot be reconstructed afterwards. It is refused once it is ten minutes old
+— the authorization code's own lifetime — and erased on every terminal outcome, so a spent attempt
+cannot be replayed.
+
 ```mermaid
 sequenceDiagram
     participant App as Your app
     participant SDK as TraciveOAuth
+    participant Store as TokenStore
     participant OS as System browser and OS
     participant Tracive as Tracive app
     participant API as Tracive API
@@ -73,6 +81,8 @@ sequenceDiagram
         SDK-->>App: AuthResult.AppNotInstalled
     else Tracive app is installed
         SDK->>SDK: PkceGenerator.generate() and randomState()
+        SDK->>Store: savePending(state, code_verifier, redirect_uri, createdAt)
+        Note over SDK,Store: Before the browser, never after. The process can be killed the moment it backgrounds.
         Note over SDK,OS: Custom Tab on Android, UIApplication.open on iOS. Never a WebView.
         SDK->>OS: launchAuthorize with client_id, redirect_uri, scope, state, code_challenge, S256
         OS->>Tracive: App Link / Universal Link on the authorize origin
@@ -80,12 +90,16 @@ sequenceDiagram
         Tracive->>App: redirect to your redirectUri carrying code and state
         App->>SDK: handleCallback(url)
         SDK->>SDK: compare state before the code is used for anything
-        alt ClientType.PUBLIC
+        alt state does not match, or the attempt is over 10 minutes old
+            SDK->>Store: savePending(null)
+            SDK-->>App: AuthResult.Failed(InvalidRequest), nothing sent
+        else ClientType.PUBLIC
             SDK->>API: POST /oauth/token with code, code_verifier, client_id, redirect_uri
             API-->>SDK: access_token, refresh_token, scope
-            SDK->>SDK: TokenStore.save(TokenSet)
+            SDK->>Store: save(TokenSet) then savePending(null)
             SDK-->>App: AuthResult.Authorized(grantedScopes)
         else ClientType.CONFIDENTIAL
+            SDK->>Store: savePending(null)
             SDK-->>App: AuthResult.CodeReceived(code, codeVerifier, redirectUri)
         end
     end
@@ -104,7 +118,14 @@ Four outcomes are not on the happy path and all four are values rather than exce
 
 `handleCallback(url)` returns `false` for a URL that is not this client's redirect, that carries
 none of `state`, `code` or `error`, or that arrives with nothing pending. Treat `false` as "not
-mine" rather than as an error. Full detail in [oauth.md](oauth.md).
+mine" rather than as an error.
+
+That last case includes a redirect arriving in a **new process**. The `PendingAuthorization` outlives
+a process death, but the suspended `authorize()` call does not — there is no continuation left to
+resume, so the recovered record cannot be delivered anywhere and the user starts again. Persisting it
+is what keeps that door open; opening it needs public API this SDK does not have yet, which the
+Flutter and React Native SDKs solve by returning the outcome from `handleCallback` rather than from
+`authorize`. Full detail in [oauth.md](oauth.md).
 
 ---
 

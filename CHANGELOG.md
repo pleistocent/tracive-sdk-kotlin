@@ -11,6 +11,30 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Added
 
+- **The pending authorization is written to the secure store before the browser opens, so a PKCE
+  verifier no longer dies with the process that generated it.** Consent happens inside the Tracive
+  app, which means the host app spends the whole of it in the background — and on Android that is an
+  ordinary candidate for being killed, not an edge case. The `code_verifier` never leaves the device,
+  so when it lived only in a field the kill took it with it: the redirect came back, its `state`
+  matched nothing, the code could not be exchanged by anyone including this SDK, and the user was
+  returned to a dead flow with no explanation and nothing to do but start again. The new public
+  `PendingAuthorization` (`state`, `codeVerifier`, `redirectUri`, `createdAt`) is stored through
+  `TokenStore`, so it lands in the Android Keystore / iOS Keychain beside the tokens — it carries a
+  live verifier and is a secret on exactly the same terms. Its `toString()` redacts both the verifier
+  and the `state`. **This does not yet let a new process finish an authorization**: the record
+  survives, but the suspended `authorize()` call does not, and there is no continuation left to
+  resume. Persisting it is the half that cannot be reconstructed afterwards; delivering a recovered
+  outcome needs public API this SDK does not have, and is the shape the Flutter and React Native SDKs
+  reach by returning the result from `handleCallback` rather than from `authorize`.
+- **A pending authorization now expires after ten minutes**, exposed as
+  `TraciveOAuth.DEFAULT_PENDING_AUTHORIZATION_MAX_AGE` and overridable per instance with the new
+  `pendingAuthorizationMaxAge` constructor parameter — the same knob the Flutter and React Native
+  SDKs expose. Ten is the authorization code's own server-side lifetime, and that is the entire
+  argument for the number: past it the code the redirect carries is already dead, so holding the
+  verifier longer buys no recovery at all. It only leaves a secret on disk and turns a hopeless
+  attempt into a round trip that can come back nothing but `invalid_grant`. A test pins both sides of
+  the boundary a second apart, so the window cannot drift to some other value while still looking
+  covered.
 - **`TraciveQuery.email()` rejects a value containing no `@`**, with the new reason token
   `not_an_email` (`TraciveQueryException.NOT_AN_EMAIL`). It previously rejected only the empty
   string, so `email("budi")` built `EMAIL_budi` — and the server applies no shape validation to an
@@ -28,6 +52,16 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Fixed
 
+- **A spent or abandoned authorization is no longer left behind, and a long-dead one is no longer
+  exchanged.** Two halves of the same omission. Nothing erased the attempt once it had resolved, so a
+  redirect delivered twice — or delivered late by an OS that had queued it — met a verifier still
+  sitting next to the `state` it answered to. And nothing looked at the clock: a callback arriving an
+  hour after `authorize()` was accepted, its long-expired code sent to the token endpoint, and the
+  only possible reply was an `invalid_grant` the user watched arrive for no reason anyone could
+  explain. Every terminal outcome now clears the record — a completed exchange, a code handed back to
+  a confidential client, a denial, a `state` mismatch, an expiry, `cancelPendingAuthorization()`, a
+  failed exchange, a browser that would not open, and `signOut()` — and a callback older than the
+  window is refused locally with `AuthResult.Failed(InvalidRequest)` before anything is sent.
 - **The document-id guard no longer refuses `__a\nb__`, a key the API accepts.** The reserved-id
   pattern is `^__.*__$`, and a regex `.` does not match a line terminator unless the `s` flag is
   set — which it is not. The guard was written as `startsWith("__") && endsWith("__")`, which has no
@@ -70,6 +104,19 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Changed
 
+- **Breaking: `TokenStore` gains `loadPending()` and `savePending(PendingAuthorization?)`.** A custom
+  implementation has to add both; there is no default body, deliberately. A no-op default would have
+  compiled everywhere and silently switched off the one thing the record exists for, and a store that
+  quietly drops a PKCE verifier is precisely the failure that is invisible until a user's phone is
+  killed mid-consent. `savePending` follows `save`'s contract and must throw
+  `TraciveException.TokenStorageFailed` when it did not store — but unlike `save`, the SDK treats
+  that failure as **non-fatal** and carries on with the authorization. Only process-death survival is
+  lost, the in-flight call still resolves, and refusing instead would make the SDK unusable for a
+  confidential client whose backend holds the tokens and whose store legitimately keeps nothing.
+  `clear()` must now drop the pending record as well as the grant: signing out means nothing of the
+  user's stays on the device, and a half-finished authorization is something of theirs. The shipped
+  Keystore and Keychain stores do all of this already, so an integration that never implemented
+  `TokenStore` itself needs no change.
 - **Breaking: a blank install-link override is now refused at construction instead of being replaced
   by the default.** `TraciveOAuth(installUrlOverride = …)` and `TraciveClient(installUrl = …)` throw
   `IllegalArgumentException` for an empty or whitespace-only string, with the reason token

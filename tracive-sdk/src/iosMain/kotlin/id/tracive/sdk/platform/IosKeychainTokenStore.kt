@@ -1,6 +1,8 @@
 package id.tracive.sdk.platform
 
 import id.tracive.sdk.TraciveException
+import id.tracive.sdk.oauth.PendingAuthorization
+import id.tracive.sdk.oauth.PendingAuthorizationCodec
 import id.tracive.sdk.oauth.TokenSet
 import id.tracive.sdk.oauth.TokenSetCodec
 import id.tracive.sdk.oauth.TokenStore
@@ -57,6 +59,13 @@ import platform.darwin.OSStatus
  * the app container, readable by anything that can read the container — a jailbreak, a device
  * backup, a file-sharing-enabled app.
  *
+ * The pending authorization lives in a second item under the same service, named by
+ * [pendingAccount]. It holds a PKCE verifier, which is the value that makes a returned
+ * authorization code redeemable, so it gets the Keychain and the same protection class rather than
+ * anything weaker. A separate item because the two have unrelated lifetimes: the grant outlives
+ * many launches, while the pending record is written and deleted within minutes and must not
+ * disturb the tokens when it goes.
+ *
  * Two attribute choices are load-bearing:
  * - **`kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly`.** `AfterFirstUnlock` rather than
  *   `WhenUnlocked` because the SDK refreshes tokens from background work, which would otherwise
@@ -81,33 +90,52 @@ import platform.darwin.OSStatus
 internal class IosKeychainTokenStore(
   private val service: String = DEFAULT_SERVICE,
   private val account: String = DEFAULT_ACCOUNT,
+  private val pendingAccount: String = "$account.pending",
 ) : TokenStore {
 
   override suspend fun load(): TokenSet? {
-    val blob = read() ?: return null
+    val blob = read(account) ?: return null
     val tokens = TokenSetCodec.decode(blob)
     if (tokens == null) {
       // Unreadable: written by a schema this build does not know, or corrupt. Drop it rather than
       // leaving a value that can only ever fail again.
-      delete()
+      delete(account)
     }
     return tokens
   }
 
   override suspend fun save(tokens: TokenSet) {
-    write(TokenSetCodec.encode(tokens))
+    write(account, TokenSetCodec.encode(tokens))
   }
 
   override suspend fun clear() {
-    delete()
+    delete(account)
+    delete(pendingAccount)
+  }
+
+  override suspend fun loadPending(): PendingAuthorization? {
+    val blob = read(pendingAccount) ?: return null
+    val pending = PendingAuthorizationCodec.decode(blob)
+    if (pending == null) delete(pendingAccount)
+    return pending
+  }
+
+  override suspend fun savePending(pending: PendingAuthorization?) {
+    if (pending == null) {
+      delete(pendingAccount)
+    } else {
+      write(pendingAccount, PendingAuthorizationCodec.encode(pending))
+    }
   }
 
   override fun toString(): String = "IosKeychainTokenStore"
 
   // ---------------------------------------------------------------- keychain ----
 
-  /** `kSecClass` + service + account: the three attributes that identify this app's one item. */
-  private fun identity(): CFMutableDictionaryRef {
+  /**
+   * `kSecClass` + service + [account]: the three attributes that identify one of this app's items.
+   */
+  private fun identity(account: String): CFMutableDictionaryRef {
     val query =
       CFDictionaryCreateMutable(
         kCFAllocatorDefault,
@@ -121,8 +149,8 @@ internal class IosKeychainTokenStore(
     return query
   }
 
-  private fun read(): String? = memScoped {
-    val query = identity()
+  private fun read(account: String): String? = memScoped {
+    val query = identity(account)
     CFDictionarySetValue(query, kSecReturnData, kCFBooleanTrue)
     CFDictionarySetValue(query, kSecMatchLimit, kSecMatchLimitOne)
 
@@ -146,7 +174,7 @@ internal class IosKeychainTokenStore(
    * been unlocked since boot), `errSecAuthFailed`, or a full keychain into a save that looks
    * exactly like a successful one — see [TraciveException.TokenStorageFailed] for what that costs.
    */
-  private fun write(text: String) {
+  private fun write(account: String, text: String) {
     // A null here is `CFDataCreate` refusing the allocation. Returning quietly would report a
     // successful save of nothing at all.
     val data =
@@ -159,13 +187,13 @@ internal class IosKeychainTokenStore(
       // Update in place when an item already exists. Deleting first and re-adding would leave a
       // window — however short — in which the device has no grant at all, and a crash inside it
       // would sign the user out for no reason.
-      var status = update(data)
+      var status = update(account, data)
       if (status == errSecItemNotFound) {
-        status = insert(data)
+        status = insert(account, data)
         // Another writer added the item between the update above and this add. The item now exists,
         // so updating it is the correct operation and the race has already resolved itself; retry
         // once rather than failing a save that can still succeed.
-        if (status == errSecDuplicateItem) status = update(data)
+        if (status == errSecDuplicateItem) status = update(account, data)
       }
       keychainWriteFailure(status)?.let { throw it }
     } finally {
@@ -176,8 +204,8 @@ internal class IosKeychainTokenStore(
     }
   }
 
-  /** `SecItemUpdate` of this app's one item, replacing its payload with [data]. */
-  private fun update(data: CFDataRef): OSStatus {
+  /** `SecItemUpdate` of the [account] item, replacing its payload with [data]. */
+  private fun update(account: String, data: CFDataRef): OSStatus {
     val attributes =
       CFDictionaryCreateMutable(
         kCFAllocatorDefault,
@@ -187,16 +215,16 @@ internal class IosKeychainTokenStore(
       ) ?: return errSecAllocate
     CFDictionarySetValue(attributes, kSecValueData, data)
 
-    val existing = identity()
+    val existing = identity(account)
     val status = SecItemUpdate(existing, attributes)
     CFRelease(existing)
     CFRelease(attributes)
     return status
   }
 
-  /** `SecItemAdd` of a new item carrying [data] and this store's protection class. */
-  private fun insert(data: CFDataRef): OSStatus {
-    val item = identity()
+  /** `SecItemAdd` of a new [account] item carrying [data] and this store's protection class. */
+  private fun insert(account: String, data: CFDataRef): OSStatus {
+    val item = identity(account)
     CFDictionarySetValue(item, kSecValueData, data)
     CFDictionarySetValue(item, kSecAttrAccessible, kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly)
     val status = SecItemAdd(item, null)
@@ -204,8 +232,8 @@ internal class IosKeychainTokenStore(
     return status
   }
 
-  private fun delete() {
-    val query = identity()
+  private fun delete(account: String) {
+    val query = identity(account)
     SecItemDelete(query)
     CFRelease(query)
   }

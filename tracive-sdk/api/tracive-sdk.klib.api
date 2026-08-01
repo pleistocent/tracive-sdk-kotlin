@@ -119,7 +119,9 @@ abstract interface id.tracive.sdk.client/HttpTransport { // id.tracive.sdk.clien
 abstract interface id.tracive.sdk.oauth/TokenStore { // id.tracive.sdk.oauth/TokenStore|null[0]
     abstract suspend fun clear() // id.tracive.sdk.oauth/TokenStore.clear|clear(){}[0]
     abstract suspend fun load(): id.tracive.sdk.oauth/TokenSet? // id.tracive.sdk.oauth/TokenStore.load|load(){}[0]
+    abstract suspend fun loadPending(): id.tracive.sdk.oauth/PendingAuthorization? // id.tracive.sdk.oauth/TokenStore.loadPending|loadPending(){}[0]
     abstract suspend fun save(id.tracive.sdk.oauth/TokenSet) // id.tracive.sdk.oauth/TokenStore.save|save(id.tracive.sdk.oauth.TokenSet){}[0]
+    abstract suspend fun savePending(id.tracive.sdk.oauth/PendingAuthorization?) // id.tracive.sdk.oauth/TokenStore.savePending|savePending(id.tracive.sdk.oauth.PendingAuthorization?){}[0]
 }
 
 abstract interface id.tracive.sdk.platform/AppPresenceChecker { // id.tracive.sdk.platform/AppPresenceChecker|null[0]
@@ -656,7 +658,25 @@ final class id.tracive.sdk.oauth/InMemoryTokenStore : id.tracive.sdk.oauth/Token
     final fun toString(): kotlin/String // id.tracive.sdk.oauth/InMemoryTokenStore.toString|toString(){}[0]
     final suspend fun clear() // id.tracive.sdk.oauth/InMemoryTokenStore.clear|clear(){}[0]
     final suspend fun load(): id.tracive.sdk.oauth/TokenSet? // id.tracive.sdk.oauth/InMemoryTokenStore.load|load(){}[0]
+    final suspend fun loadPending(): id.tracive.sdk.oauth/PendingAuthorization? // id.tracive.sdk.oauth/InMemoryTokenStore.loadPending|loadPending(){}[0]
     final suspend fun save(id.tracive.sdk.oauth/TokenSet) // id.tracive.sdk.oauth/InMemoryTokenStore.save|save(id.tracive.sdk.oauth.TokenSet){}[0]
+    final suspend fun savePending(id.tracive.sdk.oauth/PendingAuthorization?) // id.tracive.sdk.oauth/InMemoryTokenStore.savePending|savePending(id.tracive.sdk.oauth.PendingAuthorization?){}[0]
+}
+
+final class id.tracive.sdk.oauth/PendingAuthorization { // id.tracive.sdk.oauth/PendingAuthorization|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String, kotlinx.datetime/Instant) // id.tracive.sdk.oauth/PendingAuthorization.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlinx.datetime.Instant){}[0]
+
+    final val codeVerifier // id.tracive.sdk.oauth/PendingAuthorization.codeVerifier|{}codeVerifier[0]
+        final fun <get-codeVerifier>(): kotlin/String // id.tracive.sdk.oauth/PendingAuthorization.codeVerifier.<get-codeVerifier>|<get-codeVerifier>(){}[0]
+    final val createdAt // id.tracive.sdk.oauth/PendingAuthorization.createdAt|{}createdAt[0]
+        final fun <get-createdAt>(): kotlinx.datetime/Instant // id.tracive.sdk.oauth/PendingAuthorization.createdAt.<get-createdAt>|<get-createdAt>(){}[0]
+    final val redirectUri // id.tracive.sdk.oauth/PendingAuthorization.redirectUri|{}redirectUri[0]
+        final fun <get-redirectUri>(): kotlin/String // id.tracive.sdk.oauth/PendingAuthorization.redirectUri.<get-redirectUri>|<get-redirectUri>(){}[0]
+    final val state // id.tracive.sdk.oauth/PendingAuthorization.state|{}state[0]
+        final fun <get-state>(): kotlin/String // id.tracive.sdk.oauth/PendingAuthorization.state.<get-state>|<get-state>(){}[0]
+
+    final fun isStaleAt(kotlinx.datetime/Instant, kotlin.time/Duration): kotlin/Boolean // id.tracive.sdk.oauth/PendingAuthorization.isStaleAt|isStaleAt(kotlinx.datetime.Instant;kotlin.time.Duration){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.oauth/PendingAuthorization.toString|toString(){}[0]
 }
 
 final class id.tracive.sdk.oauth/Pkce { // id.tracive.sdk.oauth/Pkce|null[0]
@@ -690,7 +710,7 @@ final class id.tracive.sdk.oauth/TokenSet { // id.tracive.sdk.oauth/TokenSet|nul
 }
 
 final class id.tracive.sdk.oauth/TraciveOAuth { // id.tracive.sdk.oauth/TraciveOAuth|null[0]
-    constructor <init>(id.tracive.sdk.model/TraciveMode.OAuth, id.tracive.sdk.model/TraciveEnvironment = ..., id.tracive.sdk.client/HttpTransport? = ..., id.tracive.sdk.oauth/TokenStore? = ..., id.tracive.sdk.platform/AppPresenceChecker? = ..., id.tracive.sdk.platform/AuthorizeLauncher? = ..., kotlinx.datetime/Clock = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk.oauth/TraciveOAuth.<init>|<init>(id.tracive.sdk.model.TraciveMode.OAuth;id.tracive.sdk.model.TraciveEnvironment;id.tracive.sdk.client.HttpTransport?;id.tracive.sdk.oauth.TokenStore?;id.tracive.sdk.platform.AppPresenceChecker?;id.tracive.sdk.platform.AuthorizeLauncher?;kotlinx.datetime.Clock;kotlin.String?;kotlin.String?){}[0]
+    constructor <init>(id.tracive.sdk.model/TraciveMode.OAuth, id.tracive.sdk.model/TraciveEnvironment = ..., id.tracive.sdk.client/HttpTransport? = ..., id.tracive.sdk.oauth/TokenStore? = ..., id.tracive.sdk.platform/AppPresenceChecker? = ..., id.tracive.sdk.platform/AuthorizeLauncher? = ..., kotlinx.datetime/Clock = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.time/Duration = ...) // id.tracive.sdk.oauth/TraciveOAuth.<init>|<init>(id.tracive.sdk.model.TraciveMode.OAuth;id.tracive.sdk.model.TraciveEnvironment;id.tracive.sdk.client.HttpTransport?;id.tracive.sdk.oauth.TokenStore?;id.tracive.sdk.platform.AppPresenceChecker?;id.tracive.sdk.platform.AuthorizeLauncher?;kotlinx.datetime.Clock;kotlin.String?;kotlin.String?;kotlin.time.Duration){}[0]
 
     final val authorizeEndpoint // id.tracive.sdk.oauth/TraciveOAuth.authorizeEndpoint|{}authorizeEndpoint[0]
         final fun <get-authorizeEndpoint>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.authorizeEndpoint.<get-authorizeEndpoint>|<get-authorizeEndpoint>(){}[0]
@@ -729,6 +749,9 @@ final class id.tracive.sdk.oauth/TraciveOAuth { // id.tracive.sdk.oauth/TraciveO
             final fun <get-PATH_TOKEN>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.PATH_TOKEN.<get-PATH_TOKEN>|<get-PATH_TOKEN>(){}[0]
         final const val REASON_BLANK_INSTALL_URL // id.tracive.sdk.oauth/TraciveOAuth.Companion.REASON_BLANK_INSTALL_URL|{}REASON_BLANK_INSTALL_URL[0]
             final fun <get-REASON_BLANK_INSTALL_URL>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.REASON_BLANK_INSTALL_URL.<get-REASON_BLANK_INSTALL_URL>|<get-REASON_BLANK_INSTALL_URL>(){}[0]
+
+        final val DEFAULT_PENDING_AUTHORIZATION_MAX_AGE // id.tracive.sdk.oauth/TraciveOAuth.Companion.DEFAULT_PENDING_AUTHORIZATION_MAX_AGE|{}DEFAULT_PENDING_AUTHORIZATION_MAX_AGE[0]
+            final fun <get-DEFAULT_PENDING_AUTHORIZATION_MAX_AGE>(): kotlin.time/Duration // id.tracive.sdk.oauth/TraciveOAuth.Companion.DEFAULT_PENDING_AUTHORIZATION_MAX_AGE.<get-DEFAULT_PENDING_AUTHORIZATION_MAX_AGE>|<get-DEFAULT_PENDING_AUTHORIZATION_MAX_AGE>(){}[0]
 
         final fun defaultInstallUrl(kotlin/String): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.defaultInstallUrl|defaultInstallUrl(kotlin.String){}[0]
     }

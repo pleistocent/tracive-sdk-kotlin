@@ -18,11 +18,15 @@ import id.tracive.sdk.platform.SecureTokenStore
 import id.tracive.sdk.platform.defaultAppPresenceChecker
 import id.tracive.sdk.platform.defaultAuthorizeLauncher
 import kotlin.concurrent.Volatile
+import kotlin.time.Duration
+import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
@@ -80,9 +84,13 @@ private class TokenResponse(
  * as one value. Two consequences worth stating plainly:
  * - If the user backs out of the browser without a redirect, nothing arrives. Call
  *   [cancelPendingAuthorization] when the browser closes, or cancel the calling coroutine.
- * - The verifier lives in memory, so if the host process is killed while the browser is in front,
- *   the pending request dies with it and the callback is refused. That fails *closed*: without the
- *   verifier the code cannot be redeemed by anyone, including this SDK.
+ * - **A callback that outlives the host process is refused.** The pending record — `state`, the
+ *   verifier, the redirect URI and a timestamp — is written to the token store before the browser
+ *   opens and survives a process death, but the suspended [authorize] call does not: there is no
+ *   coroutine left to resume, so nothing in the current public surface can deliver the recovered
+ *   outcome. The record is kept anyway because it is the half that cannot be reconstructed
+ *   afterwards. It is erased on every terminal outcome, and refused once it is older than
+ *   [pendingAuthorizationMaxAge] — see there for how long that is and why.
  *
  * There is no API-key parameter here or anywhere else in this SDK, in any mode. That is a hard
  * design invariant, not an omission.
@@ -124,6 +132,16 @@ class TraciveOAuth(
 
   /** An explicit authorize endpoint, for staging or a test double. */
   authorizeEndpointOverride: String? = null,
+
+  /**
+   * How long a started authorization may sit before its callback is refused.
+   *
+   * Defaults to [DEFAULT_PENDING_AUTHORIZATION_MAX_AGE], which is where the reasoning for the value
+   * lives. A parameter rather than a bare constant because the Flutter and React Native SDKs both
+   * expose the same knob, and an integration spanning more than one of them should be able to set
+   * the same number in each.
+   */
+  private val pendingAuthorizationMaxAge: Duration = DEFAULT_PENDING_AUTHORIZATION_MAX_AGE,
 ) {
 
   /**
@@ -156,9 +174,24 @@ class TraciveOAuth(
    * after `authorize` has installed a request. The consequence is an `authorize()` that hangs
    * forever, since it has no timeout and nobody is left to complete its deferred.
    */
-  @Volatile private var pending: PendingAuthorization? = null
+  @Volatile private var pending: AuthorizationAttempt? = null
 
-  /** Hands out the ids in [PendingAuthorization]. Only ever touched under [authorize]. */
+  /**
+   * Which attempt the [PendingAuthorization] currently in the token store belongs to.
+   *
+   * Separate from [pending] because the two stop agreeing, and the gap is where a record gets
+   * deleted by the wrong owner. [cancelPendingAuthorization] clears [pending] the moment it
+   * resolves an attempt, but the coroutine inside [authorize] resumes later — and if a fresh
+   * `authorize()` runs in between, it finds nothing pending to supersede and stores its own record.
+   * The resumed cleanup would then erase a record belonging to the attempt the user is presently
+   * looking at, costing that flow its process-death recovery with nothing anywhere to say so.
+   *
+   * Tracking the disk slot's owner in one field, written only where the slot itself is written,
+   * makes that unrepresentable: [forget] erases only what its own attempt put there.
+   */
+  @Volatile private var storedRecordOwner: AuthorizationAttempt? = null
+
+  /** Hands out the ids in [AuthorizationAttempt]. Only ever touched under [authorize]. */
   private var authorizationCounter: Long = 0L
 
   init {
@@ -200,6 +233,13 @@ class TraciveOAuth(
    * [AuthResult.Failed] rather than hanging forever, because only one `state` can be outstanding
    * and honouring a stale callback is exactly the confusion `state` exists to prevent.
    *
+   * The [PendingAuthorization] is written to the token store **before** the browser opens, and
+   * erased again on every terminal outcome. A write that fails does not stop the authorization: the
+   * in-memory attempt is what resolves this call, so the flow still works and only its ability to
+   * survive a process death is lost. Refusing here would be worse than that — a confidential client
+   * whose store deliberately keeps nothing would be unable to authorize at all, even though it
+   * never asks this SDK to hold a token.
+   *
    * @param extraAuthorizeParams extra query parameters for the authorize URL. OAuth parameters
    *   cannot be overridden.
    */
@@ -213,9 +253,15 @@ class TraciveOAuth(
     }
 
     val pkce = PkceGenerator.generate()
-    val state = PkceGenerator.randomState()
+    val record =
+      PendingAuthorization(
+        state = PkceGenerator.randomState(),
+        codeVerifier = pkce.codeVerifier,
+        redirectUri = mode.redirectUri,
+        createdAt = clock.now(),
+      )
     authorizationCounter += 1
-    val request = PendingAuthorization("authorization-$authorizationCounter", state, pkce)
+    val request = AuthorizationAttempt("authorization-$authorizationCounter", record)
 
     pending
       ?.outcome
@@ -226,13 +272,28 @@ class TraciveOAuth(
       )
     pending = request
 
-    val url = urlBuilder.build(mode, pkce, state, extraAuthorizeParams)
+    // Claimed before the write, not after: from here on this attempt is the one entitled to erase
+    // the stored record, whether or not the write below actually lands.
+    storedRecordOwner = request
+
+    // Persisted before the URL is opened, never after. Consent happens in the Tracive app, so this
+    // process is in the background for the whole of it and may not be alive when the redirect
+    // returns. A verifier that existed only in the field above would be gone by then.
+    try {
+      tokenStoreProvider.value.savePending(record)
+    } catch (cancellation: CancellationException) {
+      throw cancellation
+    } catch (_: Throwable) {
+      // Non-fatal by design; see this method's documentation. The attempt below still resolves.
+    }
+
+    val url = urlBuilder.build(mode, pkce, record.state, extraAuthorizeParams)
     try {
       launcherProvider.value.launchAuthorize(url)
     } catch (cancellation: CancellationException) {
       throw cancellation
     } catch (failure: Throwable) {
-      if (pending === request) pending = null
+      forget(request)
       return AuthResult.Failed(
         TraciveException.Unknown(
           message = "No browser is available to open the Tracive authorization page."
@@ -244,13 +305,45 @@ class TraciveOAuth(
       try {
         request.outcome.await()
       } finally {
-        if (pending === request) pending = null
+        forget(request)
       }
 
     return when (outcome) {
       is CallbackOutcome.Denied -> AuthResult.Denied
       is CallbackOutcome.Failed -> AuthResult.Failed(outcome.error)
-      is CallbackOutcome.Code -> complete(outcome.code, request.pkce)
+      is CallbackOutcome.Code -> complete(outcome.code, request.record)
+    }
+  }
+
+  /**
+   * Drops [request] from memory and from the store, whatever ended it.
+   *
+   * This is the single place a terminal outcome is cleaned up — success, denial, a `state`
+   * mismatch, an expired attempt, a cancel, a browser that would not open, or the caller's own
+   * coroutine being cancelled. Routing them all through here is what makes "a spent attempt is
+   * never replayable" one fact rather than seven.
+   *
+   * Two guards, answering two different questions. The identity check on [pending] keeps a resolved
+   * attempt from clearing the in-memory slot a newer one has taken. The check on
+   * [storedRecordOwner] does the same for the record on disk, and it has to be its own field rather
+   * than an inference from [pending] — see [storedRecordOwner] for the interleaving that costs.
+   *
+   * [NonCancellable] because the most common caller is a `finally` block, and in a cancelled
+   * coroutine every suspending call throws — which would leave the spent verifier on disk precisely
+   * when the flow was abandoned.
+   */
+  private suspend fun forget(request: AuthorizationAttempt) {
+    if (pending === request) pending = null
+    if (storedRecordOwner !== request) return
+    storedRecordOwner = null
+    withContext(NonCancellable) {
+      try {
+        tokenStoreProvider.value.savePending(null)
+      } catch (_: Throwable) {
+        // Nothing better is available here: the outcome is already decided and replacing it with a
+        // storage error would hide it. The record ages out of usefulness on its own, and the next
+        // authorize() overwrites it.
+      }
     }
   }
 
@@ -277,6 +370,10 @@ class TraciveOAuth(
    * fire. Without it, one empty deep link from any app on the device would abort a user's
    * authorization — repeatedly, and with nothing to show for it.
    *
+   * An attempt older than [pendingAuthorizationMaxAge] is refused here too, after `state` has been
+   * checked and before the code is used. [DEFAULT_PENDING_AUTHORIZATION_MAX_AGE] explains why the
+   * age is worth checking at all.
+   *
    * @return false when the URL is not this client's redirect, when it carries no OAuth parameters,
    *   or when there is nothing pending — a stray link, a duplicate delivery, or a callback that
    *   outlived the process. The host can treat false as "not mine". True means the pending
@@ -289,11 +386,25 @@ class TraciveOAuth(
     if (OAUTH_CALLBACK_PARAMS.none { it in parameters }) return false
 
     val state = parameters[AuthorizeUrlBuilder.PARAM_STATE]
-    if (state == null || state != request.state) {
+    if (state == null || state != request.record.state) {
       request.outcome.complete(
         CallbackOutcome.Failed(
           TraciveException.InvalidRequest(
             "The authorization callback did not match this request (state mismatch)."
+          )
+        )
+      )
+      return true
+    }
+
+    // Only now, once the callback is known to be this request's own. A redirect whose `state` does
+    // not match is not this attempt's, so "expired" would be the wrong thing to say about it — the
+    // mismatch is the finding, and it is the one the host needs.
+    if (request.record.isStaleAt(clock.now(), pendingAuthorizationMaxAge)) {
+      request.outcome.complete(
+        CallbackOutcome.Failed(
+          TraciveException.InvalidRequest(
+            "The authorization attempt expired before its callback arrived. Start it again."
           )
         )
       )
@@ -551,14 +662,14 @@ class TraciveOAuth(
   // --------------------------------------------------------------- internal ----
 
   /** Exchanges the authorization code, or hands it back for a confidential client to exchange. */
-  private suspend fun complete(code: String, pkce: Pkce): AuthResult {
+  private suspend fun complete(code: String, record: PendingAuthorization): AuthResult {
     if (mode.clientType == ClientType.CONFIDENTIAL) {
       // No exchange, no storage: the client secret lives on the partner's backend and the SDK must
       // never hold one. The verifier goes with the code because without it the code is unusable.
       return AuthResult.CodeReceived(
         code = code,
-        codeVerifier = pkce.codeVerifier,
-        redirectUri = mode.redirectUri,
+        codeVerifier = record.codeVerifier,
+        redirectUri = record.redirectUri,
       )
     }
 
@@ -571,9 +682,11 @@ class TraciveOAuth(
               listOf(
                 PARAM_GRANT_TYPE to GRANT_AUTHORIZATION_CODE,
                 PARAM_CODE to code,
-                AuthorizeUrlBuilder.PARAM_REDIRECT_URI to mode.redirectUri,
+                // The redirect URI comes from the record, not from `mode`: RFC 6749 §4.1.3 requires
+                // the exchange to repeat the one the authorize request actually sent.
+                AuthorizeUrlBuilder.PARAM_REDIRECT_URI to record.redirectUri,
                 AuthorizeUrlBuilder.PARAM_CLIENT_ID to mode.clientId,
-                PARAM_CODE_VERIFIER to pkce.codeVerifier,
+                PARAM_CODE_VERIFIER to record.codeVerifier,
               )
             ),
         )
@@ -666,14 +779,17 @@ class TraciveOAuth(
   }
 
   /**
-   * One authorization attempt.
+   * One authorization attempt: the persistable [record], plus the parts that cannot be persisted.
    *
    * [id] identifies *this* attempt so a cancellation raised for it cannot land on a later one; see
    * [cancelPendingAuthorization]. It is not `state`: `state` travels to the authorization server
    * and back, and an identifier a host is asked to hold on to should not be the same value an
    * attacker would like to learn.
+   *
+   * [outcome] is the reason a recovered [record] alone cannot finish a flow. It is the continuation
+   * [authorize] is parked on, and a continuation does not survive the process that owns it.
    */
-  private class PendingAuthorization(val id: String, val state: String, val pkce: Pkce) {
+  private class AuthorizationAttempt(val id: String, val record: PendingAuthorization) {
     val outcome: CompletableDeferred<CallbackOutcome> = CompletableDeferred()
   }
 
@@ -694,6 +810,20 @@ class TraciveOAuth(
 
     /** RFC 6749 requires the token endpoint to take a form-encoded body. */
     const val FORM_CONTENT_TYPE: String = "application/x-www-form-urlencoded"
+
+    /**
+     * How long a started authorization stays completable. Ten minutes.
+     *
+     * The number is the authorization code's own server-side lifetime, and that is the whole
+     * argument. After ten minutes the code the callback carries is already dead, so keeping the
+     * verifier any longer buys no recovery — it only leaves a secret on disk and turns a hopeless
+     * attempt into a round trip that can come back nothing but `invalid_grant`. Refusing locally
+     * costs the user the same retry and says so immediately.
+     *
+     * Ten is also the window quoted for the install path, where the same expiry is the reason
+     * nothing is resumed after a download; see [INSTALL_URL].
+     */
+    val DEFAULT_PENDING_AUTHORIZATION_MAX_AGE: Duration = 10.minutes
 
     /**
      * The install page a device without the Tracive app is sent to.

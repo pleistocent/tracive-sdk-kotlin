@@ -1,5 +1,6 @@
 package id.tracive.sdk.oauth
 
+import kotlin.time.Duration
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.Instant
@@ -68,13 +69,68 @@ class TokenSet(
 }
 
 /**
- * Where the SDK keeps the grant between calls.
+ * An authorization that has been started and is waiting for its redirect.
+ *
+ * Written down before the browser opens rather than merely held in a field, because consent does
+ * not happen in this app. The host process spends the whole of it in the background, which on
+ * Android makes it an ordinary candidate for being killed, and [codeVerifier] is the half of the
+ * PKCE pair that never leaves the device — so if it dies with the process, the returning callback
+ * names a `state` nothing can match and a code nobody can redeem.
+ *
+ * Every field here except [createdAt] is a secret or close to one, so an implementation of
+ * [TokenStore] must keep this record exactly where it keeps [TokenSet]: the platform's encrypted
+ * store, never `SharedPreferences`, `UserDefaults` or a plain file.
+ */
+class PendingAuthorization(
+  /** The CSRF nonce that travelled in the authorize URL, and must come back unchanged. */
+  val state: String,
+
+  /**
+   * The PKCE verifier whose SHA-256 digest was sent as `code_challenge`.
+   *
+   * The one value that makes the returned authorization code redeemable. It is why this record is a
+   * secret and why it never reaches a log line or a `toString`.
+   */
+  val codeVerifier: String,
+
+  /** The `redirect_uri` that was sent, which the token exchange has to repeat verbatim. */
+  val redirectUri: String,
+
+  /** When the attempt was started, by the SDK's clock. Read by [isStaleAt] and nothing else. */
+  val createdAt: Instant,
+) {
+
+  init {
+    require(state.isNotBlank()) { "A PendingAuthorization needs a state." }
+    require(codeVerifier.isNotBlank()) { "A PendingAuthorization needs a code verifier." }
+  }
+
+  /**
+   * Whether this attempt was started more than [maxAge] before [now].
+   *
+   * A clock that has moved *backwards* since the attempt started — a manual change, an NTP
+   * correction — yields a negative age and reads as fresh. That is the right way round: the
+   * authorization code has its own server-side lifetime, so the worst a too-generous local answer
+   * costs is one round trip that comes back `invalid_grant`, while a too-strict one would refuse a
+   * consent the user really did give.
+   */
+  fun isStaleAt(now: Instant, maxAge: Duration): Boolean = now - createdAt > maxAge
+
+  /** Redacted. Neither the verifier nor the `state` ever reaches a log line. */
+  override fun toString(): String =
+    "PendingAuthorization(redirectUri=$redirectUri, createdAt=$createdAt, " +
+      "state=redacted, codeVerifier=redacted)"
+}
+
+/**
+ * Where the SDK keeps the grant, and the authorization in flight, between calls.
  *
  * The shipped implementation is the platform's hardware-backed store —
  * [id.tracive.sdk.platform.SecureTokenStore], which is the Android Keystore or the iOS Keychain. A
  * custom implementation is allowed and occasionally necessary (a host with its own encrypted store,
  * or a confidential client that keeps tokens elsewhere), but it must meet the same bar: **never
- * `SharedPreferences`, `UserDefaults` or a plain file in the clear.**
+ * `SharedPreferences`, `UserDefaults` or a plain file in the clear.** That bar covers
+ * [PendingAuthorization] as well as [TokenSet]; the pending record carries a live PKCE verifier.
  *
  * Implementations must tolerate concurrent callers. The SDK refreshes single-flight, so [save] is
  * called from exactly one coroutine at a time, but [load] is called from many.
@@ -101,8 +157,37 @@ interface TokenStore {
    */
   suspend fun save(tokens: TokenSet)
 
-  /** Removes the stored grant. Called on sign-out and whenever the server says it was revoked. */
+  /**
+   * Removes the stored grant **and any pending authorization**. Called on sign-out and whenever the
+   * server says the grant was revoked.
+   *
+   * Dropping the pending record here as well is deliberate. Sign-out is the user saying "nothing of
+   * mine stays on this device", and a half-finished authorization is something of theirs: its
+   * verifier would still redeem a code that arrived afterwards.
+   */
   suspend fun clear()
+
+  /**
+   * The authorization waiting for its redirect, or null when there is none.
+   *
+   * @return null for an unreadable record — corrupt, truncated, or written by a newer schema —
+   *   exactly as [load] does. There is nothing safe to salvage from half a PKCE pair.
+   */
+  suspend fun loadPending(): PendingAuthorization?
+
+  /**
+   * Stores [pending], or erases the stored one when it is null.
+   *
+   * Called immediately before the authorize URL is opened and again on every terminal outcome, so
+   * that a spent or abandoned attempt cannot be replayed by a redirect that arrives later.
+   *
+   * **Must throw when it did not store**, on the same terms as [save] and carrying the same
+   * [TraciveException.TokenStorageFailed][id.tracive.sdk.TraciveException.TokenStorageFailed].
+   * Unlike [save], the SDK treats that failure as non-fatal and carries on with the authorization
+   * anyway — see [TraciveOAuth.authorize] — but it can only make that judgement if this method
+   * reports honestly rather than swallowing the refusal.
+   */
+  suspend fun savePending(pending: PendingAuthorization?)
 }
 
 /**
@@ -116,6 +201,7 @@ class InMemoryTokenStore(initial: TokenSet? = null) : TokenStore {
 
   private val mutex = Mutex()
   private var tokens: TokenSet? = initial
+  private var pending: PendingAuthorization? = null
 
   override suspend fun load(): TokenSet? = mutex.withLock { tokens }
 
@@ -124,10 +210,33 @@ class InMemoryTokenStore(initial: TokenSet? = null) : TokenStore {
   }
 
   override suspend fun clear() {
-    mutex.withLock { tokens = null }
+    mutex.withLock {
+      tokens = null
+      pending = null
+    }
   }
 
-  override fun toString(): String = "InMemoryTokenStore(present=${tokens != null})"
+  override suspend fun loadPending(): PendingAuthorization? = mutex.withLock { pending }
+
+  override suspend fun savePending(pending: PendingAuthorization?) {
+    mutex.withLock { this.pending = pending }
+  }
+
+  override fun toString(): String =
+    "InMemoryTokenStore(present=${tokens != null}, pending=${pending != null})"
+}
+
+/**
+ * The one JSON configuration every stored record uses.
+ *
+ * Shared by [TokenSetCodec] and [PendingAuthorizationCodec] so the two can never drift into
+ * disagreeing about unknown keys or explicit nulls — a difference that would only ever surface as a
+ * blob one of them wrote and the other could not read back.
+ */
+private val storageJson = Json {
+  ignoreUnknownKeys = true
+  encodeDefaults = true
+  explicitNulls = false
 }
 
 /**
@@ -144,12 +253,6 @@ internal object TokenSetCodec {
   /** Bump when the stored shape changes so an old blob is discarded rather than mis-read. */
   const val VERSION: Int = 1
 
-  private val json = Json {
-    ignoreUnknownKeys = true
-    encodeDefaults = true
-    explicitNulls = false
-  }
-
   @Serializable
   private class StoredTokens(
     @SerialName("v") val version: Int,
@@ -162,7 +265,7 @@ internal object TokenSetCodec {
 
   /** [tokens] as a JSON string, ready to be encrypted. */
   fun encode(tokens: TokenSet): String =
-    json.encodeToString(
+    storageJson.encodeToString(
       StoredTokens.serializer(),
       StoredTokens(
         version = VERSION,
@@ -185,7 +288,7 @@ internal object TokenSetCodec {
   fun decode(text: String): TokenSet? {
     val stored =
       try {
-        json.decodeFromString(StoredTokens.serializer(), text)
+        storageJson.decodeFromString(StoredTokens.serializer(), text)
       } catch (_: Throwable) {
         return null
       }
@@ -196,6 +299,70 @@ internal object TokenSetCodec {
       expiresAt = stored.expiresAtEpochSeconds?.let { Instant.fromEpochSeconds(it) },
       grantedScopes = stored.grantedScopes,
       tokenType = stored.tokenType,
+    )
+  }
+}
+
+/**
+ * The on-disk form of a [PendingAuthorization], for the platform stores.
+ *
+ * Kept beside [TokenSetCodec] and for the same reason: the record is serialized once, here, so that
+ * `androidMain` and `iosMain` cannot disagree about its shape. Like a token blob, the JSON produced
+ * here is *always* encrypted before it is written — it carries a live PKCE verifier.
+ *
+ * It is stored separately from the grant rather than folded into it. The two have unrelated
+ * lifetimes: a grant outlives many launches, while this record is written minutes before it is
+ * deleted, and every terminal outcome erases it without touching the tokens.
+ */
+internal object PendingAuthorizationCodec {
+
+  /** Bump when the stored shape changes so an old blob is discarded rather than mis-read. */
+  const val VERSION: Int = 1
+
+  @Serializable
+  private class StoredPending(
+    @SerialName("v") val version: Int,
+    @SerialName("st") val state: String,
+    @SerialName("cv") val codeVerifier: String,
+    @SerialName("ru") val redirectUri: String,
+    @SerialName("ts") val createdAtEpochSeconds: Long,
+  )
+
+  /** [pending] as a JSON string, ready to be encrypted. */
+  fun encode(pending: PendingAuthorization): String =
+    storageJson.encodeToString(
+      StoredPending.serializer(),
+      StoredPending(
+        version = VERSION,
+        state = pending.state,
+        codeVerifier = pending.codeVerifier,
+        redirectUri = pending.redirectUri,
+        createdAtEpochSeconds = pending.createdAt.epochSeconds,
+      ),
+    )
+
+  /**
+   * The inverse of [encode].
+   *
+   * @return null when [text] is not a blob this version wrote, or when either half of the PKCE pair
+   *   came back blank. There is no partial recovery available: without both the `state` and the
+   *   verifier the attempt cannot be matched or redeemed, and reporting "none pending" costs the
+   *   user one retry rather than an error they cannot act on.
+   */
+  fun decode(text: String): PendingAuthorization? {
+    val stored =
+      try {
+        storageJson.decodeFromString(StoredPending.serializer(), text)
+      } catch (_: Throwable) {
+        return null
+      }
+    if (stored.version != VERSION) return null
+    if (stored.state.isBlank() || stored.codeVerifier.isBlank()) return null
+    return PendingAuthorization(
+      state = stored.state,
+      codeVerifier = stored.codeVerifier,
+      redirectUri = stored.redirectUri,
+      createdAt = Instant.fromEpochSeconds(stored.createdAtEpochSeconds),
     )
   }
 }
