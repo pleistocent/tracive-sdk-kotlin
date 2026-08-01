@@ -912,14 +912,14 @@ sealed class id.tracive.sdk.model/TraciveEnvironment { // id.tracive.sdk.model/T
 
 sealed class id.tracive.sdk.model/TraciveMode { // id.tracive.sdk.model/TraciveMode|null[0]
     final class OAuth : id.tracive.sdk.model/TraciveMode { // id.tracive.sdk.model/TraciveMode.OAuth|null[0]
-        constructor <init>(kotlin/String, kotlin/String, kotlin.collections/List<kotlin/String>, kotlin/String?, id.tracive.sdk.model/ClientType = ...) // id.tracive.sdk.model/TraciveMode.OAuth.<init>|<init>(kotlin.String;kotlin.String;kotlin.collections.List<kotlin.String>;kotlin.String?;id.tracive.sdk.model.ClientType){}[0]
+        constructor <init>(kotlin/String, kotlin/String, kotlin.collections/List<kotlin/String>, kotlin/String, id.tracive.sdk.model/ClientType = ...) // id.tracive.sdk.model/TraciveMode.OAuth.<init>|<init>(kotlin.String;kotlin.String;kotlin.collections.List<kotlin.String>;kotlin.String;id.tracive.sdk.model.ClientType){}[0]
 
         final val clientId // id.tracive.sdk.model/TraciveMode.OAuth.clientId|{}clientId[0]
             final fun <get-clientId>(): kotlin/String // id.tracive.sdk.model/TraciveMode.OAuth.clientId.<get-clientId>|<get-clientId>(){}[0]
         final val clientType // id.tracive.sdk.model/TraciveMode.OAuth.clientType|{}clientType[0]
             final fun <get-clientType>(): id.tracive.sdk.model/ClientType // id.tracive.sdk.model/TraciveMode.OAuth.clientType.<get-clientType>|<get-clientType>(){}[0]
         final val partnerUserId // id.tracive.sdk.model/TraciveMode.OAuth.partnerUserId|{}partnerUserId[0]
-            final fun <get-partnerUserId>(): kotlin/String? // id.tracive.sdk.model/TraciveMode.OAuth.partnerUserId.<get-partnerUserId>|<get-partnerUserId>(){}[0]
+            final fun <get-partnerUserId>(): kotlin/String // id.tracive.sdk.model/TraciveMode.OAuth.partnerUserId.<get-partnerUserId>|<get-partnerUserId>(){}[0]
         final val redirectUri // id.tracive.sdk.model/TraciveMode.OAuth.redirectUri|{}redirectUri[0]
             final fun <get-redirectUri>(): kotlin/String // id.tracive.sdk.model/TraciveMode.OAuth.redirectUri.<get-redirectUri>|<get-redirectUri>(){}[0]
         final val scopes // id.tracive.sdk.model/TraciveMode.OAuth.scopes|{}scopes[0]

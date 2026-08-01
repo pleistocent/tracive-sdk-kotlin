@@ -20,21 +20,33 @@ sealed class TraciveMode {
    * @param scopes the scopes to request. Ask for the narrowest set that works — `Detail.FULL` needs
    *   a scope that most integrations do not.
    * @param partnerUserId the partner's own identifier for the end user, so a grant can be
-   *   correlated with the partner's account. Pass `null` when the integration has no user accounts.
-   *   Never pass a raw phone number or email here.
+   *   correlated with the partner's account. **Required.** The Tracive app rejects an authorization
+   *   request without it, client-side and before any network call, which produces no redirect at
+   *   all — the partner app is handed nothing to handle and no server log records the attempt. It
+   *   is also what the grant is keyed on: it is echoed back in `grant.revoked` and
+   *   `grant.superseded` webhooks so a partner can map the event to their own customer, and it is
+   *   what enforces one partner account to one Tracive account. An earlier version of this
+   *   documentation said to pass `null` when the integration has no user accounts; that was wrong,
+   *   and following it produced a consent screen that refused with no way to report why. Send an
+   *   opaque identifier — never a raw phone number or email.
    * @param clientType whether the SDK completes the token exchange itself; see [ClientType].
    */
   class OAuth(
     val clientId: String,
     val redirectUri: String,
     val scopes: List<String>,
-    val partnerUserId: String?,
+    val partnerUserId: String,
     val clientType: ClientType = ClientType.PUBLIC,
   ) : TraciveMode() {
 
     init {
       require(clientId.isNotBlank()) { "TraciveMode.OAuth needs a clientId." }
       require(redirectUri.isNotBlank()) { "TraciveMode.OAuth needs a redirectUri." }
+      require(partnerUserId.isNotBlank()) {
+        "TraciveMode.OAuth needs a partnerUserId. The authorization request must carry one — the " +
+          "Tracive app refuses a consent without it, client-side and with no redirect, so the " +
+          "failure would reach you as silence rather than as an error."
+      }
     }
 
     override fun toString(): String =

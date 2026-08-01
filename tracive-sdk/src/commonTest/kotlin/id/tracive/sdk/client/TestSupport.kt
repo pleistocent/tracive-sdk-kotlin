@@ -191,7 +191,7 @@ internal fun testOAuthMode(
   clientId: String = "cli_test",
   redirectUri: String = "https://partner.test/tracive/callback",
   scopes: List<String> = listOf("scammer.check"),
-  partnerUserId: String? = "partner-user-1",
+  partnerUserId: String = "partner-user-1",
   clientType: ClientType = ClientType.PUBLIC,
 ): TraciveMode.OAuth =
   TraciveMode.OAuth(

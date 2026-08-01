@@ -69,9 +69,9 @@ class AuthorizeUrlBuilder(
     parameters += PARAM_STATE to state
     parameters += PARAM_CODE_CHALLENGE to pkce.codeChallenge
     parameters += PARAM_CODE_CHALLENGE_METHOD to pkce.codeChallengeMethod
-    mode.partnerUserId
-      ?.takeIf { it.isNotBlank() }
-      ?.let { parameters += PARAM_PARTNER_USER_ID to it }
+    // Always present: TraciveMode.OAuth refuses to construct without a non-blank one, because the
+    // authorization server and the consent screen both require it.
+    parameters += PARAM_PARTNER_USER_ID to mode.partnerUserId
 
     for ((key, value) in extraParams) {
       require(key.isNotBlank()) { "An authorize parameter needs a name." }

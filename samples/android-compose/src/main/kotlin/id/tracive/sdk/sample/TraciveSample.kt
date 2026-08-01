@@ -85,8 +85,11 @@ object TraciveSample {
           redirectUri = REDIRECT_URI,
           scopes = listOf("scammer.check", "profile.read"),
           // The partner's own id for this user, so the same person keeps one grant across
-          // reinstalls. Null when the partner has no stable id to offer.
-          partnerUserId = null,
+          // reinstalls, and so `grant.revoked` can be mapped back to the partner's own customer.
+          // Required: the Tracive app refuses a consent without one, client-side and with no
+          // redirect, so leaving it out looks like nothing happening at all. Opaque — never a
+          // phone number or an email.
+          partnerUserId = "sample-user-1",
           // PUBLIC: this app performs the PKCE token exchange itself. A partner whose backend holds
           // a client secret uses CONFIDENTIAL instead, and the SDK stops at the authorization code.
           clientType = ClientType.PUBLIC,

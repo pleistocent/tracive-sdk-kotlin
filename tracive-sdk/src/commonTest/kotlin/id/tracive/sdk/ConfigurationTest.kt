@@ -84,18 +84,24 @@ class ConfigurationTest {
         clientId = "cli_1",
         redirectUri = "https://partner.test/oauth/callback",
         scopes = listOf("scammer.check"),
-        partnerUserId = null,
+        partnerUserId = "partner-user-1",
       )
     assertEquals(ClientType.PUBLIC, mode.clientType)
     assertEquals(listOf("scammer.check"), mode.scopes)
   }
 
   @Test
-  fun oauthModeRejectsAnEmptyClientIdOrRedirect() {
+  fun oauthModeRejectsAnEmptyClientIdOrRedirectOrPartnerUserId() {
     assertFailsWith<IllegalArgumentException> {
-      TraciveMode.OAuth("  ", "https://partner.test/cb", emptyList(), null)
+      TraciveMode.OAuth("  ", "https://partner.test/cb", emptyList(), "u1")
     }
-    assertFailsWith<IllegalArgumentException> { TraciveMode.OAuth("cli_1", "", emptyList(), null) }
+    assertFailsWith<IllegalArgumentException> { TraciveMode.OAuth("cli_1", "", emptyList(), "u1") }
+    // A blank partnerUserId is refused here rather than omitted from the authorize URL. The
+    // Tracive app rejects a consent without one client-side and returns no redirect at all, so an
+    // integrator who got this wrong would see nothing happen and have nothing to report.
+    assertFailsWith<IllegalArgumentException> {
+      TraciveMode.OAuth("cli_1", "https://partner.test/cb", emptyList(), "   ")
+    }
   }
 
   @Test
