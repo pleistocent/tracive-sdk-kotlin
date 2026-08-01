@@ -3,6 +3,7 @@ package id.tracive.sdk.client
 import id.tracive.sdk.TraciveException
 import id.tracive.sdk.cache.CheckCache
 import id.tracive.sdk.cache.DisabledCheckCache
+import id.tracive.sdk.cache.cacheKeyFor
 import id.tracive.sdk.model.CachePolicy
 import id.tracive.sdk.model.CheckResult
 import id.tracive.sdk.model.CreditsInfo
@@ -21,7 +22,17 @@ import id.tracive.sdk.platform.CryptoProvider
 import id.tracive.sdk.query.TraciveQuery
 import kotlin.time.Duration
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.async
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
 import kotlinx.serialization.DeserializationStrategy
 
@@ -163,6 +174,16 @@ class TraciveClient(
   val oauth: TraciveOAuth?
     get() = oauthProvider.value
 
+  /** Checks that have gone out and not yet answered, keyed as [latchedCheck] describes. */
+  private val inFlightChecks = HashMap<String, InFlightCheck>()
+
+  /**
+   * Guards [inFlightChecks]. Held only across map reads and writes, never across a request. A lock
+   * held for a whole round trip would serialise checks for *different* identifiers, which is the
+   * opposite of the point.
+   */
+  private val inFlightMutex = Mutex()
+
   // ----------------------------------------------------------------- calls ----
 
   /**
@@ -201,6 +222,14 @@ class TraciveClient(
    * [TraciveException.CacheMiss] rather than returning a result missing the narratives that were
    * asked for.
    *
+   * ### Concurrent identical checks
+   *
+   * Overlapping calls for the same identifier, at the same detail level and locale, share **one**
+   * request and one charge. A double-tapped button and a list screen rendering the same identifier
+   * in two cells are the everyday cases, and before the latch existed each of them was billed twice
+   * — the cache write is the only serialisation point, and it happens after both requests have
+   * already gone out. See [latchedCheck] for what the sharing deliberately does not do.
+   *
    * @param source where to read from. Defaults to [defaultSource].
    * @param detail how much to return. [Detail.FULL] needs a scope most integrations do not have.
    * @param locale language for narrative text; ignored for [Detail.MINIMAL] and not sent there.
@@ -237,7 +266,7 @@ class TraciveClient(
 
     return if (source == Source.SERVER_FIRST) {
       try {
-        fetchCheck(query, detail, locale, idempotencyKey)
+        latchedCheck(query, detail, locale, idempotencyKey)
       } catch (cancellation: CancellationException) {
         throw cancellation
       } catch (failure: TraciveException) {
@@ -250,7 +279,7 @@ class TraciveClient(
         (if (cacheReadable && failure.isTransient) cache.get(query) else null) ?: throw failure
       }
     } else {
-      fetchCheck(query, detail, locale, idempotencyKey)
+      latchedCheck(query, detail, locale, idempotencyKey)
     }
   }
 
@@ -297,6 +326,98 @@ class TraciveClient(
   }
 
   // -------------------------------------------------------------- internals ----
+
+  /**
+   * Runs [fetchCheck] **single-flight**, because the unit here is currency.
+   *
+   * Two overlapping checks for the same identifier both read the cache, both missed, both POSTed
+   * and both were charged: the cache write is the only serialisation point, and by the time it runs
+   * both requests have already gone out. A double-tapped button, or a list screen rendering the
+   * same identifier in two cells, doubled the bill. [TraciveOAuth.refreshedToken] has had the
+   * correct shape all along; this is the same latch in the one place where a mistake costs money
+   * rather than a round trip.
+   *
+   * The key is the record key **plus the detail level and the locale**, not the record key alone. A
+   * [Detail.MINIMAL] answer must never be handed back to a caller who asked for [Detail.FULL] — it
+   * carries no `topChronologies` and no `comments`, and those read as "there is nothing on file"
+   * rather than as "this field was not fetched". The locale is in the key for the same reason one
+   * step further in: `tags` and `disclaimer` come back in the language that was asked for.
+   *
+   * The registration and the lookup happen under [inFlightMutex] with no suspension between them,
+   * which is the whole mechanism — two callers that both observed an empty map would both start a
+   * flight, and the latch would be decorative.
+   *
+   * The flight starts **undispatched**, which is to say it runs on the caller's own thread until
+   * the request suspends, exactly as an unlatched check did. Dispatching it instead would hand the
+   * request to the scheduler and let the caller carry on, so on a single-threaded dispatcher a
+   * check would leave only once whatever else is queued has run. The cost is that [inFlightMutex]
+   * is held for the first few lines of a new flight rather than for map access alone — up to the
+   * point where the request suspends, never across the round trip.
+   *
+   * ### What sharing must not take away
+   *
+   * A shared request has one lifetime and several callers, so it cannot simply belong to whoever
+   * started it. React Native states the rule as a carve-out — a call carrying an `AbortSignal`
+   * neither joins nor starts a shared flight — because there a signal is an explicit, per-call
+   * object. Kotlin has no such parameter: cancellation is ambient, every `suspend` call is
+   * cancellable, and an opt-out on that basis would exempt every caller and latch nothing. The same
+   * rule therefore lands here as a lifetime rather than as an exemption, and it has two halves:
+   * - The flight is nobody's child. It runs under a [Job] of its own, not under the job of whoever
+   *   started it, so a caller that gives up — a screen closing, a `withTimeout` firing — cannot
+   *   cancel a check another caller is still waiting for.
+   * - The flight lives exactly as long as someone is waiting for it. [InFlightCheck.waiters] counts
+   *   them, and the last one to leave cancels the request on the way out. Without that half,
+   *   sharing would quietly remove a caller's ability to stop a check at all: everyone could
+   *   abandon a request and it would still run to completion and still be billed, which is
+   *   precisely the credit this exists to save.
+   */
+  private suspend fun latchedCheck(
+    query: TraciveQuery,
+    detail: Detail,
+    locale: String?,
+    idempotencyKey: String?,
+  ): CheckResult {
+    // The hashed record key, not the identifier: a phone number or a wallet address does not belong
+    // in a long-lived map key, for the same reason it is not a column in the cache database.
+    val latchKey = "${cacheKeyFor(query)}|${detail.name}|${locale.orEmpty()}"
+    val callerContext = currentCoroutineContext()
+
+    val flight = inFlightMutex.withLock {
+      val joined =
+        inFlightChecks[latchKey]
+          ?: InFlightCheck(
+              CoroutineScope(callerContext + Job()).async(start = CoroutineStart.UNDISPATCHED) {
+                fetchCheck(query, detail, locale, idempotencyKey)
+              }
+            )
+            .also { inFlightChecks[latchKey] = it }
+      joined.waiters += 1
+      joined
+    }
+
+    try {
+      return flight.deferred.await()
+    } finally {
+      // [NonCancellable] because this runs on the way out of a cancellation as well as a normal
+      // return, and a plain `withLock` in a cancelled coroutine throws before it takes the lock —
+      // leaving the flight registered for ever and every later check for that identifier waiting on
+      // a request nobody is running.
+      withContext(NonCancellable) {
+        inFlightMutex.withLock {
+          flight.waiters -= 1
+          val abandoned = flight.waiters == 0
+          // Out of the map once it has answered. A check arriving a moment later then starts a
+          // fresh request instead of joining a finished flight and taking its result.
+          if (abandoned || flight.deferred.isCompleted) {
+            if (inFlightChecks[latchKey] === flight) inFlightChecks.remove(latchKey)
+          }
+          // A no-op on a flight that has already answered. It matters when the last caller gave up
+          // first: the request is theirs to stop, exactly as it was before the latch existed.
+          if (abandoned) flight.deferred.cancel()
+        }
+      }
+    }
+  }
 
   private suspend fun fetchCheck(
     query: TraciveQuery,
@@ -534,6 +655,16 @@ class TraciveClient(
     /** The single wording for the phase 2 gap, so callers can match on it. */
     const val PROXY_MODE_MESSAGE: String = "Proxy mode arrives in phase 2"
   }
+}
+
+/**
+ * One shared check, and how many callers still want its answer.
+ *
+ * [waiters] is only ever read and written under `TraciveClient.inFlightMutex`, which is what makes
+ * a plain `Int` enough on every target.
+ */
+private class InFlightCheck(val deferred: Deferred<CheckResult>) {
+  var waiters: Int = 0
 }
 
 /**

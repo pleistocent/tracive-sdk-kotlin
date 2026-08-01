@@ -49,6 +49,19 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Fixed
 
+- **Concurrent identical checks were sent twice and billed twice.** Two overlapping calls for the
+  same identifier both read the cache, both missed, both POSTed: the cache write is the only thing
+  that serialises them, and it happens after both requests have already gone out. A double-tapped
+  button, or a list screen rendering the same identifier in two cells, doubled the bill. Overlapping
+  checks now share one request, latched on the record key together with the detail level and the
+  locale — a minimal answer must never be handed to a caller who asked for full detail, and `tags`
+  and `disclaimer` come back in the language that was asked for. The shared request belongs to no
+  single caller: it runs under a job of its own, so one caller giving up cannot cancel a check
+  another is still waiting for, and it is cancelled when the last caller waiting for it leaves, so
+  sharing never removes a caller's ability to stop a check. Sequential checks are unaffected — the
+  latch collapses overlap and nothing else. The same latch has always guarded the token refresh;
+  this puts it in the one place where the unit is currency.
+
 - **`SERVER_FIRST` fell back to the cache on every failure, not only the ones worth falling back
   from.** A 403 `missing_scope`, a 402 or a revoked grant degraded to a cached verdict exactly like
   a 503 would. A partner whose access had been withdrawn kept being served fraud verdicts, and the
