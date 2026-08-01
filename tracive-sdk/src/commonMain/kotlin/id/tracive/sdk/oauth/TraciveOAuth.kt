@@ -153,9 +153,15 @@ class TraciveOAuth(
    * How long a started authorization may sit before its callback is refused.
    *
    * Defaults to [DEFAULT_PENDING_AUTHORIZATION_MAX_AGE], which is where the reasoning for the value
-   * lives. A parameter rather than a bare constant because the Flutter and React Native SDKs both
-   * expose the same knob, and an integration spanning more than one of them should be able to set
-   * the same number in each.
+   * lives.
+   *
+   * **Private, and staying that way.** It is a parameter so a test can exercise the boundary
+   * without waiting ten real minutes, and nothing more. The Flutter and React Native SDKs expose
+   * the same window as a public knob; this SDK and Swift do not, on Swift's reasoning — a second
+   * way for a window to enter the flow is how one of these SDKs ended up with two copies of its own
+   * value that were free to disagree. An earlier version of this comment claimed the parameter
+   * existed so a cross-platform integration could set the same number everywhere, which it cannot:
+   * no caller outside this class can reach it.
    */
   private val pendingAuthorizationMaxAge: Duration = DEFAULT_PENDING_AUTHORIZATION_MAX_AGE,
 ) {
@@ -211,6 +217,14 @@ class TraciveOAuth(
    * read-modify-writes safe against each other. [forgetSpentRefreshTokens] does not need that:
    * losing a concurrent append to a sign-out's clear is harmless, because the sign-out has just
    * emptied the store the appended token came from.
+   *
+   * **Deliberately in memory only: it dies with the process, and is not persisted.** What it would
+   * buy is protection across a restart — a store rolled back by a device-backup restore holds a
+   * refresh token this SDK already spent, and after a cold start there is nothing here to recognise
+   * it. That case ends at the server, which sees the reuse and revokes the grant, so the user
+   * re-consents once. Buying it back would mean writing dead refresh tokens to the secure store:
+   * more credential-shaped strings on disk, permanently, to spare a rare and recoverable prompt.
+   * Not worth it. All four SDKs make the same call.
    */
   @Volatile private var spentRefreshTokens: List<String> = emptyList()
 
