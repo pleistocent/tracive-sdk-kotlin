@@ -61,16 +61,47 @@ class TraciveClientTest {
     assertTrue(transport.requests[1].body!!.contains("\"detail\":\"full\""))
   }
 
+  /**
+   * Every check carries a key, because the SDK re-sends the identical POST after a 401 refresh and
+   * the server has to be able to collapse the two. A caller's own key is used verbatim; otherwise
+   * one is generated per call, marked so it can be told apart in a server-side log.
+   */
   @Test
-  fun anIdempotencyKeyIsSentOnlyWhenTheCallerSuppliesOne() = runSdkTest {
+  fun everyCheckCarriesAnIdempotencyKey() = runSdkTest {
     val transport = FakeHttpTransport.always(jsonResponse(checkResultJson()))
     val client = testClient(transport)
 
     client.checkScammer(testQuery())
-    assertNull(transport.requests[0].header("Idempotency-Key"))
-
+    client.checkScammer(testQuery())
     client.checkScammer(testQuery(), idempotencyKey = "idem-42")
-    assertEquals("idem-42", transport.requests[1].header("Idempotency-Key"))
+    // A blank key is not a key. Sending it as one would make every unkeyed call collide.
+    client.checkScammer(testQuery(), idempotencyKey = "  ")
+
+    val keys = transport.requests.map { it.header("Idempotency-Key") }
+    assertTrue(keys.all { it != null && it.isNotBlank() }, "a check went out with no key: $keys")
+    assertEquals("idem-42", keys[2], "a caller's own key must be sent exactly as given")
+
+    val generated = listOf(keys[0]!!, keys[1]!!, keys[3]!!)
+    assertTrue(
+      generated.all { it.startsWith(TraciveClient.GENERATED_IDEMPOTENCY_KEY_PREFIX) },
+      "a generated key must be recognisable as one: $generated",
+    )
+    assertEquals(
+      generated.size,
+      generated.toSet().size,
+      "two checks shared a generated key, so the server would collapse them into one charge",
+    )
+  }
+
+  /** A key the SDK invented is not permission to retry. Only the caller's own key is. */
+  @Test
+  fun aGeneratedKeyDoesNotBuyARetry() = runSdkTest {
+    val transport = FakeHttpTransport.always(HttpResponse(503, errorJson("upstream_down")))
+    val client = testClient(transport)
+
+    assertFailsWith<TraciveException.Server> { client.checkScammer(testQuery()) }
+
+    assertEquals(1, transport.requests.size, "a generated key was treated as a retry budget")
   }
 
   /**

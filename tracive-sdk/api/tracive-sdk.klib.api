@@ -316,6 +316,8 @@ final class id.tracive.sdk.client/TraciveClient { // id.tracive.sdk.client/Traci
     final suspend fun signOut() // id.tracive.sdk.client/TraciveClient.signOut|signOut(){}[0]
 
     final object Companion { // id.tracive.sdk.client/TraciveClient.Companion|null[0]
+        final const val GENERATED_IDEMPOTENCY_KEY_PREFIX // id.tracive.sdk.client/TraciveClient.Companion.GENERATED_IDEMPOTENCY_KEY_PREFIX|{}GENERATED_IDEMPOTENCY_KEY_PREFIX[0]
+            final fun <get-GENERATED_IDEMPOTENCY_KEY_PREFIX>(): kotlin/String // id.tracive.sdk.client/TraciveClient.Companion.GENERATED_IDEMPOTENCY_KEY_PREFIX.<get-GENERATED_IDEMPOTENCY_KEY_PREFIX>|<get-GENERATED_IDEMPOTENCY_KEY_PREFIX>(){}[0]
         final const val HEADER_IDEMPOTENCY_KEY // id.tracive.sdk.client/TraciveClient.Companion.HEADER_IDEMPOTENCY_KEY|{}HEADER_IDEMPOTENCY_KEY[0]
             final fun <get-HEADER_IDEMPOTENCY_KEY>(): kotlin/String // id.tracive.sdk.client/TraciveClient.Companion.HEADER_IDEMPOTENCY_KEY.<get-HEADER_IDEMPOTENCY_KEY>|<get-HEADER_IDEMPOTENCY_KEY>(){}[0]
         final const val JSON_CONTENT_TYPE // id.tracive.sdk.client/TraciveClient.Companion.JSON_CONTENT_TYPE|{}JSON_CONTENT_TYPE[0]

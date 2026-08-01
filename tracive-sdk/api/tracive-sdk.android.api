@@ -358,6 +358,7 @@ public final class id/tracive/sdk/client/RetryPolicy$Companion {
 
 public final class id/tracive/sdk/client/TraciveClient {
 	public static final field Companion Lid/tracive/sdk/client/TraciveClient$Companion;
+	public static final field GENERATED_IDEMPOTENCY_KEY_PREFIX Ljava/lang/String;
 	public static final field HEADER_IDEMPOTENCY_KEY Ljava/lang/String;
 	public static final field JSON_CONTENT_TYPE Ljava/lang/String;
 	public static final field PATH_CREDITS Ljava/lang/String;

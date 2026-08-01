@@ -2,6 +2,7 @@ package id.tracive.sdk.client
 
 import id.tracive.sdk.TraciveException
 import id.tracive.sdk.oauth.InMemoryTokenStore
+import id.tracive.sdk.oauth.TraciveOAuth
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -50,6 +51,47 @@ class RetryAndRefreshTest {
     val stored = assertNotNull(store.load())
     assertEquals("access-2", stored.accessToken)
     assertEquals("refresh-2", stored.refreshToken)
+  }
+
+  /**
+   * The re-send after a refresh is the whole reason an unkeyed check still carries a key.
+   *
+   * The SDK repeats the identical POST once the token is fresh. Without a key on it, those two
+   * attempts are indistinguishable to the server, so anything billed before or during authorisation
+   * is charged twice and the caller has no way to detect it. The argument that used to make this
+   * safe — "a 401 is rejected before billing" — is an assumption about a server that does not exist
+   * yet, and it is the one assumption this SDK otherwise refuses to make. Sending the same key on
+   * both attempts means it does not have to be made.
+   */
+  @Test
+  fun theReplayAfterARefreshRepeatsTheSameIdempotencyKey() = runSdkTest {
+    var checks = 0
+    val transport = FakeHttpTransport { request ->
+      if (request.url.endsWith(TraciveOAuth.PATH_TOKEN)) {
+        jsonResponse(tokenJson())
+      } else {
+        checks += 1
+        if (checks == 1) HttpResponse(401, errorJson("expired_token"))
+        else jsonResponse(checkResultJson())
+      }
+    }
+    val client = testClient(transport)
+
+    // No key from the caller: the interesting case, and the common one.
+    client.checkScammer(testQuery())
+
+    val sent = transport.requestsTo(TraciveClient.PATH_SCAMMER_CHECKS)
+    assertEquals(2, sent.size, "expected the check, then the replay after the refresh")
+    val key = assertNotNull(sent[0].header(TraciveClient.HEADER_IDEMPOTENCY_KEY))
+    assertTrue(
+      key.startsWith(TraciveClient.GENERATED_IDEMPOTENCY_KEY_PREFIX),
+      "the SDK sent no key of its own on an unkeyed check: $key",
+    )
+    assertEquals(
+      key,
+      sent[1].header(TraciveClient.HEADER_IDEMPOTENCY_KEY),
+      "the replay carried a different key, so the server cannot collapse it onto the first charge",
+    )
   }
 
   @Test

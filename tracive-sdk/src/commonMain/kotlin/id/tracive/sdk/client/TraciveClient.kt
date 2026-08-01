@@ -16,6 +16,8 @@ import id.tracive.sdk.oauth.TokenStore
 import id.tracive.sdk.oauth.TraciveOAuth
 import id.tracive.sdk.platform.AppPresenceChecker
 import id.tracive.sdk.platform.AuthorizeLauncher
+import id.tracive.sdk.platform.Base64Url
+import id.tracive.sdk.platform.CryptoProvider
 import id.tracive.sdk.query.TraciveQuery
 import kotlin.time.Duration
 import kotlinx.coroutines.CancellationException
@@ -182,6 +184,12 @@ class TraciveClient(
    * reuse it only to retry *that* check, and expect [TraciveException.IdempotencyConflict] if it is
    * reused with different content.
    *
+   * The request nonetheless always carries **some** `Idempotency-Key`: when the caller supplies
+   * none, the SDK generates a per-call one prefixed [GENERATED_IDEMPOTENCY_KEY_PREFIX], so that its
+   * own re-send after a 401 token refresh can be collapsed server-side. That does not hand the
+   * caller a retry budget — only their own key does — and it is not a substitute for a key derived
+   * from the transaction if what is wanted is retries or deduplication across processes.
+   *
    * A 429 is never auto-retried at all; [TraciveException.RateLimited.retryAfter] carries the
    * server's own hint so the app can decide where to wait.
    *
@@ -308,15 +316,24 @@ class TraciveClient(
         ),
       )
 
+    val callerKey = idempotencyKey?.takeIf { it.isNotBlank() }
+
     val response =
       send(
         method = HttpMethod.POST,
         path = PATH_SCAMMER_CHECKS,
         body = body,
         contentType = JSON_CONTENT_TYPE,
-        idempotencyKey = idempotencyKey,
-        // Without an idempotency key a repeat can be charged twice, so there is no retry.
-        retryable = idempotencyKey != null,
+        // Every check carries a key, whether the caller supplied one or not. [send] re-sends this
+        // exact POST after a 401 refresh. Without a key the server cannot tell those two attempts
+        // apart, so anything billed before or during authorisation is charged twice and the caller
+        // has no way to notice. What used to make that safe was "a 401 is rejected before billing"
+        // — an assumption about a server that does not exist yet. A key means nothing is assumed.
+        idempotencyKey = callerKey ?: generatedIdempotencyKey(),
+        // A generated key is not a licence to retry. Retrying is still gated on the *caller's* key,
+        // because a retry is only safe if the caller can reuse the same key on a later call of
+        // their own; a key this SDK invented lives for one call and would collapse nothing.
+        retryable = callerKey != null,
       )
 
     val result =
@@ -429,6 +446,21 @@ class TraciveClient(
     }
   }
 
+  /**
+   * A key for a check the caller did not key itself. One per call, never reused.
+   *
+   * Prefixed so that a key this SDK invented is distinguishable from a partner's own in a
+   * server-side log, which is what someone reconciling a disputed charge needs. It is deliberately
+   * **not** derived from the query: two genuine re-checks of the same identifier are two billable
+   * answers, and a derived key would collapse them into one.
+   *
+   * 16 bytes from the platform CSPRNG, base64url — the same source
+   * [id.tracive.sdk.oauth .PkceGenerator] uses. Uniqueness is the only property required here;
+   * unguessability is free and costs nothing to keep.
+   */
+  private fun generatedIdempotencyKey(): String =
+    GENERATED_IDEMPOTENCY_KEY_PREFIX + Base64Url.encode(CryptoProvider.randomBytes(16))
+
   private suspend fun waitBeforeAttempt(attempt: Int) {
     val wait = retryPolicy.backoffBefore(attempt)
     if (wait > Duration.ZERO) delay(wait)
@@ -465,8 +497,16 @@ class TraciveClient(
     /** `GET` here for the authorised user. */
     const val PATH_PROFILE: String = "/profile"
 
-    /** Header carrying a caller-supplied idempotency key. */
+    /** Header carrying the idempotency key. Every check sends one. */
     const val HEADER_IDEMPOTENCY_KEY: String = "Idempotency-Key"
+
+    /**
+     * Marks a key the SDK generated for a caller who supplied none.
+     *
+     * Stable and public so that a partner reconciling a charge against their own records can tell
+     * the two apart, and so the same prefix means the same thing in every Tracive SDK.
+     */
+    const val GENERATED_IDEMPOTENCY_KEY_PREFIX: String = "sdk-"
 
     /** Content type of every request body the API takes, apart from the OAuth endpoints. */
     const val JSON_CONTENT_TYPE: String = "application/json"
