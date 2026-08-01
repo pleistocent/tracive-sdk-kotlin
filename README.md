@@ -17,9 +17,10 @@ if (result.riskTier == RiskTier.HIGH) {
 
 Three separate facts, none of which this README will pretend otherwise about:
 
-1. **There is no server.** No `/v1/*` routes are live, and the consent endpoint this SDK opens
-   exist in the Tracive backend yet. `https://api.tracive.id/v1` does not answer. Every method on
-   this SDK that needs the network will fail until it does. That is expected, not a bug to report.
+1. **There is no server.** No `/v1/*` routes are live, and the consent endpoint this SDK opens does
+   not exist in the Tracive backend yet. `https://api.tracive.id/v1` does not answer. Every method
+   on this SDK that needs the network will fail until it does. That is expected, not a bug to
+   report.
 2. **Proxy mode is phase 2.** `TraciveMode.Proxy` exists in the public surface today so that adding
    the behaviour later is not a breaking change for anyone. Any call made in Proxy mode throws
    `TraciveException.NotImplemented` right now. See [docs/proxy-contract.md](docs/proxy-contract.md).
