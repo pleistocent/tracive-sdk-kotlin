@@ -26,8 +26,8 @@ import kotlinx.coroutines.withContext
  * The grant is serialized to JSON, encrypted, and the ciphertext is what lands in
  * `SharedPreferences`. The preference file is only a container — the key material lives in the
  * Keystore, backed by the StrongBox or TEE where the device has one, and is not extractable by this
- * process or any other. That is the difference between "stored in SharedPreferences", which the
- * spec forbids, and this: an attacker with the preference file has ciphertext and nothing else.
+ * process or any other. That is the difference between "stored in SharedPreferences", which this SDK
+ * does not permit, and this: an attacker with the preference file has ciphertext and nothing else.
  *
  * The refresh token is the reason the bar is this high. It is long-lived, it rotates, and the
  * server treats a *reused* one as evidence of theft by revoking the whole grant — so a leaked copy

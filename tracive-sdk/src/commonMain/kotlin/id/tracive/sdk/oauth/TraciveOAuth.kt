@@ -46,7 +46,7 @@ private class TokenResponse(
 /**
  * The OAuth 2.0 + PKCE flow against the Tracive app, and the grant it produces.
  *
- * The shape of the flow is fixed by the plan's §4.2 sequence and is not negotiable:
+ * The shape of the flow is not negotiable, and each step below carries its own reason:
  * 1. **Check the Tracive app is installed, before any redirect.** Without it there is nobody to
  *    authorize the grant, and an unclaimed App Link lands in a browser asking for Tracive
  *    credentials — which teaches users to type them into whatever a partner app opened.
@@ -673,7 +673,7 @@ class TraciveOAuth(
      * non-sensitive attribution tag naming the client. **No OAuth parameters** — not `state`, not
      * `code_challenge`, not `partner_user_id`. They would be useless by the time the user came back
      * (the server-side request expires in ten minutes) and they would put a partner's user
-     * identifier through a third-party link service, which the plan rules out for production.
+     * identifier through a third-party link service, which is not acceptable in production.
      */
     const val INSTALL_URL: String = "https://tracive.chottu.link/install"
 

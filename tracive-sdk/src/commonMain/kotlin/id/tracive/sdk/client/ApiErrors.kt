@@ -13,9 +13,9 @@ import kotlinx.serialization.json.jsonPrimitive
 /**
  * Turns a non-2xx [HttpResponse] into a typed `TraciveException`.
  *
- * The mapping table itself lives in `TraciveException.fromApiError` — the single implementation of
- * the spec's error table. This object's job is only to get the three envelope fields out of a body
- * that may not be what the spec promises, and to read `Retry-After`.
+ * The mapping table itself lives in `TraciveException.fromApiError`, the one place the Tracive
+ * API's documented error table is implemented. This object's job is only to get the three envelope
+ * fields out of a body that may not have the documented shape, and to read `Retry-After`.
  *
  * Every parse failure here degrades to "no code", which still maps to a typed error carrying the
  * status. A malformed error body must never become a crash or, worse, a success.
@@ -28,9 +28,9 @@ internal object ApiErrors {
   /**
    * Reads the error envelope out of [body].
    *
-   * Two shapes are accepted. The Tracive API sends the spec's
-   * `{"error":{"code","message","checkId"}}`. The OAuth endpoints may also answer in RFC 6749's
-   * form, `{"error":"invalid_grant","error_description":"…"}`, where `error` is a bare string — a
+   * Two shapes are accepted. The Tracive API sends `{"error":{"code","message","checkId"}}`. The
+   * OAuth endpoints may also answer in RFC 6749's form,
+   * `{"error":"invalid_grant","error_description":"…"}`, where `error` is a bare string — a
    * standards-compliant authorization server may well do that, and reading only the nested shape
    * would silently discard the reason a token exchange failed.
    */

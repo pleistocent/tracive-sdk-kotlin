@@ -88,7 +88,7 @@ Two things carry over unchanged from OAuth mode and are worth calling out:
 
 ### Response the SDK expects
 
-The `CheckResult` shape from the spec. Unknown fields are ignored rather than fatal, so you may add
+The documented `CheckResult` shape. Unknown fields are ignored rather than fatal, so you may add
 your own without breaking installed apps — that forward compatibility runs in your favour too.
 
 ### Errors

@@ -29,7 +29,7 @@ Three separate facts, none of which this README will pretend otherwise about:
    tests that run with no network at all.
 
 Version `0.1.0`. SemVer, and `0.x` means the surface can still move — it is frozen against the
-cross-language spec, not against you, until `1.0.0`.
+cross-language contract shared with the Flutter and Swift SDKs, not against you, until `1.0.0`.
 
 ## There is no API key. There will never be one.
 
@@ -115,8 +115,8 @@ Swift SDKs produce for the same input, pinned by a shared fixture (`query-gramma
 that all three repos vendor verbatim. Invalid input throws `TraciveQueryException` **before**
 anything is sent, because a key that cannot possibly hit would still be billed.
 
-**There is no `domain()` builder.** The original plan listed a DOMAIN type; the backend dropped it.
-Building such a key would guarantee a miss, and misses cost money.
+**There is no `domain()` builder.** The Tracive API never shipped a DOMAIN type, so no record with
+a `DOMAIN_` id exists. Building such a key would guarantee a miss, and misses cost money.
 
 ## Cost, and the two things that most affect your bill
 

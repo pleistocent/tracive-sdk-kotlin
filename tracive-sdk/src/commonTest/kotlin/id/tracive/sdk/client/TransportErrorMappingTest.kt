@@ -11,9 +11,9 @@ import kotlin.time.Duration.Companion.seconds
  * The error table, exercised through a real HTTP reply rather than a pre-parsed envelope.
  *
  * `ErrorMappingTest` covers the mapping function itself. This covers the step before it: pulling
- * `code`, `message` and `checkId` out of a body that may not be the shape the spec promises, and
- * reading `Retry-After`. That step is where a wrong answer is silent — a body the parser cannot
- * read still has to produce a typed error carrying the status, never a crash and never a success.
+ * `code`, `message` and `checkId` out of a body that may not have the documented shape, and reading
+ * `Retry-After`. That step is where a wrong answer is silent — a body the parser cannot read still
+ * has to produce a typed error carrying the status, never a crash and never a success.
  */
 class TransportErrorMappingTest {
 

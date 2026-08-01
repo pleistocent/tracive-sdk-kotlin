@@ -51,7 +51,7 @@ private val CachePayloadJson: Json = Json {
 /**
  * The whole cache, minus where the bytes physically live.
  *
- * Everything the SDK spec asks of a cache is implemented here — SHA-256 key derivation, the AES-GCM
+ * Everything this cache is required to do is implemented here — SHA-256 key derivation, the AES-GCM
  * envelope, TTL per risk tier with the server override applied, schema-version invalidation, lazy
  * expiry on read and a prune on open — over the small [CacheRecordStore] interface. Swapping
  * SQLDelight for a map changes the store and nothing else, which is why the TTL and encryption

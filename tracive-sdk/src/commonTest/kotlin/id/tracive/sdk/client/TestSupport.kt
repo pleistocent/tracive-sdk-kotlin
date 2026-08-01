@@ -263,7 +263,7 @@ internal fun checkResultJson(
   append("}")
 }
 
-/** The spec's error envelope. */
+/** The Tracive API's documented error envelope. */
 internal fun errorJson(code: String, message: String = "nope", checkId: String? = null): String =
   buildString {
     append("{\"error\":{\"code\":\"").append(code).append("\",\"message\":\"").append(message)

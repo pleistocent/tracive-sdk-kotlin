@@ -19,10 +19,9 @@ import id.tracive.sdk.TraciveQueryException
  * into this repo and into the Flutter and Swift SDKs. `QueryFolding.kt` documents what each rule
  * does and why.
  *
- * **There is deliberately no `domain()` factory.** The Open API plan lists a DOMAIN input type, but
- * the Tracive API indexes only PHONE, EMAIL, BANK, CRYPTO and USERNAME, and no document with a
- * `DOMAIN_` id is ever written. A `domain()` factory would therefore build keys that can never hit
- * — and every one of those misses would be billed.
+ * **There is deliberately no `domain()` factory.** The Tracive API indexes only PHONE, EMAIL, BANK,
+ * CRYPTO and USERNAME, and no record with a `DOMAIN_` id is ever written. A `domain()` factory
+ * would therefore build keys that can never hit — and every one of those misses would be billed.
  */
 class TraciveQuery
 private constructor(

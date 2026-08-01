@@ -147,9 +147,9 @@ class QueryGrammarTest {
   }
 
   /**
-   * The plan lists a DOMAIN input type; the backend never shipped it, so no document with a
-   * `DOMAIN_` id exists. A `domain()` factory would build keys that can never hit, and a miss is
-   * billed — hence no such factory, and no vector that would justify one.
+   * The backend never shipped a DOMAIN input type, so no record with a `DOMAIN_` id exists. A
+   * `domain()` factory would build keys that can never hit, and a miss is billed — hence no such
+   * factory, and no vector that would justify one. The fixture records the absence deliberately.
    */
   @Test
   fun theGrammarEmitsOnlyThePrefixesTheBackendWrites() {

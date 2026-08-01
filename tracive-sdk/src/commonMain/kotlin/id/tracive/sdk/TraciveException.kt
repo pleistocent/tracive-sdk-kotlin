@@ -6,9 +6,9 @@ import kotlin.time.Duration
  * Every error the Tracive SDK raises.
  *
  * The hierarchy is sealed so a caller can exhaustively `when` over it. The mapping from the wire
- * envelope `{"error":{"code","message","checkId"}}` onto these types is [fromApiError] — the single
- * implementation of the SDK spec's error table. The transport layer should call it rather than
- * re-deriving the mapping.
+ * envelope `{"error":{"code","message","checkId"}}` onto these types is [fromApiError] — the one
+ * place the Tracive API's documented error table is implemented. The transport layer should call it
+ * rather than re-deriving the mapping.
  *
  * Messages are deliberately free of user data. No phone number, account number, email address,
  * access token or refresh token ever reaches a message string, because messages end up in crash

@@ -227,7 +227,7 @@ class TraciveClient(
    * **Do not call this before each check.** Handle [TraciveException.InsufficientCredits] instead:
    * a pre-flight call doubles the requests per transaction and still races with anything else
    * spending the same balance, so it can report credits that are gone by the time the check runs.
-   * The plan's §3.3 warning exists because that pattern is the default instinct.
+   * It is worth saying because pre-checking is the default instinct.
    */
   suspend fun credits(): CreditsInfo {
     requireOAuthMode()

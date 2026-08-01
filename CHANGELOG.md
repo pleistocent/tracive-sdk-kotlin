@@ -4,8 +4,8 @@ All notable changes to this project are documented here.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project uses
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html). While the version is `0.x` the public
-surface may still change in a minor release; it is frozen against the cross-language SDK spec, not
-against consumers, until `1.0.0`.
+surface may still change in a minor release; it is frozen against the cross-language contract shared
+with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ## [Unreleased]
 
@@ -69,7 +69,7 @@ authorization endpoint. The whole test suite runs with no network.
   test asserting every vector and every rejection.
 - Validation before any network call — a key that cannot hit would still be billed.
 - The document-id guard: rejects `/`, `__…__`, `.`, `..`, and anything over 1500 UTF-8 bytes.
-- **No `domain()` builder.** The original plan listed a DOMAIN type; the backend dropped it, and
+- **No `domain()` builder.** The Tracive API never shipped a DOMAIN type, and
   building such a key would guarantee a billed miss.
 
 **Cache**
