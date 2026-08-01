@@ -80,7 +80,8 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   transport-shaped failures — network error, 429, 5xx — and everything else is rethrown.
 
 - **A non-production application id shipped inside the published AAR.** `androidMain`'s manifest
-  declared `com.pleistocent.tracive.dev` alongside the real one, and that manifest merges into every
+  declared a second, non-production application id alongside the real one, and that manifest merges
+  into every
   integrator's app. A host that genuinely needs to probe another build passes the id to
   `AndroidAppPresenceChecker` and declares it in its own manifest instead.
 
