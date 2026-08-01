@@ -180,6 +180,39 @@ class TraciveOAuth(
   private val refreshMutex = Mutex()
 
   /**
+   * The refresh tokens this flow has actually put on the wire, oldest first.
+   *
+   * A refresh token is single-use, and presenting one twice is exactly what the server's reuse
+   * detection looks for: it answers by revoking the whole grant, not by failing one call. The mutex
+   * above only makes refreshes *sequential*, and the hazard this list closes is sequential. A
+   * refresh that fails with no reply at all — a socket timeout, a connection dropped mid-flight —
+   * is indistinguishable from a success whose answer was lost, so the server may already have
+   * rotated the token and be waiting to see the new one. The store still holds the old one, and
+   * without this list the next 401 reads it back and sends it again. The guard has to be on the
+   * token's identity, because nothing about the timing distinguishes the two cases.
+   *
+   * It is a short history rather than a single slot because a single slot cannot answer for a token
+   * two rotations back: by the time such a token turns up the slot has moved on, and it goes
+   * straight back on the wire. That was tried in the Flutter SDK and was wrong for that reason. How
+   * far back this reaches is not safety-critical — every refresh re-reads the store under the mutex
+   * and sends what it finds there, so a token too old to be recognised here is one the store has
+   * already replaced.
+   *
+   * It is keyed on the token that was actually sent, which is safe because the Tracive API rotates
+   * on every refresh. RFC 6749 §6 does allow a reply carrying no `refresh_token`, meaning "keep the
+   * one you have"; nothing here carries one forward today — [tokenSetFrom] takes the reply's — and
+   * anything that starts to must release the mark on success, or the next refresh would be refused.
+   *
+   * Replaced wholesale rather than mutated in place, so a reader on another thread sees either the
+   * old list or the new one and never a half-updated one. [markRefreshTokenSpent] and
+   * [releaseRefreshToken] both run under [refreshMutex], which is what makes their
+   * read-modify-writes safe against each other. [forgetSpentRefreshTokens] does not need that:
+   * losing a concurrent append to a sign-out's clear is harmless, because the sign-out has just
+   * emptied the store the appended token came from.
+   */
+  @Volatile private var spentRefreshTokens: List<String> = emptyList()
+
+  /**
    * The authorization *this* process started and has not yet resolved.
    *
    * A cache of what is on disk, never the authority. [handleCallback] prefers it and falls back to
@@ -620,6 +653,9 @@ class TraciveOAuth(
     // comes back holding a token finds the generation moved and abandons it rather than writing it
     // to a store this method is about to empty. See [credentialGeneration].
     credentialGeneration += 1
+    // The spent history describes the grant being thrown away, and nothing about the next one. A
+    // fresh authorization starts from a clean slate.
+    forgetSpentRefreshTokens()
     if (tokens != null) {
       // Revoking the refresh token is what actually ends the grant (RFC 7009 §2.1): the server
       // invalidates it and every access token issued under it. Revoking an access token alone would
@@ -696,10 +732,18 @@ class TraciveOAuth(
    * lock and, on getting it, sees that the stored access token is no longer the one they failed
    * with and returns it without a second network call.
    *
+   * That covers concurrent callers and nothing else. The second guard, [spentRefreshTokens], covers
+   * the sequential case the lock cannot see: a refresh that got no answer at all leaves the store
+   * holding a token that may already have been spent, and the next 401 minutes later would read it
+   * back and send it. See the comment on the request below for what is released and what is not.
+   *
    * @param staleAccessToken the token whose 401 triggered this, so a caller that lost the race can
    *   recognise that someone else already fixed it.
    * @throws TraciveException.GrantRevoked when the server rejects the refresh token. The stored
    *   grant is cleared first: it is worthless, and sending it again looks like a replay.
+   * @throws TraciveException.InvalidToken when the stored refresh token has already gone out and
+   *   the SDK never learned what became of it. Terminal on purpose — the user authorizes again
+   *   rather than the SDK risking the grant on a second presentation.
    */
   internal suspend fun refreshedToken(staleAccessToken: String?): String {
     val store = tokenStoreProvider.value
@@ -715,23 +759,76 @@ class TraciveOAuth(
             "The access token was rejected and no refresh token is stored. Authorize again."
           )
 
+      if (refreshToken in spentRefreshTokens) {
+        // This exact token has already been handed to the server by an attempt that never learned
+        // what the server did with it. Presenting it a second time is the reuse that costs the
+        // grant, so it is refused here instead of on the wire.
+        throw TraciveException.InvalidToken(
+          "The stored refresh token has already been presented to the Tracive API and no answer " +
+            "came back, so it will not be presented again. Authorize again."
+        )
+      }
+
       // Read before the request goes out, checked again before the reply is stored.
       val generation = credentialGeneration
 
-      val response =
-        post(
-          url = environment.baseUrl + PATH_TOKEN,
-          form =
-            formBody(
-              listOf(
-                PARAM_GRANT_TYPE to GRANT_REFRESH_TOKEN,
-                PARAM_REFRESH_TOKEN to refreshToken,
-                AuthorizeUrlBuilder.PARAM_CLIENT_ID to mode.clientId,
-              )
-            ),
-        )
+      // Marked before the request leaves rather than after it returns, because a refresh that gets
+      // no answer is precisely the case that has to be remembered, and by then there is nothing
+      // left to remember it from.
+      //
+      // Whether the mark may come off again depends entirely on what kind of failure follows, and
+      // there are only two kinds worth telling apart.
+      //
+      // A complete HTTP reply, whatever its status, settles the question. A token endpoint that
+      // answers with an error has issued no tokens (RFC 6749 §5.2), so the refresh token was not
+      // consumed and the mark is released below — without that, one 500 would end the grant for
+      // good.
+      //
+      // No reply at all does not settle it. A socket timeout or a dropped connection is
+      // indistinguishable from a success whose answer was lost, and in the second case the server
+      // has already rotated the token and is waiting to see the new one. So the mark stays and the
+      // caller is told to authorize again. That is the better trade rather than merely the more
+      // cautious one: if the token really was consumed, the grant needs re-authorization anyway and
+      // this avoids adding a revocation to it; if it was not, the whole cost is one consent the
+      // user did not strictly need. Retrying loses outright in the first case and only draws in the
+      // second.
+      //
+      // A connect-phase or DNS failure would in principle prove the request never arrived, and its
+      // mark could safely be released. It is deliberately not detected: [HttpTransport] is
+      // injectable, so the error is whatever some other library chose to throw, and matching on its
+      // shape would be a guess about the exact ambiguous-versus-safe distinction this rule turns
+      // on. The Flutter SDK declined the same shortcut for the same reason.
+      markRefreshTokenSpent(refreshToken)
 
-      if (!response.isSuccessful) throw revocationAware(response, store)
+      val response =
+        try {
+          post(
+            url = environment.baseUrl + PATH_TOKEN,
+            form =
+              formBody(
+                listOf(
+                  PARAM_GRANT_TYPE to GRANT_REFRESH_TOKEN,
+                  PARAM_REFRESH_TOKEN to refreshToken,
+                  AuthorizeUrlBuilder.PARAM_CLIENT_ID to mode.clientId,
+                )
+              ),
+          )
+        } catch (_: TraciveException) {
+          // The transport's own error is not carried through. It is produced by whichever transport
+          // the host installed, and this SDK does not put text it did not write into an exception
+          // raised from a frame whose neighbouring values are a refresh token. Cancellation is not
+          // caught here and propagates untouched, leaving the mark in place, which is the same safe
+          // side of the same ambiguity.
+          throw TraciveException.InvalidToken(
+            "The refresh request failed before any answer arrived, so whether the refresh token " +
+              "was consumed is unknown. It will not be presented again. Authorize again."
+          )
+        }
+
+      if (!response.isSuccessful) {
+        releaseRefreshToken(refreshToken)
+        throw revocationAware(response, store)
+      }
 
       val refreshed =
         tokenSetFrom(decodeTokenResponse(response), fallbackScopes = current.grantedScopes)
@@ -752,6 +849,7 @@ class TraciveOAuth(
   internal suspend fun clearTokens() {
     // A deliberate discard, on the same terms as signOut: nothing in flight may put it back.
     credentialGeneration += 1
+    forgetSpentRefreshTokens()
     tokenStoreProvider.value.clear()
   }
 
@@ -790,6 +888,29 @@ class TraciveOAuth(
     if (generation != credentialGeneration) {
       throw TraciveException.GrantRevoked("The grant was dropped while $during.")
     }
+  }
+
+  /**
+   * Records [token] as having gone to the server, dropping the oldest entry once the history is
+   * full. Called under [refreshMutex]; see [spentRefreshTokens].
+   */
+  private fun markRefreshTokenSpent(token: String) {
+    val history = spentRefreshTokens
+    if (token in history) return
+    spentRefreshTokens = (history + token).takeLast(SPENT_REFRESH_TOKEN_HISTORY)
+  }
+
+  /**
+   * Takes [token] back out of the history, for the one case that proves it was not consumed: the
+   * server answered. Called under [refreshMutex]; see [spentRefreshTokens].
+   */
+  private fun releaseRefreshToken(token: String) {
+    spentRefreshTokens = spentRefreshTokens.filterNot { it == token }
+  }
+
+  /** Forgets every spent token, because the grant they belong to is being discarded. */
+  private fun forgetSpentRefreshTokens() {
+    spentRefreshTokens = emptyList()
   }
 
   /** Exchanges the authorization code, or hands it back for a confidential client to exchange. */
@@ -982,6 +1103,15 @@ class TraciveOAuth(
      * around it: the sentence is free to change and the token is not.
      */
     const val REASON_BLANK_INSTALL_URL: String = "blank_install_url"
+
+    /**
+     * How many spent refresh tokens [spentRefreshTokens] remembers.
+     *
+     * Comfortably more rotations than a caller can realistically be behind, and an under-estimate
+     * is not a correctness problem: see [spentRefreshTokens] for why the store, not this history,
+     * is what decides which token goes on the wire. The Flutter SDK keeps the same number.
+     */
+    private const val SPENT_REFRESH_TOKEN_HISTORY = 8
 
     private const val PARAM_GRANT_TYPE = "grant_type"
     private const val PARAM_CODE = "code"
