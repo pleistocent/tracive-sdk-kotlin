@@ -411,7 +411,9 @@ class TraciveOAuth(
         )
 
     val state = parameters[AuthorizeUrlBuilder.PARAM_STATE]
-    if (state == null || state != record.state) {
+    // Compared in constant time — see [constantTimeEquals] for what that is worth here, which is
+    // less than it sounds, and why the four Tracive SDKs do it the same way regardless.
+    if (state == null || !constantTimeEquals(state, record.state)) {
       // Refused, and the pending record is deliberately left where it is. Any app on the device can
       // hand this method a URL, so erasing here would give any of them a one-call cancel button for
       // a consent the user is in the middle of: they finish in the Tracive app, come back, and find
