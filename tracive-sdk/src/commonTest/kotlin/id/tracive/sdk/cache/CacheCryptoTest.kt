@@ -1,5 +1,6 @@
 package id.tracive.sdk.cache
 
+import id.tracive.sdk.crypto.Sha256
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith

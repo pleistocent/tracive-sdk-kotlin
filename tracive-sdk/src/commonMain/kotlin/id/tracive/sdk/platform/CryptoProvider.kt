@@ -1,11 +1,14 @@
 package id.tracive.sdk.platform
 
+import id.tracive.sdk.crypto.Sha256
+
 /**
  * The two cryptographic primitives the SDK needs, and nothing else.
  *
  * Only the random source is platform-specific: unpredictability is a property of the operating
  * system's entropy pool and cannot be written in common code, while SHA-256 is a fixed function
- * that must produce identical bytes everywhere (see [Sha256]).
+ * that must produce identical bytes everywhere — so it is one implementation, [Sha256], shared with
+ * the cache rather than repeated here.
  */
 object CryptoProvider {
 
@@ -24,15 +27,6 @@ object CryptoProvider {
 
   /** The SHA-256 digest of [input]. */
   fun sha256(input: ByteArray): ByteArray = Sha256.digest(input)
-
-  /**
-   * The SHA-256 of [input]'s UTF-8 bytes, as lower-case hex.
-   *
-   * This is how a cache key is derived from a `searchQueryIndex`: the folded key contains the
-   * caller's phone number, email or account number in cleartext, and the digest is what makes it
-   * safe to write to disk.
-   */
-  fun sha256Hex(input: String): String = Sha256.digest(input.encodeToByteArray()).toLowerHex()
 }
 
 /**

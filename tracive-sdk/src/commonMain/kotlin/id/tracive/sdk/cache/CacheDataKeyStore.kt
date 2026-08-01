@@ -1,5 +1,7 @@
 package id.tracive.sdk.cache
 
+import id.tracive.sdk.crypto.Sha256
+
 /**
  * The 256-bit key the cache's records are encrypted with, and where it lives.
  *

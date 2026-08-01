@@ -1,15 +1,24 @@
-package id.tracive.sdk.cache
+package id.tracive.sdk.crypto
 
 /**
- * SHA-256 (FIPS 180-4), in common Kotlin.
+ * SHA-256 (FIPS 180-4), in common Kotlin. The SDK's only implementation of it.
  *
- * Why not the platform's digest: this hash produces the *cache key*, and a row written on Android
- * must be findable by the same logic on iOS. Routing it through `MessageDigest` on one side and
- * `CryptoKit` on the other would make one contract into two implementations, which is the shape of
- * bug `query-grammar-vectors.json` exists to prevent one layer up. It also keeps the derivation
- * testable in `commonTest` with no platform seam at all.
+ * Two things depend on this digest, and they used to have an implementation each — which is the
+ * duplication both of those files opened by arguing against. It lives in a package of its own now
+ * because neither caller owns it:
+ * - **The cache key**, `SHA-256(searchQueryIndex)`. A row written on Android must be findable by
+ *   the same logic on iOS, so routing this through `MessageDigest` on one side and `CryptoKit` on
+ *   the other would turn one contract into two implementations — the shape of bug
+ *   `query-grammar-vectors.json` exists to prevent one layer up.
+ * - **The PKCE `S256` challenge**, which the authorization server re-derives and compares. A wrong
+ *   challenge fails authorization with an error that says nothing about hashing.
  *
- * `CacheCryptoTest` pins this against the FIPS 180-4 examples.
+ * Hashing here is not secret-dependent in the sense that matters for timing attacks: the inputs are
+ * a verifier this client generated and an identifier the caller already holds. Correctness is what
+ * matters, and it is pinned twice over — `CacheCryptoTest` against the FIPS 180-4 examples and
+ * `PkceGeneratorTest` against RFC 7636 Appendix B and the NIST vectors. Both now exercise these
+ * bytes, so there is no longer a pair of implementations that could pass their own vectors while
+ * disagreeing with each other.
  */
 internal object Sha256 {
 

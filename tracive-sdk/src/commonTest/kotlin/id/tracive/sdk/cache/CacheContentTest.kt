@@ -1,5 +1,6 @@
 package id.tracive.sdk.cache
 
+import id.tracive.sdk.crypto.Sha256
 import id.tracive.sdk.model.CachePolicy
 import id.tracive.sdk.model.Origin
 import id.tracive.sdk.model.RiskTier

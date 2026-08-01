@@ -1056,7 +1056,6 @@ final object id.tracive.sdk.oauth/PkceGenerator { // id.tracive.sdk.oauth/PkceGe
 final object id.tracive.sdk.platform/CryptoProvider { // id.tracive.sdk.platform/CryptoProvider|null[0]
     final fun randomBytes(kotlin/Int): kotlin/ByteArray // id.tracive.sdk.platform/CryptoProvider.randomBytes|randomBytes(kotlin.Int){}[0]
     final fun sha256(kotlin/ByteArray): kotlin/ByteArray // id.tracive.sdk.platform/CryptoProvider.sha256|sha256(kotlin.ByteArray){}[0]
-    final fun sha256Hex(kotlin/String): kotlin/String // id.tracive.sdk.platform/CryptoProvider.sha256Hex|sha256Hex(kotlin.String){}[0]
 }
 
 final fun id.tracive.sdk.platform/SecureTokenStore(): id.tracive.sdk.oauth/TokenStore // id.tracive.sdk.platform/SecureTokenStore|SecureTokenStore(){}[0]

@@ -939,7 +939,6 @@ public final class id/tracive/sdk/platform/CryptoProvider {
 	public static final field INSTANCE Lid/tracive/sdk/platform/CryptoProvider;
 	public final fun randomBytes (I)[B
 	public final fun sha256 ([B)[B
-	public final fun sha256Hex (Ljava/lang/String;)Ljava/lang/String;
 }
 
 public final class id/tracive/sdk/query/TraciveQuery {
