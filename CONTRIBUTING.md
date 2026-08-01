@@ -152,8 +152,15 @@ strings or commit messages — may name any of the following:
 Say **"the Tracive API"** or **"the server"**. Say **"record key"**. Say **"phase 1" / "phase 2"**.
 
 The single allowed exception is the Android application id `com.pleistocent.tracive`, which the
-app-presence check genuinely needs. No other application id belongs here — a non-production variant
-appears nowhere in shipping code, so naming one only discloses that it exists.
+app-presence check genuinely needs, plus this repository's own GitHub path. No other application id
+belongs here — a non-production variant appears nowhere in shipping code, so naming one only
+discloses that it exists.
+
+The GitHub path is not a loophole, it is the install instruction: a published package names the
+repository it is published from, in its POM metadata and in the changelog's release links, and a
+reader who cannot find the source cannot audit the SDK they are being asked to embed. The rule as
+written forbade what the build file necessarily ships, which makes the rule wrong rather than the
+repository.
 
 There is no automated scan in this repository, which puts it on you and on the reviewer. Read your
 diff the way a stranger would, before it is public and permanent.
