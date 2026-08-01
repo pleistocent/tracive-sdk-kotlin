@@ -95,7 +95,7 @@ class AuthorizeUrlBuilder(
     /** The production authorize origin: the host the shipping Tracive app claims. */
     const val PRODUCTION_AUTHORIZE_URL: String = "https://tracive.id/oauth/authorize"
 
-    /** The sandbox authorize origin, claimed by the `.dev` build of the Tracive app. */
+    /** The sandbox authorize origin, claimed by the Tracive app's sandbox build. */
     const val SANDBOX_AUTHORIZE_URL: String = "https://sandbox.tracive.id/oauth/authorize"
 
     /** Path appended to a custom environment's base URL. */

@@ -14,9 +14,11 @@ import id.tracive.sdk.TraciveAndroid
  * to remember. Without it `getPackageInfo` throws `NameNotFoundException` even when the app is
  * installed, and the SDK would send every user to the install page.
  *
- * @param packageName which build to look for. The default is the production app; the sandbox build
- *   is `com.pleistocent.tracive.dev`, and a host testing against it constructs this directly and
- *   passes the result to `TraciveOAuth`.
+ * @param packageName which build to look for. The default, and the only one the SDK's own manifest
+ *   declares, is the production app. A host that tests against a different build of the Tracive app
+ *   passes that application id here, declares it in its **own** manifest's `<queries>` — package
+ *   visibility is per-app, and this library will not declare it — and hands the result to
+ *   `TraciveOAuth`.
  */
 class AndroidAppPresenceChecker(
   private val context: Context,

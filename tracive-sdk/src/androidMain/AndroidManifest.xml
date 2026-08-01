@@ -11,12 +11,13 @@
     NameNotFoundException for the Tracive app even when it is installed — so the SDK's pre-check
     would report "not installed" for every user and send all of them to the install page.
 
-    Both build variants are declared: the production app and the sandbox `.dev` build a partner
-    tests against.
+    The production application id and nothing else. This file is merged into every partner's app by
+    the manifest merger, so an entry added here is an entry published in someone else's shipped
+    manifest — see CONTRIBUTING.md. A host that needs to probe a different build declares that
+    package in its own manifest and passes the id to AndroidAppPresenceChecker.
   -->
   <queries>
     <package android:name="com.pleistocent.tracive" />
-    <package android:name="com.pleistocent.tracive.dev" />
 
     <!--
       Browsers, so Custom Tabs can resolve one. The authorize page is opened in the system browser
