@@ -23,7 +23,15 @@ import android.net.Uri
  */
 object TraciveAndroid {
 
-  private var applicationContext: Context? = null
+  /**
+   * `@Volatile` because this is written once on the main thread, during `Application.onCreate`, and
+   * read from everywhere else: `Dispatchers.IO` for the Keystore token store, and whatever
+   * dispatcher the host's coroutine happens to be on for the presence check and the launcher.
+   * Without it there is no happens-before edge, so a background thread may observe null in a process
+   * where the SDK is initialised — and [requireContext] would then tell the developer to call
+   * [initialize], which they never needed to call.
+   */
+  @Volatile private var applicationContext: Context? = null
 
   /**
    * Supplies the SDK's application context.
