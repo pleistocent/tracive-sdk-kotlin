@@ -247,6 +247,8 @@ final class id.tracive.sdk.client/KtorTransport : id.tracive.sdk.client/HttpTran
     final object Companion { // id.tracive.sdk.client/KtorTransport.Companion|null[0]
         final const val CONNECT_TIMEOUT_MS // id.tracive.sdk.client/KtorTransport.Companion.CONNECT_TIMEOUT_MS|{}CONNECT_TIMEOUT_MS[0]
             final fun <get-CONNECT_TIMEOUT_MS>(): kotlin/Long // id.tracive.sdk.client/KtorTransport.Companion.CONNECT_TIMEOUT_MS.<get-CONNECT_TIMEOUT_MS>|<get-CONNECT_TIMEOUT_MS>(){}[0]
+        final const val MAX_RESPONSE_BYTES // id.tracive.sdk.client/KtorTransport.Companion.MAX_RESPONSE_BYTES|{}MAX_RESPONSE_BYTES[0]
+            final fun <get-MAX_RESPONSE_BYTES>(): kotlin/Int // id.tracive.sdk.client/KtorTransport.Companion.MAX_RESPONSE_BYTES.<get-MAX_RESPONSE_BYTES>|<get-MAX_RESPONSE_BYTES>(){}[0]
         final const val REQUEST_TIMEOUT_MS // id.tracive.sdk.client/KtorTransport.Companion.REQUEST_TIMEOUT_MS|{}REQUEST_TIMEOUT_MS[0]
             final fun <get-REQUEST_TIMEOUT_MS>(): kotlin/Long // id.tracive.sdk.client/KtorTransport.Companion.REQUEST_TIMEOUT_MS.<get-REQUEST_TIMEOUT_MS>|<get-REQUEST_TIMEOUT_MS>(){}[0]
         final const val SOCKET_TIMEOUT_MS // id.tracive.sdk.client/KtorTransport.Companion.SOCKET_TIMEOUT_MS|{}SOCKET_TIMEOUT_MS[0]

@@ -6,11 +6,15 @@ import io.ktor.client.plugins.HttpTimeout
 import io.ktor.client.request.header
 import io.ktor.client.request.request
 import io.ktor.client.request.setBody
-import io.ktor.client.statement.bodyAsText
+import io.ktor.client.statement.HttpResponse as KtorResponse
+import io.ktor.client.statement.bodyAsChannel
 import io.ktor.http.ContentType
+import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod as KtorHttpMethod
 import io.ktor.http.contentType
+import io.ktor.utils.io.readRemaining
 import kotlinx.coroutines.CancellationException
+import kotlinx.io.readByteArray
 
 /**
  * The default [HttpTransport], on Ktor.
@@ -78,9 +82,11 @@ class KtorTransport(
 
     val body =
       try {
-        response.bodyAsText()
+        readBoundedBody(response)
       } catch (cancellation: CancellationException) {
         throw cancellation
+      } catch (failure: TraciveException) {
+        throw failure
       } catch (failure: Throwable) {
         // The status line arrived but the body did not. Treat it as a transport failure rather than
         // reporting a status with an empty body, which would be indistinguishable from a real
@@ -90,6 +96,33 @@ class KtorTransport(
 
     return HttpResponse(status = response.status.value, body = body, headers = headers)
   }
+
+  /**
+   * The response body, refusing to materialise more than [MAX_RESPONSE_BYTES].
+   *
+   * `bodyAsText()` reads whatever arrives. Every reply this SDK understands is a small JSON
+   * document — the largest is a full-detail `CheckResult` with narrative text — so an unbounded
+   * read buys nothing and costs the ability of a misbehaving or hostile origin to make the SDK
+   * allocate a string of its choosing. That origin is reachable: `TraciveEnvironment.Custom` points
+   * the client anywhere the host names, and phase 2 puts a partner-operated proxy in the path.
+   *
+   * `Content-Length` is checked first when the reply declares one, so an oversized body is refused
+   * before a byte of it is read. It is only a hint, though — a chunked reply has none and a hostile
+   * one can lie — so the read itself is capped as well, and that cap is what actually holds.
+   */
+  private suspend fun readBoundedBody(response: KtorResponse): String {
+    val declared = response.headers[HttpHeaders.ContentLength]?.toLongOrNull()
+    if (declared != null && declared > MAX_RESPONSE_BYTES) throw oversizedBody()
+    // One byte past the limit, so "exactly at the limit" and "over it" are distinguishable.
+    val bytes = response.bodyAsChannel().readRemaining(MAX_RESPONSE_BYTES + 1L).readByteArray()
+    if (bytes.size > MAX_RESPONSE_BYTES) throw oversizedBody()
+    return bytes.decodeToString()
+  }
+
+  private fun oversizedBody(): TraciveException =
+    TraciveException.Network(
+      "The Tracive API returned a response larger than the SDK will read ($MAX_RESPONSE_BYTES bytes)."
+    )
 
   override fun close() {
     if (ownsClient) client.close()
@@ -108,6 +141,15 @@ class KtorTransport(
 
     /** Between two bytes of the response. A stalled socket is the failure this one catches. */
     const val SOCKET_TIMEOUT_MS: Long = 30_000
+
+    /**
+     * Ceiling on a response body, in bytes.
+     *
+     * Comfortably above anything the API can legitimately send — a full-detail `CheckResult` with
+     * narrative text and comments is a few kilobytes — and far below anything that would matter to
+     * a phone. The point is that the number exists at all.
+     */
+    const val MAX_RESPONSE_BYTES: Int = 512 * 1024
   }
 }
 

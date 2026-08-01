@@ -53,6 +53,9 @@ kotlin {
     commonTest.dependencies {
       implementation(libs.kotlin.test)
       implementation(libs.kotlinx.coroutines.test)
+      // A scripted engine, so `KtorTransport` itself can be driven without a socket. Everything
+      // above the transport is tested against `FakeHttpTransport`; this is for the transport.
+      implementation(libs.ktor.client.mock)
     }
 
     androidMain.dependencies {

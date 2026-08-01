@@ -313,6 +313,7 @@ public final class id/tracive/sdk/client/HttpTransport$DefaultImpls {
 public final class id/tracive/sdk/client/KtorTransport : id/tracive/sdk/client/HttpTransport {
 	public static final field CONNECT_TIMEOUT_MS J
 	public static final field Companion Lid/tracive/sdk/client/KtorTransport$Companion;
+	public static final field MAX_RESPONSE_BYTES I
 	public static final field REQUEST_TIMEOUT_MS J
 	public static final field SOCKET_TIMEOUT_MS J
 	public fun <init> ()V
