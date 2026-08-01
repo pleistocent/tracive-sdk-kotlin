@@ -70,6 +70,20 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Changed
 
+- **Breaking: a blank install-link override is now refused at construction instead of being replaced
+  by the default.** `TraciveOAuth(installUrlOverride = …)` and `TraciveClient(installUrl = …)` throw
+  `IllegalArgumentException` for an empty or whitespace-only string, with the reason token
+  `blank_install_url` in the message — the same token every Tracive SDK uses, and now also
+  `TraciveOAuth.REASON_BLANK_INSTALL_URL`. Passing `null`, or leaving the parameter out, is
+  unchanged and still yields the default link, because absence is a real answer and a blank is not.
+  Silent substitution was the most dangerous of the behaviours available here, precisely because the
+  link it produced *worked*: a partner whose configuration pipeline yielded an empty string shipped a
+  release that sent their users to Tracive's own install page rather than theirs, and nothing in
+  their logs or ours ever said so. A constructor throw runs once, in the host app's code, on every
+  run, during development, before any end user is involved. Anyone who was passing a blank on purpose
+  has to pass `null` instead. Non-blank values are now also taken **verbatim** rather than trimmed:
+  the SDK does no URL validation of any kind here, and a wrong-but-non-blank link reaches the user
+  exactly as written, so a value that relied on the old trimming needs trimming at the call site.
 - **Breaking (reason token):** an empty crypto address now reports `empty_address` and an empty
   username platform now reports `empty_platform`, instead of both reporting the generic
   `empty_value`. The behaviour is unchanged — both were already refused, because `CRYPTO_ETH_` and

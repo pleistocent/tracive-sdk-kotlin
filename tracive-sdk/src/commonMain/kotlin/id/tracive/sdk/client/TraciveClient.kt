@@ -90,9 +90,28 @@ class TraciveClient(
   val retryPolicy: RetryPolicy = RetryPolicy.Default,
   appPresenceChecker: AppPresenceChecker? = null,
   authorizeLauncher: AuthorizeLauncher? = null,
+
+  /**
+   * Replaces the page a user without the Tracive app is sent to. Null uses the default.
+   *
+   * Handed to [TraciveOAuth.installUrlOverride] unchanged, and it follows the same rule: null means
+   * "use the default", any non-blank value is used verbatim, and a blank one is rejected rather
+   * than quietly replaced by the default.
+   *
+   * @throws IllegalArgumentException if a blank string is passed. Leaving the parameter alone can
+   *   never raise it.
+   */
   installUrl: String? = null,
   authorizeEndpoint: String? = null,
 ) {
+
+  init {
+    // Checked here as well as in TraciveOAuth, because the flow below is built lazily.
+    // Without this guard a blank would not surface until the host first reached for `oauth`,
+    // and not at all in a run that never authorizes. A caller who leaves `installUrl` alone
+    // passes null and is unaffected.
+    TraciveOAuth.requireUsableInstallUrl(installUrl)
+  }
 
   private val clock: Clock = clock ?: Clock.System
 

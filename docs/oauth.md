@@ -57,6 +57,31 @@ and the link goes through a third-party link service, so anything on it is hande
 servers. You can replace the whole link (`installUrl` on `TraciveClient`, `installUrlOverride` on
 `TraciveOAuth`); hold to the same rule if you do.
 
+#### Replacing the link: blank is refused, not substituted
+
+```kotlin
+TraciveClient(mode = …)                                  // default link
+TraciveClient(mode = …, installUrl = null)               // default link — absence is a real answer
+TraciveClient(mode = …, installUrl = "https://…/get")    // used verbatim
+TraciveClient(mode = …, installUrl = "")                 // IllegalArgumentException
+TraciveClient(mode = …, installUrl = "   ")              // IllegalArgumentException
+```
+
+A **blank** override — empty, or nothing but whitespace — is rejected as the object is built, and the
+failure message carries the token `blank_install_url`. That token is identical in every Tracive SDK,
+so match on it rather than on the wording around it.
+
+Anything non-blank is used **verbatim**: not trimmed, not repaired, not checked for being a URL. This
+is deliberately not URL validation — a wrong-but-non-blank link reaches your users exactly as you
+wrote it, because vetting your own link is not the SDK's job.
+
+The one value it does refuse is the one that carries no intent at all, and refusing it is the whole
+point. Falling back to the Tracive default on a blank is the most dangerous of the available
+behaviours, because the resulting link *works*: if your build pipeline ever yields an empty string,
+you ship a release that silently sends your users to Tracive's install page instead of yours, and
+nothing in your logs or ours reports it. A constructor throw runs once, in your own code, on every
+run, in development — long before an end user is involved.
+
 There is **no deferred resume.** Nothing is held; the user installs Tracive and retries in your app.
 Handle it by showing "install Tracive, then try again" — the SDK has already opened the store page.
 

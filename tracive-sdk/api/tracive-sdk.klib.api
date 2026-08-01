@@ -727,6 +727,8 @@ final class id.tracive.sdk.oauth/TraciveOAuth { // id.tracive.sdk.oauth/TraciveO
             final fun <get-PATH_REVOKE>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.PATH_REVOKE.<get-PATH_REVOKE>|<get-PATH_REVOKE>(){}[0]
         final const val PATH_TOKEN // id.tracive.sdk.oauth/TraciveOAuth.Companion.PATH_TOKEN|{}PATH_TOKEN[0]
             final fun <get-PATH_TOKEN>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.PATH_TOKEN.<get-PATH_TOKEN>|<get-PATH_TOKEN>(){}[0]
+        final const val REASON_BLANK_INSTALL_URL // id.tracive.sdk.oauth/TraciveOAuth.Companion.REASON_BLANK_INSTALL_URL|{}REASON_BLANK_INSTALL_URL[0]
+            final fun <get-REASON_BLANK_INSTALL_URL>(): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.REASON_BLANK_INSTALL_URL.<get-REASON_BLANK_INSTALL_URL>|<get-REASON_BLANK_INSTALL_URL>(){}[0]
 
         final fun defaultInstallUrl(kotlin/String): kotlin/String // id.tracive.sdk.oauth/TraciveOAuth.Companion.defaultInstallUrl|defaultInstallUrl(kotlin.String){}[0]
     }

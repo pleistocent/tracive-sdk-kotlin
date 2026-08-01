@@ -90,6 +90,79 @@ class TraciveOAuthTest {
     }
   }
 
+  // ------------------------------------------------------ the install override ----
+
+  /**
+   * A blank override is a configuration mistake, and it has to be refused where it is loudest.
+   *
+   * Silently substituting the default was the worst of the available behaviours, because the link
+   * it produced *worked*: a partner whose config pipeline yielded an empty string shipped a build
+   * that sent their users to Tracive's own install page, and nothing in anyone's logs said so. A
+   * constructor throw runs once, in the host app's own code, on every run, long before an end user
+   * is involved.
+   *
+   * The reason token is spelled out here rather than read from a constant. It is a contract shared
+   * with the other Tracive SDKs, so renaming the constant has to fail this test instead of quietly
+   * redefining the token.
+   */
+  @Test
+  fun aBlankInstallUrlOverrideIsRefusedAtConstruction() {
+    for (blank in listOf("", " ", "   ", "\t", "\n", " \t\n ")) {
+      val failure =
+        assertFailsWith<IllegalArgumentException>("a blank override was accepted: <$blank>") {
+          oauthUnderTest(installUrlOverride = blank)
+        }
+      assertTrue(
+        failure.message.orEmpty().contains("blank_install_url"),
+        "the reason token is a cross-SDK contract: ${failure.message}",
+      )
+    }
+  }
+
+  /** Absence is a real answer, and it keeps its old meaning: use the default link. */
+  @Test
+  fun anAbsentInstallUrlOverrideStillGetsTheDefault() {
+    val oauth = oauthUnderTest(installUrlOverride = null)
+
+    assertEquals(TraciveOAuth.defaultInstallUrl("cli_test"), oauth.installUrl)
+    assertTrue(
+      oauth.installUrl.startsWith("https://tracive.chottu.link/install?"),
+      oauth.installUrl,
+    )
+  }
+
+  /**
+   * Anything non-blank is passed through untouched — no trimming, no repair, no vetting.
+   *
+   * These three values are all things the SDK could plausibly have "fixed", and it deliberately
+   * fixes none of them: the surrounding spaces stay, the private-use scheme stays, and the third is
+   * the schemeless query fragment a blank override produced in a sibling SDK when the blank was let
+   * through instead of refused. Vetting a partner's link is not this SDK's job; the only thing it
+   * refuses is the one value that carries no intent at all.
+   */
+  @Test
+  fun aNonBlankInstallUrlOverrideSurvivesVerbatim() = runSdkTest {
+    for (odd in
+      listOf(
+        "  https://partner.example/get-the-app  ",
+        "partner-app://install",
+        "?ref=cli_test&utm_source=tracive-sdk-kotlin",
+      )) {
+      val launcher = RecordingAuthorizeLauncher()
+      val oauth =
+        oauthUnderTest(
+          transport = FakeHttpTransport { fail("nothing may be sent before the app is installed") },
+          launcher = launcher,
+          installed = false,
+          installUrlOverride = odd,
+        )
+
+      assertEquals(odd, oauth.installUrl, "the override was rewritten")
+      assertEquals(AuthResult.AppNotInstalled, oauth.authorize())
+      assertEquals(odd, launcher.installUrls.single(), "the launcher was handed a rewritten link")
+    }
+  }
+
   // --------------------------------------------------------- the authorize URL ----
 
   @Test
@@ -493,11 +566,12 @@ class TraciveOAuthTest {
   // ---------------------------------------------------------------- internals ----
 
   private fun oauthUnderTest(
-    transport: FakeHttpTransport,
-    launcher: RecordingAuthorizeLauncher,
+    transport: FakeHttpTransport = FakeHttpTransport { fail("no request expected") },
+    launcher: RecordingAuthorizeLauncher = RecordingAuthorizeLauncher(),
     tokenStore: TokenStore = InMemoryTokenStore(),
     installed: Boolean = true,
     clientType: ClientType = ClientType.PUBLIC,
+    installUrlOverride: String? = null,
   ): TraciveOAuth =
     TraciveOAuth(
       mode = testOAuthMode(redirectUri = REDIRECT_URI, clientType = clientType),
@@ -507,6 +581,7 @@ class TraciveOAuthTest {
       appPresenceChecker = FakeAppPresenceChecker(installed = installed),
       authorizeLauncher = launcher,
       clock = FixedClock(),
+      installUrlOverride = installUrlOverride,
     )
 
   private fun stateOf(authorizeUrl: String): String =

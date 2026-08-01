@@ -881,6 +881,7 @@ public final class id/tracive/sdk/oauth/TraciveOAuth {
 	public static final field INSTALL_UTM_SOURCE_PARAM Ljava/lang/String;
 	public static final field PATH_REVOKE Ljava/lang/String;
 	public static final field PATH_TOKEN Ljava/lang/String;
+	public static final field REASON_BLANK_INSTALL_URL Ljava/lang/String;
 	public fun <init> (Lid/tracive/sdk/model/TraciveMode$OAuth;Lid/tracive/sdk/model/TraciveEnvironment;Lid/tracive/sdk/client/HttpTransport;Lid/tracive/sdk/oauth/TokenStore;Lid/tracive/sdk/platform/AppPresenceChecker;Lid/tracive/sdk/platform/AuthorizeLauncher;Lkotlinx/datetime/Clock;Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Lid/tracive/sdk/model/TraciveMode$OAuth;Lid/tracive/sdk/model/TraciveEnvironment;Lid/tracive/sdk/client/HttpTransport;Lid/tracive/sdk/oauth/TokenStore;Lid/tracive/sdk/platform/AppPresenceChecker;Lid/tracive/sdk/platform/AuthorizeLauncher;Lkotlinx/datetime/Clock;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun adoptTokens (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;

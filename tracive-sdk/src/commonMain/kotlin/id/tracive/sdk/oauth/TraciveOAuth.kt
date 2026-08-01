@@ -102,10 +102,23 @@ class TraciveOAuth(
   private val clock: Clock = Clock.System,
 
   /**
-   * Where a user without the Tracive app is sent.
+   * Where a user without the Tracive app is sent. Null uses the default.
    *
    * Must carry **no OAuth parameters** — see [INSTALL_URL]. Non-sensitive tags naming the client
    * and the SDK are fine, and are what the default adds.
+   *
+   * Null and blank are different answers, and this constructor treats them differently. Null means
+   * "I am not replacing the link", so the default is used. A **blank** string — empty, or nothing
+   * but whitespace — is a configuration mistake, and it is rejected here with
+   * [REASON_BLANK_INSTALL_URL] in the message rather than quietly falling back to the default. See
+   * [installUrl] for why silently substituting is the worst of the available answers.
+   *
+   * Any other value is used **verbatim**: not trimmed, not repaired, not checked for being a URL at
+   * all. A wrong-but-non-blank link reaches the user exactly as written, because vetting a
+   * partner's own link is not this SDK's job.
+   *
+   * @throws IllegalArgumentException if a blank string is passed. The token is the same in every
+   *   Tracive SDK, so a cross-platform integration can match on one string.
    */
   installUrlOverride: String? = null,
 
@@ -148,9 +161,25 @@ class TraciveOAuth(
   /** Hands out the ids in [PendingAuthorization]. Only ever touched under [authorize]. */
   private var authorizationCounter: Long = 0L
 
-  /** The install page for a device without the Tracive app. Never carries OAuth parameters. */
-  val installUrl: String =
-    installUrlOverride?.trim()?.takeIf { it.isNotEmpty() } ?: defaultInstallUrl(mode.clientId)
+  init {
+    // Refused here, at construction, because this is the loudest point available: it runs once, in
+    // the host app's own code, on every run, during development, before any end user is involved.
+    requireUsableInstallUrl(installUrlOverride)
+  }
+
+  /**
+   * The install page for a device without the Tracive app. Never carries OAuth parameters.
+   *
+   * Either [installUrlOverride] exactly as it was given, or [defaultInstallUrl] when none was.
+   *
+   * A blank override never reaches this property; it is refused by the constructor. The rejected
+   * alternative was to fall back to the default, and that is the most dangerous of the behaviours
+   * available, because the link it produces *works*. A partner whose configuration pipeline yields
+   * an empty string ships a build that silently sends their users to Tracive's own install page,
+   * and nothing in their logs or ours ever says so. Failing loudly costs one build; failing quietly
+   * costs a release nobody knows is wrong.
+   */
+  val installUrl: String = installUrlOverride ?: defaultInstallUrl(mode.clientId)
 
   /**
    * The authorize endpoint in use, with no query string. Useful when verifying an App Link setup.
@@ -691,6 +720,15 @@ class TraciveOAuth(
     /** This SDK's value for [INSTALL_UTM_SOURCE_PARAM]. One per Tracive SDK. */
     const val INSTALL_UTM_SOURCE: String = "tracive-sdk-kotlin"
 
+    /**
+     * Why a blank install-link override is refused, as a stable token in the failure message.
+     *
+     * Every Tracive SDK rejects a blank override with this exact string, so an integration spanning
+     * more than one of them can match on a single value. Branch on the token, never on the wording
+     * around it: the sentence is free to change and the token is not.
+     */
+    const val REASON_BLANK_INSTALL_URL: String = "blank_install_url"
+
     private const val PARAM_GRANT_TYPE = "grant_type"
     private const val PARAM_CODE = "code"
     private const val PARAM_CODE_VERIFIER = "code_verifier"
@@ -726,6 +764,20 @@ class TraciveOAuth(
         parameters.joinToString("&") { (name, value) ->
           name + "=" + AuthorizeUrlBuilder.percentEncode(value)
         }
+    }
+
+    /**
+     * Applies the blank rule to an install-link override, wherever one is accepted.
+     *
+     * Shared so that [TraciveOAuth] and [id.tracive.sdk.client.TraciveClient] refuse the same
+     * values with the same message. Null passes: absence means "use the default", which is a real
+     * answer. A blank string does not, and never falls back to the default — see [installUrl].
+     */
+    internal fun requireUsableInstallUrl(installUrlOverride: String?) {
+      require(installUrlOverride == null || installUrlOverride.isNotBlank()) {
+        "The Tracive install link was set to a blank string ($REASON_BLANK_INSTALL_URL). Pass null " +
+          "to use the default link, or a non-blank one to replace it."
+      }
     }
 
     /** `a=1&b=2`, percent-encoded — the body shape RFC 6749 §4.1.3 requires. */

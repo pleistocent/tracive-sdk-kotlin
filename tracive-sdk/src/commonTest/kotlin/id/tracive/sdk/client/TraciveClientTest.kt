@@ -13,6 +13,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
@@ -334,5 +335,43 @@ class TraciveClientTest {
     client.close()
 
     assertFalse(transport.closed, "the SDK closed an HTTP client the host owns")
+  }
+
+  // ---------------------------------------------------------- the install link ----
+
+  /**
+   * The client passes the caller's own `installUrl` straight through and never invents one, so the
+   * blank rule must not touch anyone who left the parameter alone. Every other test in this file
+   * omits it; this one says so on purpose, because a regression here would break construction for
+   * every integration at once.
+   */
+  @Test
+  fun aClientThatNamesNoInstallUrlStillBuildsAndGetsTheDefault() {
+    val client = testClient(FakeHttpTransport.always(jsonResponse(checkResultJson())))
+
+    assertEquals(
+      "https://tracive.chottu.link/install?ref=cli_test&utm_source=tracive-sdk-kotlin",
+      assertNotNull(client.oauth).installUrl,
+    )
+  }
+
+  /**
+   * A blank one is refused as the client is built, not later when something first touches `oauth`.
+   * The flow itself is created lazily, so without this guard the mistake would surface at whatever
+   * moment the host happened to reach for the OAuth object — much further from the line that made
+   * it, and skippable in any run that never authorizes.
+   */
+  @Test
+  fun aBlankInstallUrlIsRefusedWhenTheClientIsBuilt() {
+    val failure =
+      assertFailsWith<IllegalArgumentException> {
+        TraciveClient(
+          mode = testOAuthMode(),
+          environment = TraciveEnvironment.Custom(TEST_BASE_URL),
+          transport = FakeHttpTransport.always(jsonResponse(checkResultJson())),
+          installUrl = "   ",
+        )
+      }
+    assertTrue(failure.message.orEmpty().contains("blank_install_url"), failure.message)
   }
 }
