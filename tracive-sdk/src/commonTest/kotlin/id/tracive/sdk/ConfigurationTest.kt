@@ -170,9 +170,10 @@ class ConfigurationTest {
     assertEquals(0.seconds, policy.effectiveTtl(RiskTier.HIGH, 0L))
     // Absent means "use the default".
     assertEquals(30.days, policy.effectiveTtl(RiskTier.HIGH, null))
-    // A negative value is malformed. Falling back beats treating it as already-expired, which would
-    // silently disable caching for everyone the moment a server bug shipped.
-    assertEquals(30.days, policy.effectiveTtl(RiskTier.HIGH, -1L))
+    // A negative value clamps to zero rather than falling back, so it retracts the answer instead
+    // of extending it. See `effectiveTtl` and `CacheTtlTest` for which way round that has to be.
+    assertEquals(0.seconds, policy.effectiveTtl(RiskTier.HIGH, -1L))
+    assertEquals(0.seconds, policy.effectiveTtl(RiskTier.HIGH, Long.MIN_VALUE))
   }
 
   @Test

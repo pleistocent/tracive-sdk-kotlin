@@ -112,15 +112,21 @@ class CacheTtlTest {
   }
 
   @Test
-  fun aNegativeTtlIsTreatedAsMalformedAndTheTierDefaultApplies() = runTest {
-    // A negative value is a bug on the wire, not an instruction. Reading it as "expired already"
-    // would silently disable caching for whatever the bug affects — and the only symptom would be
-    // the bill.
-    assertLifetime(
-      30.days,
-      RiskTier.HIGH,
-      result = serverResult(riskTier = RiskTier.HIGH, cacheTtlSeconds = -1),
-    )
+  fun aNegativeTtlRetractsTheEntryExactlyAsZeroDoes() = runTest {
+    // A negative TTL is either "expired already" or a bug, and both are answered by not trusting
+    // the entry. The reading this replaces — malformed, so use the tier default — is the only one
+    // that cannot be right: it keeps serving a HIGH verdict for another thirty days on the
+    // strength of a response the SDK has just decided it does not understand.
+    val clock = TestClock.atStart()
+    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy.Default, clock)
+
+    cache.put(query, serverResult(riskTier = RiskTier.HIGH))
+    assertNotNull(cache.get(query))
+
+    cache.put(query, serverResult(riskTier = RiskTier.HIGH, cacheTtlSeconds = -1))
+
+    assertNull(cache.get(query), "A negative TTL must not leave the old answer being served.")
+    assertEquals(0, cache.size(), "A negative TTL must delete the row, not merely skip the write.")
   }
 
   @Test

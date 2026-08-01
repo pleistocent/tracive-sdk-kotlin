@@ -55,13 +55,22 @@ data class CachePolicy(
    * The lifetime to actually store an entry with: the server's [cacheTtlSeconds] when it sent one
    * and [honorServerTtlOverride] is on, otherwise the tier default.
    *
-   * A server TTL of zero means "do not cache this" and yields [Duration.ZERO]. A negative value is
-   * ignored as malformed rather than being treated as "already expired", so a bad response degrades
-   * to the tier default instead of disabling caching.
+   * A server TTL of zero means "do not keep this answer" and yields [Duration.ZERO], which makes
+   * the store delete any row that is already there — the retraction lever, and the only way the
+   * server can take back an answer it has already put on a device.
+   *
+   * **A negative value is clamped to zero, so it retracts too.** It used to be read as malformed
+   * and fall through to the tier default, which is the one reading that cannot be right: the two
+   * plausible intentions behind a negative number are "expired already" and "a bug", and the answer
+   * that serves both is to stop trusting the entry. Falling back to the tier default does the
+   * opposite — it keeps serving a `HIGH` verdict for thirty more days on the strength of a response
+   * the SDK has just decided it does not understand. Clamping matches the Swift and React Native
+   * SDKs, and it fails in the direction that costs a credit rather than the direction that shows a
+   * stale fraud verdict.
    */
   fun effectiveTtl(riskTier: RiskTier, cacheTtlSeconds: Long?): Duration =
-    if (honorServerTtlOverride && cacheTtlSeconds != null && cacheTtlSeconds >= 0L) {
-      cacheTtlSeconds.seconds
+    if (honorServerTtlOverride && cacheTtlSeconds != null) {
+      cacheTtlSeconds.coerceAtLeast(0L).seconds
     } else {
       ttlFor(riskTier)
     }
