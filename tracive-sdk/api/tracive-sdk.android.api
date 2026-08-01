@@ -895,7 +895,7 @@ public final class id/tracive/sdk/oauth/TraciveOAuth$Companion {
 public final class id/tracive/sdk/platform/AndroidAppPresenceChecker : id/tracive/sdk/platform/AppPresenceChecker {
 	public fun <init> (Landroid/content/Context;Ljava/lang/String;)V
 	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public fun isTraciveAppInstalled ()Z
+	public fun isTraciveAppInstalled (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -905,8 +905,8 @@ public final class id/tracive/sdk/platform/AndroidAppPresenceCheckerKt {
 
 public final class id/tracive/sdk/platform/AndroidAuthorizeLauncher : id/tracive/sdk/platform/AuthorizeLauncher {
 	public fun <init> (Landroid/content/Context;)V
-	public fun launchAuthorize (Ljava/lang/String;)V
-	public fun launchInstall (Ljava/lang/String;)V
+	public fun launchAuthorize (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun launchInstall (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public fun toString ()Ljava/lang/String;
 }
 
@@ -922,7 +922,7 @@ public abstract interface class id/tracive/sdk/platform/AppPresenceChecker {
 	public static final field ANDROID_PACKAGE Ljava/lang/String;
 	public static final field Companion Lid/tracive/sdk/platform/AppPresenceChecker$Companion;
 	public static final field IOS_URL_SCHEME Ljava/lang/String;
-	public abstract fun isTraciveAppInstalled ()Z
+	public abstract fun isTraciveAppInstalled (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class id/tracive/sdk/platform/AppPresenceChecker$Companion {
@@ -931,8 +931,8 @@ public final class id/tracive/sdk/platform/AppPresenceChecker$Companion {
 }
 
 public abstract interface class id/tracive/sdk/platform/AuthorizeLauncher {
-	public abstract fun launchAuthorize (Ljava/lang/String;)V
-	public abstract fun launchInstall (Ljava/lang/String;)V
+	public abstract fun launchAuthorize (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun launchInstall (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class id/tracive/sdk/platform/CryptoProvider {

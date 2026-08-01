@@ -185,14 +185,14 @@ Clear the cache too — those entries belong to the user who was authorised when
 
 ```kotlin
 class FakePresence(private val installed: Boolean) : AppPresenceChecker {
-  override fun isTraciveAppInstalled() = installed
+  override suspend fun isTraciveAppInstalled() = installed
 }
 
 class RecordingLauncher : AuthorizeLauncher {
   var authorizeUrl: String? = null
   var installUrl: String? = null
-  override fun launchAuthorize(url: String) { authorizeUrl = url }
-  override fun launchInstall(url: String) { installUrl = url }
+  override suspend fun launchAuthorize(url: String) { authorizeUrl = url }
+  override suspend fun launchInstall(url: String) { installUrl = url }
 }
 
 val oauth = TraciveOAuth(

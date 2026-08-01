@@ -123,7 +123,7 @@ abstract interface id.tracive.sdk.oauth/TokenStore { // id.tracive.sdk.oauth/Tok
 }
 
 abstract interface id.tracive.sdk.platform/AppPresenceChecker { // id.tracive.sdk.platform/AppPresenceChecker|null[0]
-    abstract fun isTraciveAppInstalled(): kotlin/Boolean // id.tracive.sdk.platform/AppPresenceChecker.isTraciveAppInstalled|isTraciveAppInstalled(){}[0]
+    abstract suspend fun isTraciveAppInstalled(): kotlin/Boolean // id.tracive.sdk.platform/AppPresenceChecker.isTraciveAppInstalled|isTraciveAppInstalled(){}[0]
 
     final object Companion { // id.tracive.sdk.platform/AppPresenceChecker.Companion|null[0]
         final const val ANDROID_PACKAGE // id.tracive.sdk.platform/AppPresenceChecker.Companion.ANDROID_PACKAGE|{}ANDROID_PACKAGE[0]
@@ -134,8 +134,8 @@ abstract interface id.tracive.sdk.platform/AppPresenceChecker { // id.tracive.sd
 }
 
 abstract interface id.tracive.sdk.platform/AuthorizeLauncher { // id.tracive.sdk.platform/AuthorizeLauncher|null[0]
-    abstract fun launchAuthorize(kotlin/String) // id.tracive.sdk.platform/AuthorizeLauncher.launchAuthorize|launchAuthorize(kotlin.String){}[0]
-    abstract fun launchInstall(kotlin/String) // id.tracive.sdk.platform/AuthorizeLauncher.launchInstall|launchInstall(kotlin.String){}[0]
+    abstract suspend fun launchAuthorize(kotlin/String) // id.tracive.sdk.platform/AuthorizeLauncher.launchAuthorize|launchAuthorize(kotlin.String){}[0]
+    abstract suspend fun launchInstall(kotlin/String) // id.tracive.sdk.platform/AuthorizeLauncher.launchInstall|launchInstall(kotlin.String){}[0]
 }
 
 final class id.tracive.sdk.cache/AesGcmCacheCipher : id.tracive.sdk.cache/CacheCipher { // id.tracive.sdk.cache/AesGcmCacheCipher|null[0]
@@ -726,16 +726,16 @@ final class id.tracive.sdk.oauth/TraciveOAuth { // id.tracive.sdk.oauth/TraciveO
 final class id.tracive.sdk.platform/IosAppPresenceChecker : id.tracive.sdk.platform/AppPresenceChecker { // id.tracive.sdk.platform/IosAppPresenceChecker|null[0]
     constructor <init>(kotlin/String = ...) // id.tracive.sdk.platform/IosAppPresenceChecker.<init>|<init>(kotlin.String){}[0]
 
-    final fun isTraciveAppInstalled(): kotlin/Boolean // id.tracive.sdk.platform/IosAppPresenceChecker.isTraciveAppInstalled|isTraciveAppInstalled(){}[0]
     final fun toString(): kotlin/String // id.tracive.sdk.platform/IosAppPresenceChecker.toString|toString(){}[0]
+    final suspend fun isTraciveAppInstalled(): kotlin/Boolean // id.tracive.sdk.platform/IosAppPresenceChecker.isTraciveAppInstalled|isTraciveAppInstalled(){}[0]
 }
 
 final class id.tracive.sdk.platform/IosAuthorizeLauncher : id.tracive.sdk.platform/AuthorizeLauncher { // id.tracive.sdk.platform/IosAuthorizeLauncher|null[0]
     constructor <init>() // id.tracive.sdk.platform/IosAuthorizeLauncher.<init>|<init>(){}[0]
 
-    final fun launchAuthorize(kotlin/String) // id.tracive.sdk.platform/IosAuthorizeLauncher.launchAuthorize|launchAuthorize(kotlin.String){}[0]
-    final fun launchInstall(kotlin/String) // id.tracive.sdk.platform/IosAuthorizeLauncher.launchInstall|launchInstall(kotlin.String){}[0]
     final fun toString(): kotlin/String // id.tracive.sdk.platform/IosAuthorizeLauncher.toString|toString(){}[0]
+    final suspend fun launchAuthorize(kotlin/String) // id.tracive.sdk.platform/IosAuthorizeLauncher.launchAuthorize|launchAuthorize(kotlin.String){}[0]
+    final suspend fun launchInstall(kotlin/String) // id.tracive.sdk.platform/IosAuthorizeLauncher.launchInstall|launchInstall(kotlin.String){}[0]
 }
 
 final class id.tracive.sdk.query/TraciveQuery { // id.tracive.sdk.query/TraciveQuery|null[0]

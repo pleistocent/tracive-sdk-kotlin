@@ -124,7 +124,7 @@ internal class FakeAppPresenceChecker(private val installed: Boolean) : AppPrese
   var checks: Int = 0
     private set
 
-  override fun isTraciveAppInstalled(): Boolean {
+  override suspend fun isTraciveAppInstalled(): Boolean {
     checks += 1
     return installed
   }
@@ -137,12 +137,12 @@ internal class RecordingAuthorizeLauncher(private val onAuthorize: ((String) -> 
   val authorizeUrls: MutableList<String> = mutableListOf()
   val installUrls: MutableList<String> = mutableListOf()
 
-  override fun launchAuthorize(url: String) {
+  override suspend fun launchAuthorize(url: String) {
     authorizeUrls += url
     onAuthorize?.invoke(url)
   }
 
-  override fun launchInstall(url: String) {
+  override suspend fun launchInstall(url: String) {
     installUrls += url
   }
 }

@@ -32,7 +32,7 @@ class AndroidAppPresenceChecker(
    * whole flow exists to avoid.
    */
   @Suppress("DEPRECATION")
-  override fun isTraciveAppInstalled(): Boolean =
+  override suspend fun isTraciveAppInstalled(): Boolean =
     try {
       // The PackageInfoFlags overload arrived in API 33; this one works on every supported level
       // and behaves identically for a zero flag set.

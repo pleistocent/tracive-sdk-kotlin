@@ -28,11 +28,11 @@ import id.tracive.sdk.TraciveAndroid
  */
 class AndroidAuthorizeLauncher(private val context: Context) : AuthorizeLauncher {
 
-  override fun launchAuthorize(url: String) {
+  override suspend fun launchAuthorize(url: String) {
     open(url)
   }
 
-  override fun launchInstall(url: String) {
+  override suspend fun launchInstall(url: String) {
     open(url)
   }
 

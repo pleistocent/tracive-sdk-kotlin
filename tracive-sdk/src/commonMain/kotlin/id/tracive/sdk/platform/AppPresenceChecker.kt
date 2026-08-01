@@ -21,8 +21,16 @@ package id.tracive.sdk.platform
  */
 interface AppPresenceChecker {
 
-  /** Whether the Tracive app is installed and visible to this app. */
-  fun isTraciveAppInstalled(): Boolean
+  /**
+   * Whether the Tracive app is installed and visible to this app.
+   *
+   * `suspend` because of iOS: `UIApplication.canOpenURL` is main-thread-only, and the dispatcher
+   * `authorize()` runs on is the host's choice — a ViewModel scope reached through a KMP bridge is
+   * frequently not main. The iOS implementation therefore hops to the main queue itself, which it
+   * can only do from a suspending function. Android has no such constraint but shares the
+   * signature.
+   */
+  suspend fun isTraciveAppInstalled(): Boolean
 
   companion object {
     /** The Tracive app's Android application id. */

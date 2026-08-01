@@ -15,6 +15,11 @@ package id.tracive.sdk.platform
  *
  * Both methods are fire-and-forget. The result of an authorization arrives later, through
  * `TraciveOAuth.handleCallback`.
+ *
+ * Both are `suspend` because of iOS: `UIApplication.open` is main-thread-only and the dispatcher
+ * the flow runs on belongs to the host, so the iOS implementation hops to the main queue itself.
+ * Doing that with `dispatch_async` instead would detach the call, and a failure to open the browser
+ * would then surface as a crash on the main thread rather than as `AuthResult.Failed`.
  */
 interface AuthorizeLauncher {
 
@@ -24,7 +29,7 @@ interface AuthorizeLauncher {
    * @throws Exception if no browser is available. `TraciveOAuth` turns that into
    *   `AuthResult.Failed` rather than letting it escape as a raw platform exception.
    */
-  fun launchAuthorize(url: String)
+  suspend fun launchAuthorize(url: String)
 
   /**
    * Opens the Tracive install page.
@@ -32,7 +37,7 @@ interface AuthorizeLauncher {
    * The URL carries no OAuth parameters — see `TraciveOAuth.installUrl` for why — so there is
    * nothing sensitive in it and nothing to resume when the user comes back.
    */
-  fun launchInstall(url: String)
+  suspend fun launchInstall(url: String)
 }
 
 /** The platform's own launcher: Custom Tabs on Android, `UIApplication.open` on iOS. */
