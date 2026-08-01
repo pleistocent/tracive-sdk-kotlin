@@ -204,7 +204,17 @@ internal class DefaultCheckCache(
     // uninstalled.
     store.deleteExpired(nowEpochMs())
 
-    return AesGcmCacheCipher(key).also { cipher = it }
+    // `CacheDataKey.bytes` hands out a fresh copy on every read and the cipher copies it again, so
+    // this array is a second live copy of the data key that nothing else will ever touch. Wiping it
+    // is best-effort on a managed runtime — the collector may already have moved it — but leaving a
+    // key on the heap for the life of the process when zeroing it costs one loop is the wrong
+    // default. The copy the cipher keeps is unavoidable: a software cipher has to see its key.
+    val keyBytes = key.bytes
+    return try {
+      AesGcmCacheCipher(keyBytes).also { cipher = it }
+    } finally {
+      keyBytes.wipe()
+    }
   }
 
   private fun decode(plaintext: ByteArray): CheckResult? =
