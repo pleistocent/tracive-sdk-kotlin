@@ -6,6 +6,7 @@ import id.tracive.sdk.model.ClientType
 import id.tracive.sdk.model.RiskTier
 import id.tracive.sdk.model.TraciveEnvironment
 import id.tracive.sdk.model.TraciveMode
+import id.tracive.sdk.model.TraciveScopes
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -52,17 +53,41 @@ class ConfigurationTest {
     assertFailsWith<IllegalArgumentException> { TraciveEnvironment.Custom("ftp://api.tracive.id") }
   }
 
+  /**
+   * The scope names are a wire contract, not a naming preference.
+   *
+   * The authorization server rejects a consent request naming a scope it does not know, so a wrong
+   * constant here is not a narrower grant — it is an integration that cannot authorize at all, and
+   * one that fails identically whichever of the names is wrong. The strings are spelled out rather
+   * than compared to the constants, so that renaming a constant fails here instead of quietly
+   * redefining the contract on the SDK's side.
+   */
+  @Test
+  fun scopeConstantsAreTheExactWireStrings() {
+    assertEquals("scammer.check", TraciveScopes.SCAMMER_CHECK)
+    assertEquals("credits.read", TraciveScopes.CREDITS_READ)
+    assertEquals("profile.read", TraciveScopes.PROFILE_READ)
+
+    // Separator and resource name are both easy to get wrong, and both were wrong here before: the
+    // colon form and a bare `check` are what an earlier revision of this SDK actually requested.
+    for (scope in
+      listOf(TraciveScopes.SCAMMER_CHECK, TraciveScopes.CREDITS_READ, TraciveScopes.PROFILE_READ)) {
+      assertFalse(scope.contains(':'), "scope names are dot-separated: $scope")
+      assertTrue(scope.contains('.'), "scope names are dot-separated: $scope")
+    }
+  }
+
   @Test
   fun oauthModeDefaultsToAPublicClient() {
     val mode =
       TraciveMode.OAuth(
         clientId = "cli_1",
         redirectUri = "https://partner.test/oauth/callback",
-        scopes = listOf("check:read"),
+        scopes = listOf("scammer.check"),
         partnerUserId = null,
       )
     assertEquals(ClientType.PUBLIC, mode.clientType)
-    assertEquals(listOf("check:read"), mode.scopes)
+    assertEquals(listOf("scammer.check"), mode.scopes)
   }
 
   @Test

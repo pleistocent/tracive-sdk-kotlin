@@ -31,7 +31,7 @@ import kotlinx.serialization.DeserializationStrategy
  *   mode = TraciveMode.OAuth(
  *     clientId = "cli_bank_x",
  *     redirectUri = "https://bank.example/tracive/callback",
- *     scopes = listOf("check:read"),
+ *     scopes = listOf(TraciveScopes.SCAMMER_CHECK),
  *     partnerUserId = internalUserId,   // never a phone number or an email
  *   ),
  * )

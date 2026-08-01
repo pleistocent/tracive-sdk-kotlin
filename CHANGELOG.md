@@ -19,6 +19,16 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Fixed
 
+- **The OAuth scope names were wrong and no integration using them could ever have authorized.** The
+  SDK asked for `check:read` and `profile:read`. The authorization server's scopes are
+  dot-separated, and the first one is not called `check` at all: they are `scammer.check`,
+  `credits.read` and `profile.read`. A server rejects a consent request naming a scope it does not
+  recognise, so this was not a narrower grant or a cosmetic inconsistency — every partner following
+  the README would have failed at their first authorization, with nothing locally to debug. The
+  literals are corrected everywhere, including the sample and the docs. New public
+  `TraciveScopes.SCAMMER_CHECK`, `CREDITS_READ` and `PROFILE_READ` hold the exact wire strings, and
+  a test pins them so a rename cannot pass silently. `usage.read` is deliberately absent until the
+  SDK models daily usage aggregates.
 - **A Keychain or Keystore write that fails is no longer reported as a success.** The iOS token
   store discarded every `OSStatus` it received, so a save that did not happen looked exactly like
   one that did. After a refresh rotation that leaves the device holding the *retired* refresh token,

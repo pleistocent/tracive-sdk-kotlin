@@ -76,7 +76,7 @@ val client = TraciveClient(
   mode = TraciveMode.OAuth(
     clientId = "your-client-id",
     redirectUri = "https://yourapp.example.com/oauth/callback",
-    scopes = listOf("check:read", "profile:read"),
+    scopes = listOf("scammer.check", "profile.read"),
     partnerUserId = null,
   ),
   environment = TraciveEnvironment.Sandbox,

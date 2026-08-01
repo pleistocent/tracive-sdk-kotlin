@@ -103,7 +103,7 @@ class TraciveOAuthTest {
     assertEquals("code", parameters["response_type"])
     assertEquals("cli_test", parameters["client_id"])
     assertEquals("https://partner.test/tracive/callback", parameters["redirect_uri"])
-    assertEquals("check:read", parameters["scope"])
+    assertEquals("scammer.check", parameters["scope"])
     assertEquals("S256", parameters["code_challenge_method"], "plain is never acceptable")
     assertTrue(parameters["code_challenge"]!!.isNotBlank())
     assertTrue(parameters["state"]!!.isNotBlank())
@@ -217,7 +217,9 @@ class TraciveOAuthTest {
 
   @Test
   fun aPublicClientExchangesTheCodeAndStoresTheGrant() = runSdkTest {
-    val transport = FakeHttpTransport { jsonResponse(tokenJson(scope = "check:read profile:read")) }
+    val transport = FakeHttpTransport {
+      jsonResponse(tokenJson(scope = "scammer.check profile.read"))
+    }
     val launcher = RecordingAuthorizeLauncher()
     val store = InMemoryTokenStore()
     val oauth = oauthUnderTest(transport, launcher, tokenStore = store)
@@ -227,7 +229,7 @@ class TraciveOAuthTest {
     oauth.handleCallback("$REDIRECT_URI?code=auth-code-1&state=${stateOf(authorizeUrl)}")
 
     val result = assertIs<AuthResult.Authorized>(outcome.await())
-    assertEquals(listOf("check:read", "profile:read"), result.grantedScopes)
+    assertEquals(listOf("scammer.check", "profile.read"), result.grantedScopes)
 
     val exchange = transport.requestsTo("/oauth/token").single()
     assertEquals("application/x-www-form-urlencoded", exchange.contentType)

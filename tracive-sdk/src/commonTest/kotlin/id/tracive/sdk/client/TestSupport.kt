@@ -190,7 +190,7 @@ internal class FakeCheckCache(
 internal fun testOAuthMode(
   clientId: String = "cli_test",
   redirectUri: String = "https://partner.test/tracive/callback",
-  scopes: List<String> = listOf("check:read"),
+  scopes: List<String> = listOf("scammer.check"),
   partnerUserId: String? = "partner-user-1",
   clientType: ClientType = ClientType.PUBLIC,
 ): TraciveMode.OAuth =
@@ -211,7 +211,7 @@ internal fun storedTokens(
     TokenSet(
       accessToken = accessToken,
       refreshToken = refreshToken,
-      grantedScopes = listOf("check:read"),
+      grantedScopes = listOf("scammer.check"),
     )
   )
 
@@ -277,7 +277,7 @@ internal fun tokenJson(
   accessToken: String = "access-2",
   refreshToken: String? = "refresh-2",
   expiresIn: Long? = 3600,
-  scope: String? = "check:read",
+  scope: String? = "scammer.check",
 ): String = buildString {
   append("{\"access_token\":\"").append(accessToken).append("\",\"token_type\":\"Bearer\"")
   if (expiresIn != null) append(",\"expires_in\":").append(expiresIn)

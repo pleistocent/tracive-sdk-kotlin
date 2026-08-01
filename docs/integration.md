@@ -32,7 +32,7 @@ val client = TraciveClient(
   mode = TraciveMode.OAuth(
     clientId = "your-client-id",
     redirectUri = "https://yourapp.example.com/oauth/callback",
-    scopes = listOf("check:read", "profile:read"),
+    scopes = listOf("scammer.check", "profile.read"),
     partnerUserId = yourInternalUserId,   // or null
     clientType = ClientType.PUBLIC,
   ),
@@ -49,7 +49,16 @@ Notes on the arguments that are easy to get wrong:
   mismatch fails at the very end of the OAuth round trip, which is the most annoying possible time to
   find out. The sample keeps it in a `manifestPlaceholder` so the two cannot drift.
 - **`scopes`** — ask for the narrowest set that works. `Detail.FULL` needs a scope most integrations
-  do not have, and requesting it makes your consent screen scarier for no gain.
+  do not have, and requesting it makes your consent screen scarier for no gain. Use the
+  `TraciveScopes` constants rather than typing the strings: the authorization server rejects the
+  whole consent request when it does not recognise a scope, so a typo is not a narrower grant, it is
+  an integration that cannot authorize at all. The names are:
+
+  | Constant                      | Wire value      | Grants                                  |
+  | ----------------------------- | --------------- | --------------------------------------- |
+  | `TraciveScopes.SCAMMER_CHECK` | `scammer.check` | running a scammer check                 |
+  | `TraciveScopes.CREDITS_READ`  | `credits.read`  | reading the user's remaining credits     |
+  | `TraciveScopes.PROFILE_READ`  | `profile.read`  | reading the minimal user profile         |
 - **`partnerUserId`** is *your* identifier for the user, so a grant survives a reinstall. **Never
   pass a raw phone number or email here.** Pass `null` if you have no accounts.
 - **There is no API key parameter.** Not here, not anywhere. See the README for why.

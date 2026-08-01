@@ -787,6 +787,13 @@ public final class id/tracive/sdk/model/TraciveMode$Proxy : id/tracive/sdk/model
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class id/tracive/sdk/model/TraciveScopes {
+	public static final field CREDITS_READ Ljava/lang/String;
+	public static final field INSTANCE Lid/tracive/sdk/model/TraciveScopes;
+	public static final field PROFILE_READ Ljava/lang/String;
+	public static final field SCAMMER_CHECK Ljava/lang/String;
+}
+
 public final class id/tracive/sdk/oauth/AuthorizeUrlBuilder {
 	public static final field AUTHORIZE_PATH Ljava/lang/String;
 	public static final field Companion Lid/tracive/sdk/oauth/AuthorizeUrlBuilder$Companion;

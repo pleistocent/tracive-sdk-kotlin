@@ -1045,6 +1045,15 @@ final object id.tracive.sdk.cache/DisabledCheckCache : id.tracive.sdk.cache/Chec
     final suspend fun size(): kotlin/Int // id.tracive.sdk.cache/DisabledCheckCache.size|size(){}[0]
 }
 
+final object id.tracive.sdk.model/TraciveScopes { // id.tracive.sdk.model/TraciveScopes|null[0]
+    final const val CREDITS_READ // id.tracive.sdk.model/TraciveScopes.CREDITS_READ|{}CREDITS_READ[0]
+        final fun <get-CREDITS_READ>(): kotlin/String // id.tracive.sdk.model/TraciveScopes.CREDITS_READ.<get-CREDITS_READ>|<get-CREDITS_READ>(){}[0]
+    final const val PROFILE_READ // id.tracive.sdk.model/TraciveScopes.PROFILE_READ|{}PROFILE_READ[0]
+        final fun <get-PROFILE_READ>(): kotlin/String // id.tracive.sdk.model/TraciveScopes.PROFILE_READ.<get-PROFILE_READ>|<get-PROFILE_READ>(){}[0]
+    final const val SCAMMER_CHECK // id.tracive.sdk.model/TraciveScopes.SCAMMER_CHECK|{}SCAMMER_CHECK[0]
+        final fun <get-SCAMMER_CHECK>(): kotlin/String // id.tracive.sdk.model/TraciveScopes.SCAMMER_CHECK.<get-SCAMMER_CHECK>|<get-SCAMMER_CHECK>(){}[0]
+}
+
 final object id.tracive.sdk.oauth/PkceGenerator { // id.tracive.sdk.oauth/PkceGenerator|null[0]
     final const val DEFAULT_STATE_BYTES // id.tracive.sdk.oauth/PkceGenerator.DEFAULT_STATE_BYTES|{}DEFAULT_STATE_BYTES[0]
         final fun <get-DEFAULT_STATE_BYTES>(): kotlin/Int // id.tracive.sdk.oauth/PkceGenerator.DEFAULT_STATE_BYTES.<get-DEFAULT_STATE_BYTES>|<get-DEFAULT_STATE_BYTES>(){}[0]

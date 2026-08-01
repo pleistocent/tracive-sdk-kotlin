@@ -9,6 +9,7 @@ import id.tracive.sdk.model.ClientType
 import id.tracive.sdk.model.Source
 import id.tracive.sdk.model.TraciveEnvironment
 import id.tracive.sdk.model.TraciveMode
+import id.tracive.sdk.model.TraciveScopes
 import kotlinx.coroutines.Dispatchers
 
 /**
@@ -82,7 +83,7 @@ object TraciveSample {
         TraciveMode.OAuth(
           clientId = CLIENT_ID,
           redirectUri = REDIRECT_URI,
-          scopes = listOf("check:read", "profile:read"),
+          scopes = listOf("scammer.check", "profile.read"),
           // The partner's own id for this user, so the same person keeps one grant across
           // reinstalls. Null when the partner has no stable id to offer.
           partnerUserId = null,
