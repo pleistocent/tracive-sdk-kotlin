@@ -367,8 +367,11 @@ public final class id/tracive/sdk/client/TraciveClient {
 	public static final field PROXY_MODE_MESSAGE Ljava/lang/String;
 	public fun <init> (Lid/tracive/sdk/model/TraciveMode;Lid/tracive/sdk/model/TraciveEnvironment;Lid/tracive/sdk/model/CachePolicy;Lid/tracive/sdk/model/Source;Lid/tracive/sdk/client/HttpTransport;Lkotlinx/datetime/Clock;Lid/tracive/sdk/cache/CheckCache;Lid/tracive/sdk/oauth/TokenStore;Lid/tracive/sdk/client/RetryPolicy;Lid/tracive/sdk/platform/AppPresenceChecker;Lid/tracive/sdk/platform/AuthorizeLauncher;Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Lid/tracive/sdk/model/TraciveMode;Lid/tracive/sdk/model/TraciveEnvironment;Lid/tracive/sdk/model/CachePolicy;Lid/tracive/sdk/model/Source;Lid/tracive/sdk/client/HttpTransport;Lkotlinx/datetime/Clock;Lid/tracive/sdk/cache/CheckCache;Lid/tracive/sdk/oauth/TokenStore;Lid/tracive/sdk/client/RetryPolicy;Lid/tracive/sdk/platform/AppPresenceChecker;Lid/tracive/sdk/platform/AuthorizeLauncher;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun authorize (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun authorize$default (Lid/tracive/sdk/client/TraciveClient;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun checkScammer (Lid/tracive/sdk/query/TraciveQuery;Lid/tracive/sdk/model/Source;Lid/tracive/sdk/model/Detail;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun checkScammer$default (Lid/tracive/sdk/client/TraciveClient;Lid/tracive/sdk/query/TraciveQuery;Lid/tracive/sdk/model/Source;Lid/tracive/sdk/model/Detail;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun clearCache (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun close ()V
 	public final fun credits (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun getCache ()Lid/tracive/sdk/cache/CheckCache;
@@ -378,6 +381,8 @@ public final class id/tracive/sdk/client/TraciveClient {
 	public final fun getMode ()Lid/tracive/sdk/model/TraciveMode;
 	public final fun getOauth ()Lid/tracive/sdk/oauth/TraciveOAuth;
 	public final fun getRetryPolicy ()Lid/tracive/sdk/client/RetryPolicy;
+	public final fun handleCallback (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun isAuthorized (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun profile (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun signOut (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }

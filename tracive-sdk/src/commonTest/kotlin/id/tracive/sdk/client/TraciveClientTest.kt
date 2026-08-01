@@ -9,6 +9,7 @@ import id.tracive.sdk.model.RiskTier
 import id.tracive.sdk.model.Source
 import id.tracive.sdk.model.TraciveEnvironment
 import id.tracive.sdk.model.TraciveMode
+import id.tracive.sdk.oauth.InMemoryTokenStore
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
@@ -411,7 +412,54 @@ class TraciveClientTest {
     assertFailsWith<TraciveException.NotImplemented> { client.checkScammer(testQuery()) }
     assertFailsWith<TraciveException.NotImplemented> { client.credits() }
     assertFailsWith<TraciveException.NotImplemented> { client.profile() }
+    assertFailsWith<TraciveException.NotImplemented> { client.authorize() }
+    assertFailsWith<TraciveException.NotImplemented> {
+      client.handleCallback("https://partner.test/tracive/callback?code=c&state=s")
+    }
     assertNull(client.oauth, "a proxied client has no OAuth grant of its own")
+    assertFalse(
+      client.isAuthorized(),
+      "asking a proxied client whether it holds a grant has an answer — no — rather than being a " +
+        "misuse worth throwing over",
+    )
+  }
+
+  @Test
+  fun theClientIsTheFrontDoorToTheOAuthFlow() = runSdkTest {
+    val transport = FakeHttpTransport.always(jsonResponse(checkResultJson()))
+
+    val authorized = testClient(transport)
+    assertTrue(authorized.isAuthorized(), "a stored grant is a grant")
+
+    val notAuthorized = testClient(transport, tokenStore = InMemoryTokenStore())
+    assertFalse(notAuthorized.isAuthorized(), "an empty store is not a grant")
+
+    // Delegation is faithful rather than reinterpreted: a URL that is not this client's redirect
+    // is "not mine" at both levels, which is a null and not a failure.
+    assertNull(authorized.handleCallback("https://elsewhere.test/callback?code=c&state=s"))
+    assertEquals(
+      authorized.handleCallback("https://elsewhere.test/callback?code=c&state=s"),
+      authorized.oauth?.handleCallback("https://elsewhere.test/callback?code=c&state=s"),
+      "the front door and the flow answer the same thing, because one calls the other",
+    )
+  }
+
+  @Test
+  fun clearCacheEmptiesTheCacheAndLeavesTheGrantAlone() = runSdkTest {
+    val cache = FakeCheckCache()
+    val transport = FakeHttpTransport.always(jsonResponse(checkResultJson()))
+    val client = testClient(transport, cache = cache)
+
+    client.checkScammer(testQuery(), source = Source.SERVER)
+    assertEquals(1, cache.size(), "the check should have written a row to clear")
+
+    client.clearCache()
+
+    assertEquals(0, cache.size())
+    assertTrue(
+      client.isAuthorized(),
+      "this is the difference between clearCache and signOut: the user stays signed in",
+    )
   }
 
   @Test

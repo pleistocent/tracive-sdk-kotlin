@@ -310,8 +310,12 @@ final class id.tracive.sdk.client/TraciveClient { // id.tracive.sdk.client/Traci
         final fun <get-retryPolicy>(): id.tracive.sdk.client/RetryPolicy // id.tracive.sdk.client/TraciveClient.retryPolicy.<get-retryPolicy>|<get-retryPolicy>(){}[0]
 
     final fun close() // id.tracive.sdk.client/TraciveClient.close|close(){}[0]
+    final suspend fun authorize(kotlin.collections/Map<kotlin/String, kotlin/String> = ...): id.tracive.sdk.model/AuthResult? // id.tracive.sdk.client/TraciveClient.authorize|authorize(kotlin.collections.Map<kotlin.String,kotlin.String>){}[0]
     final suspend fun checkScammer(id.tracive.sdk.query/TraciveQuery, id.tracive.sdk.model/Source = ..., id.tracive.sdk.model/Detail = ..., kotlin/String? = ..., kotlin/String? = ...): id.tracive.sdk.model/CheckResult // id.tracive.sdk.client/TraciveClient.checkScammer|checkScammer(id.tracive.sdk.query.TraciveQuery;id.tracive.sdk.model.Source;id.tracive.sdk.model.Detail;kotlin.String?;kotlin.String?){}[0]
+    final suspend fun clearCache() // id.tracive.sdk.client/TraciveClient.clearCache|clearCache(){}[0]
     final suspend fun credits(): id.tracive.sdk.model/CreditsInfo // id.tracive.sdk.client/TraciveClient.credits|credits(){}[0]
+    final suspend fun handleCallback(kotlin/String): id.tracive.sdk.model/AuthResult? // id.tracive.sdk.client/TraciveClient.handleCallback|handleCallback(kotlin.String){}[0]
+    final suspend fun isAuthorized(): kotlin/Boolean // id.tracive.sdk.client/TraciveClient.isAuthorized|isAuthorized(){}[0]
     final suspend fun profile(): id.tracive.sdk.model/ProfileInfo // id.tracive.sdk.client/TraciveClient.profile|profile(){}[0]
     final suspend fun signOut() // id.tracive.sdk.client/TraciveClient.signOut|signOut(){}[0]
 

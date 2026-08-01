@@ -4,6 +4,7 @@ import id.tracive.sdk.TraciveException
 import id.tracive.sdk.cache.CheckCache
 import id.tracive.sdk.cache.DisabledCheckCache
 import id.tracive.sdk.cache.cacheKeyFor
+import id.tracive.sdk.model.AuthResult
 import id.tracive.sdk.model.CachePolicy
 import id.tracive.sdk.model.CheckResult
 import id.tracive.sdk.model.CreditsInfo
@@ -50,9 +51,9 @@ import kotlinx.serialization.DeserializationStrategy
  * )
  *
  * // Opens the consent page and returns. The outcome arrives at handleCallback, wherever the OS
- * // delivers the redirect — see TraciveOAuth.
- * client.oauth!!.authorize()
- * when (val auth = client.oauth!!.handleCallback(redirectUrl)) { /* … */ }
+ * // delivers the redirect — see TraciveOAuth, which both of these delegate to.
+ * client.authorize()
+ * when (val auth = client.handleCallback(redirectUrl)) { /* … */ }
  *
  * val result = client.checkScammer(TraciveQuery.phone("+6281234567891"))
  * // Always show result.disclaimer next to result.riskTier.
@@ -313,6 +314,46 @@ class TraciveClient(
   }
 
   /**
+   * Asks the user for consent, by delegating to [oauth].
+   *
+   * The whole flow lives on [TraciveOAuth], and everything it documents applies unchanged — this is
+   * the front door, not a second implementation. Reach for [oauth] directly when you need the parts
+   * that are not mirrored here: [TraciveOAuth.cancelPendingAuthorization],
+   * [TraciveOAuth.pendingAuthorizationId], [TraciveOAuth.grantedScopes],
+   * [TraciveOAuth.adoptTokens].
+   *
+   * The Swift, Flutter and React Native SDKs all put consent on the client, and an integrator who
+   * reads only this class should not have to already know that another one exists.
+   *
+   * @throws TraciveException.NotImplemented in [TraciveMode.Proxy], which has no grant of its own.
+   */
+  suspend fun authorize(extraAuthorizeParams: Map<String, String> = emptyMap()): AuthResult? {
+    val flow = oauth ?: throw notImplementedInProxyMode()
+    return flow.authorize(extraAuthorizeParams)
+  }
+
+  /**
+   * Hands a redirect back to the flow, by delegating to [oauth].
+   *
+   * See [TraciveOAuth.handleCallback] for what a null return means, and for why a redirect must be
+   * delivered once rather than replayed on every recreation.
+   *
+   * @throws TraciveException.NotImplemented in [TraciveMode.Proxy], which has no grant of its own.
+   */
+  suspend fun handleCallback(url: String): AuthResult? {
+    val flow = oauth ?: throw notImplementedInProxyMode()
+    return flow.handleCallback(url)
+  }
+
+  /**
+   * Whether a grant is stored, by delegating to [oauth].
+   *
+   * False in [TraciveMode.Proxy] rather than throwing: a proxied client genuinely holds no grant,
+   * which is an answer to the question rather than a misuse of it.
+   */
+  suspend fun isAuthorized(): Boolean = oauth?.isAuthorized() ?: false
+
+  /**
    * Revokes the grant best-effort, clears the stored tokens, and empties the cache.
    *
    * The cache goes too, and that is not housekeeping: its entries were fetched under the grant of
@@ -321,6 +362,17 @@ class TraciveClient(
    */
   suspend fun signOut() {
     oauth?.signOut()
+    cache.clear()
+  }
+
+  /**
+   * Empties the result cache, and nothing else.
+   *
+   * The same call as `client.cache.clear()`, named where a reader looks for it. [signOut] already
+   * does this; reach for it on its own when a user stays signed in and you want the history gone —
+   * a "clear data" button, or a privacy setting.
+   */
+  suspend fun clearCache() {
     cache.clear()
   }
 
