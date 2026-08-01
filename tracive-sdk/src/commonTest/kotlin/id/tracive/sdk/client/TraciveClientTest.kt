@@ -262,6 +262,62 @@ class TraciveClientTest {
     assertEquals(RiskTier.ELEVATED, result.riskTier)
   }
 
+  /** 429 and a dead socket are the other two shapes a cached answer may stand in for. */
+  @Test
+  fun serverFirstAlsoFallsBackOnRateLimitingAndOnADeadSocket() = runSdkTest {
+    for (transport in
+      listOf(
+        FakeHttpTransport.always(HttpResponse(429, errorJson("rate_limited"))),
+        FakeHttpTransport { throw IllegalStateException("connection reset") },
+      )) {
+      val cache = FakeCheckCache()
+      val query = testQuery()
+      val client = testClient(transport, cache = cache)
+      cache.seed(query, cachedVerdict())
+
+      val result = client.checkScammer(query, source = Source.SERVER_FIRST)
+
+      assertEquals(Origin.CACHE, result.origin)
+    }
+  }
+
+  /**
+   * A refusal aimed at the caller is never masked by a cached verdict.
+   *
+   * This is the whole reason the fallback is filtered. A 402, a 403 or a revoked grant is not "the
+   * server is unreachable" — it is the server saying something about this account, and it is the
+   * one thing the integrator has to be told. Answering from the cache instead makes a withdrawn
+   * partner's app carry on serving fraud verdicts for up to thirty days, with nothing in either
+   * side's logs to show it, because from the app's point of view every call succeeded.
+   *
+   * A cache entry is seeded in every case, so a test that passes because the cache was empty cannot
+   * exist here.
+   */
+  @Test
+  fun serverFirstNeverMasksARefusalAimedAtTheCallerWithACachedVerdict() = runSdkTest {
+    val refusals =
+      listOf(
+        HttpResponse(403, errorJson("missing_scope")),
+        HttpResponse(403, errorJson("partner_suspended")),
+        HttpResponse(402, errorJson("insufficient_user_credits")),
+        HttpResponse(401, errorJson("grant_revoked")),
+      )
+
+    for (refusal in refusals) {
+      val cache = FakeCheckCache()
+      val query = testQuery()
+      val client = testClient(FakeHttpTransport.always(refusal), cache = cache)
+      cache.seed(query, cachedVerdict())
+
+      val error =
+        assertFailsWith<TraciveException>("${refusal.status} was served from the cache instead") {
+          client.checkScammer(query, source = Source.SERVER_FIRST)
+        }
+
+      assertEquals(refusal.status, error.httpStatus, "the original refusal must be what surfaces")
+    }
+  }
+
   @Test
   fun serverFirstRethrowsWhenThereIsNothingCachedEither() = runSdkTest {
     val client =
@@ -374,4 +430,13 @@ class TraciveClientTest {
       }
     assertTrue(failure.message.orEmpty().contains("blank_install_url"), failure.message)
   }
+
+  /** A verdict sitting in the cache, as a previous check would have left it. */
+  private fun cachedVerdict(): CheckResult =
+    CheckResult(
+      found = true,
+      riskTier = RiskTier.ELEVATED,
+      origin = Origin.CACHE,
+      fetchedAt = FixedClock.DEFAULT,
+    )
 }

@@ -236,7 +236,10 @@ class TraciveClient(
         // Falling back is the point of SERVER_FIRST: the caller wanted freshness but still needs an
         // answer offline. A stale answer beats no answer for a fraud check; no answer beats a wrong
         // one, which is why a miss rethrows the original failure rather than inventing a result.
-        (if (cacheReadable) cache.get(query) else null) ?: throw failure
+        //
+        // "The server failed" here means a transport-shaped failure only. [isTransient] says
+        // which ones qualify, and why every other failure has to reach the caller instead.
+        (if (cacheReadable && failure.isTransient) cache.get(query) else null) ?: throw failure
       }
     } else {
       fetchCheck(query, detail, locale, idempotencyKey)
@@ -472,3 +475,35 @@ class TraciveClient(
     const val PROXY_MODE_MESSAGE: String = "Proxy mode arrives in phase 2"
   }
 }
+
+/**
+ * Whether a cached verdict is allowed to stand in for this failure under [Source.SERVER_FIRST].
+ *
+ * Only a **transport-shaped** failure qualifies: the request did not reach a server that had an
+ * opinion, or reached one that could not answer right now. Those are the cases where a stale answer
+ * is better than none, because the answer the server would have given is unchanged and merely
+ * unreachable.
+ *
+ * Everything else is a real answer *about the caller*. A 402 says the account cannot pay for this
+ * check; a 403 `missing_scope` or `partner_suspended` says it may no longer ask; a revoked grant
+ * says it is no longer anyone. Serving a cached verdict on top of any of those hides the finding
+ * behind an answer that looks completely normal — a partner whose access was withdrawn keeps
+ * receiving fraud verdicts until the entries age out, which for a `HIGH` result is thirty days, and
+ * nothing anywhere reports it. The failure has to reach the caller.
+ *
+ * Three shapes and no others. That is the agreed rule for every Tracive SDK, so widening it here
+ * would not be a local choice — it would be this SDK answering a withdrawn grant differently from
+ * the others on the same account.
+ */
+private val TraciveException.isTransient: Boolean
+  get() =
+    when (this) {
+      // Never reached a server: DNS, TLS, connect, read timeout.
+      is TraciveException.Network -> true
+      // 429. The server is deferring the answer, not refusing to give one.
+      is TraciveException.RateLimited -> true
+      // 5xx. `fromApiError` only builds this for 500..599, but the class is public and a caller
+      // could construct one, so the status is checked rather than assumed.
+      is TraciveException.Server -> (httpStatus ?: 500) >= 500
+      else -> false
+    }
