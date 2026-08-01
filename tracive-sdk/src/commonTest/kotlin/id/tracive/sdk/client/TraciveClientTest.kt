@@ -124,7 +124,7 @@ class TraciveClientTest {
   @Test
   fun unknownResponseFieldsAreIgnored() = runSdkTest {
     val body =
-      "{\"found\":true,\"riskTier\":\"CAUTION\",\"tahap2Signal\":{\"nested\":[1,2]}," +
+      "{\"found\":true,\"riskTier\":\"CAUTION\",\"futureVersionSignal\":{\"nested\":[1,2]}," +
         "\"reportTotal\":2,\"unknownScalar\":\"whatever\"}"
     val client = testClient(FakeHttpTransport.always(jsonResponse(body)))
 
