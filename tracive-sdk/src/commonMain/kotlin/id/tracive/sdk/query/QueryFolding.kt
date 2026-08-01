@@ -274,6 +274,13 @@ private fun foldBankAccountId(account: String): String {
  * This runs on the FOLDED key. Case mapping is not length-preserving, so a byte count taken before
  * folding would be measuring a different string.
  *
+ * Most of the branches below cannot fire for a key a public factory produced: every factory
+ * prefixes `PHONE_`, `EMAIL_`, `BANK_`, `CRYPTO_` or `USERNAME_`, so the result is never empty,
+ * never `.` or `..`, and never starts with `__`. They are here because this function is also the
+ * guard on the raw path, where a caller-supplied key arrives unprefixed — which is what the
+ * fixture's `RAW` rejection vectors exercise. A reader who assumes the factories can produce those
+ * shapes is reading it backwards.
+ *
  * @return [key] unchanged, so this can wrap the return of a fold.
  */
 internal fun requireValidDocumentId(key: String): String {
@@ -293,7 +300,7 @@ internal fun requireValidDocumentId(key: String): String {
  * True if [this] holds a high surrogate not followed by a low one, or a low surrogate not preceded
  * by a high one.
  *
- * Such a string is not valid UTF-16 and has no UTF-8 encoding. the API rejects it; more to the
+ * Such a string is not valid UTF-16 and has no UTF-8 encoding. The API rejects it; more to the
  * point, every layer between here and the server silently substitutes U+FFFD for it, so the key
  * that arrives is not the key that was built and the request is a guaranteed — billed — miss.
  */
