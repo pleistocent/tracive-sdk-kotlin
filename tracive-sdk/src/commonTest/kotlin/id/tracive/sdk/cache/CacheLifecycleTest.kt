@@ -5,6 +5,7 @@ import id.tracive.sdk.model.RiskTier
 import id.tracive.sdk.query.TraciveQuery
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -124,6 +125,62 @@ class CacheLifecycleTest {
     val nonces = queries.mapNotNull { store.select(cacheKeyFor(it))?.envelope?.nonce() }
     assertEquals(queries.size, nonces.size)
     assertEquals(queries.size, nonces.toSet().size, "A nonce may never repeat under one key.")
+  }
+
+  /**
+   * A new generation of records must get new key *material*, not merely a new id.
+   *
+   * The whole safety argument for a counter-based nonce is that a cache which restarts its counter
+   * at zero is also handed a key that counter has never been used with. A key store that reissues
+   * the same bytes under a new id satisfies the `dataKeyId` assertions elsewhere in this file while
+   * breaking the assumption they exist to protect.
+   */
+  @Test
+  fun eachGeneratedKeyIsDifferentMaterialAndTheEarlierOneStaysReadable() = runTest {
+    val keyStore = testKeyStore()
+
+    val first = keyStore.createKey()
+    val second = keyStore.createKey()
+
+    assertNotEquals(first.id, second.id)
+    assertFalse(
+      first.bytes.contentEquals(second.bytes),
+      "createKey() reissued the same key bytes; the nonce counter restarts at zero for every new " +
+        "key, so reissuing one is a repeated (key, nonce) pair",
+    )
+    // Both generations stay loadable: a cache still holding the first key has rows it can read.
+    assertTrue(first.bytes.contentEquals(assertNotNull(keyStore.loadKey(first.id)).bytes))
+    assertTrue(second.bytes.contentEquals(assertNotNull(keyStore.loadKey(second.id)).bytes))
+  }
+
+  /**
+   * Two caches over one key store must not seal their records under the same (key, nonce) pair.
+   *
+   * Nothing stops a host from doing this, and it is the route the documentation's "never pair this
+   * with a persistent record store" warning does not cover: each cache gets its own record store,
+   * so each starts its counter at zero. If the key store hands both the same bytes, both first
+   * records are sealed under key K and nonce 0 — and for identical plaintext the two envelopes come
+   * out byte for byte identical, which is what this asserts against.
+   */
+  @Test
+  fun twoCachesSharingOneKeyStoreDoNotSealUnderOneNonceAndKey() = runTest {
+    val keyStore = testKeyStore()
+    val clock = TestClock.atStart()
+    val storeA = InMemoryCacheRecordStore()
+    val storeB = InMemoryCacheRecordStore()
+
+    DefaultCheckCache(storeA, keyStore, CachePolicy.Default, clock).put(query, serverResult())
+    DefaultCheckCache(storeB, keyStore, CachePolicy.Default, clock).put(query, serverResult())
+
+    val key = cacheKeyFor(query)
+    val a = assertNotNull(storeA.select(key)).envelope
+    val b = assertNotNull(storeB.select(key)).envelope
+    assertEquals(a.nonce(), b.nonce(), "both counters legitimately start at zero")
+    assertFalse(
+      a.contentEquals(b),
+      "identical envelopes for identical plaintext under identical nonces means the two caches " +
+        "share one key, which is exactly the (key, nonce) reuse AES-GCM does not survive",
+    )
   }
 
   @Test

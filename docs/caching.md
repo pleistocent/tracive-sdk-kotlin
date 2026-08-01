@@ -99,9 +99,13 @@ Three rules an implementation must honour:
 **Never pair `InMemoryCacheDataKeyStore` with a persistent cache.** It is for tests and for
 `InMemoryCheckCache`. The reason is specific and unforgiving: the cache's nonces are a counter that
 restarts at zero whenever the database is recreated, which is safe *only* because a new database also
-gets a new key. A store that hands the same key to a fresh database produces a repeated (key, nonce)
-pair, and that is the one failure AES-GCM does not degrade gracefully from — it leaks the
-authentication subkey for every record written under it.
+gets a new key. `InMemoryCacheDataKeyStore` derives its keys from a fixed seed, so a database that
+outlives the process would meet a counter at zero beside key material already used under it. That is
+a repeated (key, nonce) pair, and it is the one failure AES-GCM does not degrade gracefully from — it
+leaks the authentication subkey for every record written under that key.
+
+`SqlDelightCheckCache` rejects the pairing in its constructor rather than trusting you to have read
+this paragraph.
 
 ---
 

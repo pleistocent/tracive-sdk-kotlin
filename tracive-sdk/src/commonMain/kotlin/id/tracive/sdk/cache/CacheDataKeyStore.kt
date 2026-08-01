@@ -83,37 +83,68 @@ class CacheDataKey(
 }
 
 /**
- * A [CacheDataKeyStore] that holds one caller-supplied key in memory for the life of the process.
+ * A **test-only** [CacheDataKeyStore] that derives its keys from a caller-supplied seed and keeps
+ * them in memory for the life of the process.
  *
  * For tests, and for pairing with [InMemoryCheckCache] where nothing is written to disk in the
- * first place.
+ * first place. Reproducible on purpose: a failing cache test has to be replayable, which a real
+ * CSPRNG would not be — and common Kotlin has no CSPRNG to reach for anyway.
  *
- * **Never pair this with a persistent record store.** The cache's nonces are a counter that resets
- * whenever the database is recreated; that is safe only because a new database also gets a new key.
- * A store that hands out the same key to a fresh database breaks the one assumption AES-GCM cannot
- * survive being wrong about — a repeated nonce under a repeated key reveals the authentication
- * subkey for every record written with it.
+ * Each [createKey] returns `SHA-256(seed ‖ generation)`, so the bytes differ every time even though
+ * they are predictable from the seed. That is the contract rule 1 asks for and it is not optional
+ * decoration: the cache's nonces are a counter that restarts at zero whenever a new key is issued,
+ * so a store that reissued one key would pair a fresh counter with key material already used under
+ * it. A repeated (key, nonce) pair is the one failure AES-GCM does not degrade gracefully from — it
+ * reveals the authentication subkey and makes every tag ever written under that key forgeable.
+ *
+ * **Never pair this with a persistent record store.** Derivation from a fixed seed is reproducible
+ * *across process restarts* too, so a database that outlives the process would meet a counter at
+ * zero beside a key it has already used. [SqlDelightCheckCache] refuses this store outright rather
+ * than relying on the reader to have seen this paragraph.
  */
-class InMemoryCacheDataKeyStore(key: ByteArray) : CacheDataKeyStore {
+class InMemoryCacheDataKeyStore(seed: ByteArray) : CacheDataKeyStore {
 
-  private var current: CacheDataKey? = null
-  private val keyBytes: ByteArray = key.copyOf()
+  private val seed: ByteArray = seed.copyOf()
+
+  /**
+   * Every key issued so far, by id.
+   *
+   * Not just the most recent one: two caches sharing this store each hold a key of their own, and a
+   * store that forgot the earlier generation would tell the first cache its key was gone and make
+   * it discard rows it can still read perfectly well.
+   */
+  private val issued = LinkedHashMap<String, CacheDataKey>()
+
   private var generation: Int = 0
 
   init {
-    require(keyBytes.size == CacheDataKey.KEY_SIZE) {
-      "An in-memory cache data key must be ${CacheDataKey.KEY_SIZE} bytes."
+    require(this.seed.size == CacheDataKey.KEY_SIZE) {
+      "An in-memory cache data key seed must be ${CacheDataKey.KEY_SIZE} bytes."
     }
   }
 
   override suspend fun createKey(): CacheDataKey {
     generation += 1
-    return CacheDataKey("in-memory-$generation", keyBytes).also { current = it }
+    val id = "in-memory-$generation"
+    return CacheDataKey(id, Sha256.digest(seed + generation.toBigEndianBytes())).also {
+      issued[id] = it
+    }
   }
 
-  override suspend fun loadKey(id: String): CacheDataKey? = current?.takeIf { it.id == id }
+  override suspend fun loadKey(id: String): CacheDataKey? = issued[id]
 
   override suspend fun deleteKey(id: String) {
-    if (current?.id == id) current = null
+    issued.remove(id)
   }
 }
+
+/**
+ * [this] as four big-endian bytes, so the derivation is byte-defined rather than platform-defined.
+ */
+private fun Int.toBigEndianBytes(): ByteArray =
+  byteArrayOf(
+    ((this ushr 24) and 0xFF).toByte(),
+    ((this ushr 16) and 0xFF).toByte(),
+    ((this ushr 8) and 0xFF).toByte(),
+    (this and 0xFF).toByte(),
+  )

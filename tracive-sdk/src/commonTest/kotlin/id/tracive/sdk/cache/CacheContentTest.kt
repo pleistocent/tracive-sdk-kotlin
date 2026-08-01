@@ -53,11 +53,12 @@ class CacheContentTest {
     // A future field that quietly carried narrative text into the payload would pass the first
     // test and fail this one.
     val store = InMemoryCacheRecordStore()
-    val cache = DefaultCheckCache(store, testKeyStore(), CachePolicy.Default, TestClock.atStart())
+    val keyStore = testKeyStore()
+    val cache = DefaultCheckCache(store, keyStore, CachePolicy.Default, TestClock.atStart())
 
     cache.put(query, serverResult())
 
-    val plaintext = decryptSoleRecord(store)
+    val plaintext = decryptSoleRecord(store, keyStore)
     assertTrue(!plaintext.contains(NARRATIVE_MARKER), "Chronology text was written to the cache.")
     assertTrue(!plaintext.contains(COMMENT_MARKER), "Comment text was written to the cache.")
     assertTrue(!plaintext.contains("chk_01J9ZQ"), "The check id was written to the cache.")
@@ -127,7 +128,8 @@ class CacheContentTest {
   @Test
   fun theIdentifierItselfIsNowhereInTheStore() = runTest {
     val store = InMemoryCacheRecordStore()
-    val cache = DefaultCheckCache(store, testKeyStore(), CachePolicy.Default, TestClock.atStart())
+    val keyStore = testKeyStore()
+    val cache = DefaultCheckCache(store, keyStore, CachePolicy.Default, TestClock.atStart())
 
     cache.put(query, serverResult())
 
@@ -140,7 +142,7 @@ class CacheContentTest {
     )
     // The folded query is not in the plaintext either: the cache never needs to read it back, and
     // storing it would undo the hashing.
-    assertTrue(!decryptSoleRecord(store).contains("6281234567891"))
+    assertTrue(!decryptSoleRecord(store, keyStore).contains("6281234567891"))
   }
 
   @Test
@@ -238,11 +240,22 @@ class CacheContentTest {
   }
 
   /** Decrypts the single record in [store], for tests that assert on what was actually written. */
-  private suspend fun decryptSoleRecord(store: InMemoryCacheRecordStore): String {
+  /**
+   * The one record in [store], decrypted.
+   *
+   * The key is read back from [keyStore] by the id in the meta row rather than assumed to be the
+   * seed the store was built with. A key store owes the cache a *fresh* key per generation, so what
+   * the cache sealed with is whatever `createKey()` returned — not the caller's seed.
+   */
+  private suspend fun decryptSoleRecord(
+    store: InMemoryCacheRecordStore,
+    keyStore: InMemoryCacheDataKeyStore,
+  ): String {
     val key = cacheKeyFor(query)
     val row = assertNotNull(store.select(key))
+    val dataKey = assertNotNull(keyStore.loadKey(assertNotNull(store.readMeta()).dataKeyId))
     val opened =
-      AesGcmCacheCipher(TestDataKey)
+      AesGcmCacheCipher(dataKey)
         .open(row.envelope, cacheAssociatedData(key, CachePolicy.SCHEMA_VERSION))
     return assertNotNull(opened).decodeToString()
   }

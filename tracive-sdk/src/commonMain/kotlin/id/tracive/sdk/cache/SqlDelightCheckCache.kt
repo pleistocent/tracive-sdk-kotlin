@@ -70,6 +70,20 @@ class SqlDelightCheckCache(
     clock = clock,
   ) {
 
+  init {
+    // The doc paragraph above is not a mechanism. `InMemoryCacheDataKeyStore` derives its keys from
+    // a fixed seed, which is reproducible across process restarts — so a database that outlives the
+    // process would meet a nonce counter back at zero beside key material it has already used.
+    // Rejecting the pairing here turns a warning nobody has to read into a failure on first
+    // construction, long before any record is sealed.
+    require(dataKeyStore !is InMemoryCacheDataKeyStore) {
+      "InMemoryCacheDataKeyStore derives its keys from a fixed seed and cannot back a persistent " +
+        "cache: the nonce counter restarts at zero with the database while the key material does " +
+        "not, and a repeated (key, nonce) pair breaks AES-GCM outright. Supply a Keystore- or " +
+        "Keychain-backed CacheDataKeyStore, or use InMemoryCheckCache."
+    }
+  }
+
   override fun toString(): String = "SqlDelightCheckCache"
 
   companion object {
