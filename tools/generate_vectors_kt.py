@@ -51,14 +51,23 @@ FOOTER = '''    )
 def escape(line: str) -> str:
     out = []
     for character in line:
+        code = ord(character)
         if character == "\\":
             out.append("\\\\")
         elif character == '"':
             out.append('\\"')
         elif character == "$":
             out.append("\\$")
-        elif ord(character) < 0x20 or ord(character) > 0x7E:
-            out.append("\\u%04x" % ord(character))
+        elif code > 0xFFFF:
+            # Kotlin's \u escape is exactly four hex digits: one UTF-16 code unit, not one code
+            # point. "\\u%04x" on a supplementary code point emits five digits, which Kotlin reads
+            # as a four-digit escape followed by a literal hex digit — a different string, silently.
+            # Emit the surrogate pair instead, which is what the code point is in UTF-16 anyway.
+            shifted = code - 0x10000
+            out.append("\\u%04x" % (0xD800 + (shifted >> 10)))
+            out.append("\\u%04x" % (0xDC00 + (shifted & 0x3FF)))
+        elif code < 0x20 or code > 0x7E:
+            out.append("\\u%04x" % code)
         else:
             out.append(character)
     return "".join(out)
@@ -76,8 +85,17 @@ def unescape(literal: str) -> str:
             continue
         following = literal[index + 1]
         if following == "u":
-            out.append(chr(int(literal[index + 2 : index + 6], 16)))
+            code = int(literal[index + 2 : index + 6], 16)
             index += 6
+            # Recombine a pair written by escape(). Python strings hold whole code points, and a
+            # lone surrogate has no UTF-8 encoding at all — so without this the round-trip check
+            # below would raise instead of comparing, which is not the same as passing.
+            if 0xD800 <= code <= 0xDBFF and literal[index : index + 2] == "\\u":
+                low = int(literal[index + 2 : index + 6], 16)
+                if 0xDC00 <= low <= 0xDFFF:
+                    code = 0x10000 + ((code - 0xD800) << 10) + (low - 0xDC00)
+                    index += 6
+            out.append(chr(code))
         else:
             out.append(following)
             index += 2
