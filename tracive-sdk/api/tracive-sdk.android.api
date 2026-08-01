@@ -867,6 +867,8 @@ public final class id/tracive/sdk/oauth/TraciveOAuth {
 	public static final field FORM_CONTENT_TYPE Ljava/lang/String;
 	public static final field INSTALL_ATTRIBUTION_PARAM Ljava/lang/String;
 	public static final field INSTALL_URL Ljava/lang/String;
+	public static final field INSTALL_UTM_SOURCE Ljava/lang/String;
+	public static final field INSTALL_UTM_SOURCE_PARAM Ljava/lang/String;
 	public static final field PATH_REVOKE Ljava/lang/String;
 	public static final field PATH_TOKEN Ljava/lang/String;
 	public fun <init> (Lid/tracive/sdk/model/TraciveMode$OAuth;Lid/tracive/sdk/model/TraciveEnvironment;Lid/tracive/sdk/client/HttpTransport;Lid/tracive/sdk/oauth/TokenStore;Lid/tracive/sdk/platform/AppPresenceChecker;Lid/tracive/sdk/platform/AuthorizeLauncher;Lkotlinx/datetime/Clock;Ljava/lang/String;Ljava/lang/String;)V

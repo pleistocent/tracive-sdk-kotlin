@@ -9,6 +9,14 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ## [Unreleased]
 
+### Added
+
+- The install link opened when the Tracive app is missing now carries `utm_source=tracive-sdk-kotlin`
+  alongside the existing `ref` attribution tag, matching the link contract shared with the other
+  Tracive SDKs. Both parameters are optional and non-sensitive; the link still carries no OAuth
+  parameter of any kind, and a test now asserts that for `scope` and `code_verifier` as well.
+  `TraciveOAuth.INSTALL_UTM_SOURCE_PARAM` and `INSTALL_UTM_SOURCE` name the two new values.
+
 ### Fixed
 
 - **A Keychain or Keystore write that fails is no longer reported as a success.** The iOS token

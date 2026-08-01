@@ -56,16 +56,31 @@ class TraciveOAuthTest {
     assertTrue(launcher.authorizeUrls.isEmpty(), "the flow started without the Tracive app")
     assertTrue(transport.requests.isEmpty(), "an uninstalled device reached the network")
 
-    // The install link carries no OAuth parameters at all. They would be useless by the time the
-    // user came back — the server-side request expires in minutes — and `partner_user_id` on a
-    // third-party short link would put a partner's user identifier through someone else's servers.
+    // The link is the one every Tracive SDK opens, carrying only the two agreed non-sensitive tags:
+    // the partner's client id, and which SDK opened it. Written out rather than built from the
+    // constants, so that changing a constant fails here instead of quietly redefining the contract.
     val installUrl = launcher.installUrls.single()
+    assertTrue(
+      installUrl.startsWith("https://tracive.chottu.link/install?"),
+      "the install link left the agreed base URL: $installUrl",
+    )
+    val installParams = TraciveOAuth.parseQueryParameters(installUrl)
+    assertEquals("cli_test", installParams["ref"], "the client id is the attribution tag")
+    assertEquals("tracive-sdk-kotlin", installParams["utm_source"])
+    assertEquals(setOf("ref", "utm_source"), installParams.keys, "an extra parameter appeared")
+
+    // The hard invariant: no OAuth parameter at all. They would be stale by the time the user
+    // returned — the server-side request expires in minutes, and nothing is resumed — and this
+    // link transits a third-party link service, so whatever rides on it is handed to someone
+    // else's servers.
     for (parameter in
       listOf(
         "code_challenge",
         "code_challenge_method",
+        "code_verifier",
         "state",
         "redirect_uri",
+        "scope",
         "partner_user_id",
       )) {
       assertFalse(

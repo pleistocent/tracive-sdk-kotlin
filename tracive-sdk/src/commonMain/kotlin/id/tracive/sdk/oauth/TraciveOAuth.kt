@@ -104,8 +104,8 @@ class TraciveOAuth(
   /**
    * Where a user without the Tracive app is sent.
    *
-   * Must carry **no OAuth parameters** — see [installUrl]. A non-sensitive attribution tag naming
-   * the client is fine and is what the default adds.
+   * Must carry **no OAuth parameters** — see [INSTALL_URL]. Non-sensitive tags naming the client
+   * and the SDK are fine, and are what the default adds.
    */
   installUrlOverride: String? = null,
 
@@ -669,16 +669,27 @@ class TraciveOAuth(
     /**
      * The install page a device without the Tracive app is sent to.
      *
-     * A short link, deliberately: the flow stops here, and the only thing that may ride along is a
-     * non-sensitive attribution tag naming the client. **No OAuth parameters** — not `state`, not
-     * `code_challenge`, not `partner_user_id`. They would be useless by the time the user came back
-     * (the server-side request expires in ten minutes) and they would put a partner's user
-     * identifier through a third-party link service, which is not acceptable in production.
+     * A short link, deliberately: the flow stops here. Every Tracive SDK opens this same base URL
+     * and may add exactly two optional, non-sensitive query parameters —
+     * [INSTALL_ATTRIBUTION_PARAM] naming the *partner's* OAuth client, and
+     * [INSTALL_UTM_SOURCE_PARAM] naming the SDK that opened it. Nothing else.
+     *
+     * **No OAuth parameter may ever appear here** — not `state`, `code_challenge`, `code_verifier`,
+     * `partner_user_id`, `redirect_uri` or `scope`. They would be useless by the time the user came
+     * back (the server-side request expires in ten minutes, and there is no deferred resume), and
+     * this link transits a third-party link service, so anything on it is handed to someone else's
+     * servers. A partner's user identifier going that way is not acceptable in production.
      */
     const val INSTALL_URL: String = "https://tracive.chottu.link/install"
 
     /** Query parameter carrying the attribution tag on [INSTALL_URL]. */
     const val INSTALL_ATTRIBUTION_PARAM: String = "ref"
+
+    /** Query parameter naming which SDK opened [INSTALL_URL]. */
+    const val INSTALL_UTM_SOURCE_PARAM: String = "utm_source"
+
+    /** This SDK's value for [INSTALL_UTM_SOURCE_PARAM]. One per Tracive SDK. */
+    const val INSTALL_UTM_SOURCE: String = "tracive-sdk-kotlin"
 
     private const val PARAM_GRANT_TYPE = "grant_type"
     private const val PARAM_CODE = "code"
@@ -702,15 +713,20 @@ class TraciveOAuth(
     private const val TOKEN_TYPE_REFRESH = "refresh_token"
     private const val TOKEN_TYPE_ACCESS = "access_token"
 
-    /** [INSTALL_URL] with [clientId] as an attribution tag, and nothing else. */
-    fun defaultInstallUrl(clientId: String): String =
-      if (clientId.isBlank()) INSTALL_URL
-      else
-        INSTALL_URL +
-          "?" +
-          INSTALL_ATTRIBUTION_PARAM +
-          "=" +
-          AuthorizeUrlBuilder.percentEncode(clientId)
+    /**
+     * [INSTALL_URL] with [clientId] as the attribution tag and this SDK as the source, and nothing
+     * else. The attribution tag is dropped when [clientId] is blank; both parameters are optional.
+     */
+    fun defaultInstallUrl(clientId: String): String {
+      val parameters = mutableListOf<Pair<String, String>>()
+      if (clientId.isNotBlank()) parameters += INSTALL_ATTRIBUTION_PARAM to clientId
+      parameters += INSTALL_UTM_SOURCE_PARAM to INSTALL_UTM_SOURCE
+      return INSTALL_URL +
+        "?" +
+        parameters.joinToString("&") { (name, value) ->
+          name + "=" + AuthorizeUrlBuilder.percentEncode(value)
+        }
+    }
 
     /** `a=1&b=2`, percent-encoded — the body shape RFC 6749 §4.1.3 requires. */
     internal fun formBody(parameters: List<Pair<String, String>>): String =

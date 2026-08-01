@@ -42,9 +42,20 @@ authorize()
 ### 1. The install pre-check comes first
 
 Before any redirect, the SDK checks whether the Tracive app is present — Android package visibility,
-iOS `canOpenURL`. If it is missing, the user is sent to a **clean** install link carrying no OAuth
-parameters whatsoever (an attribution tag naming the client is allowed), and `authorize()` returns
-`AuthResult.AppNotInstalled` without starting a flow.
+iOS `canOpenURL`. If it is missing, the user is sent to a **clean** install link and `authorize()`
+returns `AuthResult.AppNotInstalled` without starting a flow.
+
+That link is `https://tracive.chottu.link/install`, the same base URL in every Tracive SDK, and it
+may carry exactly two optional non-sensitive query parameters:
+
+- `ref` — your OAuth client id, as an attribution tag. Omitted when you have none.
+- `utm_source` — `tracive-sdk-kotlin`, naming which SDK opened the link.
+
+**No OAuth parameter ever appears on it** — not `state`, `code_challenge`, `code_verifier`,
+`partner_user_id`, `redirect_uri` or `scope`. They would be useless by the time the user came back,
+and the link goes through a third-party link service, so anything on it is handed to someone else's
+servers. You can replace the whole link (`installUrl` on `TraciveClient`, `installUrlOverride` on
+`TraciveOAuth`); hold to the same rule if you do.
 
 There is **no deferred resume.** Nothing is held; the user installs Tracive and retries in your app.
 Handle it by showing "install Tracive, then try again" — the SDK has already opened the store page.
