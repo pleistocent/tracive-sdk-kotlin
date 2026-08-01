@@ -1,0 +1,961 @@
+public final class id/tracive/sdk/TraciveAndroid {
+	public static final field INSTANCE Lid/tracive/sdk/TraciveAndroid;
+	public final fun initialize (Landroid/content/Context;)V
+	public final fun isInitialized ()Z
+}
+
+public abstract class id/tracive/sdk/TraciveException : java/lang/Exception {
+	public static final field CODE_CREDENTIAL_MISMATCH Ljava/lang/String;
+	public static final field CODE_DETAIL_NOT_PERMITTED Ljava/lang/String;
+	public static final field CODE_EXPIRED_TOKEN Ljava/lang/String;
+	public static final field CODE_GRANT_REVOKED Ljava/lang/String;
+	public static final field CODE_IDEMPOTENCY_CONFLICT Ljava/lang/String;
+	public static final field CODE_INSUFFICIENT_CREDITS Ljava/lang/String;
+	public static final field CODE_INSUFFICIENT_PARTNER_BALANCE Ljava/lang/String;
+	public static final field CODE_INSUFFICIENT_USER_CREDITS Ljava/lang/String;
+	public static final field CODE_INVALID_API_KEY Ljava/lang/String;
+	public static final field CODE_INVALID_REQUEST Ljava/lang/String;
+	public static final field CODE_INVALID_TOKEN Ljava/lang/String;
+	public static final field CODE_MISSING_SCOPE Ljava/lang/String;
+	public static final field CODE_PARTNER_SUSPENDED Ljava/lang/String;
+	public static final field CODE_RATE_LIMITED Ljava/lang/String;
+	public static final field CODE_UNSUPPORTED_CREDIT_SOURCE Ljava/lang/String;
+	public static final field CODE_UNSUPPORTED_INPUT_TYPE Ljava/lang/String;
+	public static final field Companion Lid/tracive/sdk/TraciveException$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getCheckId ()Ljava/lang/String;
+	public final fun getErrorCode ()Ljava/lang/String;
+	public final fun getHttpStatus ()Ljava/lang/Integer;
+}
+
+public final class id/tracive/sdk/TraciveException$CacheMiss : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$Companion {
+	public final fun fromApiError-jSaE0eg (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Duration;)Lid/tracive/sdk/TraciveException;
+	public static synthetic fun fromApiError-jSaE0eg$default (Lid/tracive/sdk/TraciveException$Companion;ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlin/time/Duration;ILjava/lang/Object;)Lid/tracive/sdk/TraciveException;
+}
+
+public final class id/tracive/sdk/TraciveException$CredentialMismatch : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$DetailNotPermitted : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$ExpiredToken : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$GrantRevoked : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$IdempotencyConflict : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$InsufficientCredits : id/tracive/sdk/TraciveException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getWhich ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/TraciveException$InvalidApiKey : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$InvalidRequest : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$InvalidToken : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$MissingScope : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$Network : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$NotImplemented : id/tracive/sdk/TraciveException {
+	public fun <init> (Ljava/lang/String;)V
+}
+
+public final class id/tracive/sdk/TraciveException$PartnerSuspended : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$RateLimited : id/tracive/sdk/TraciveException {
+	public synthetic fun <init> (Lkotlin/time/Duration;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (Lkotlin/time/Duration;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getRetryAfter-FghU774 ()Lkotlin/time/Duration;
+}
+
+public final class id/tracive/sdk/TraciveException$Server : id/tracive/sdk/TraciveException {
+	public fun <init> (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (ILjava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$TokenStorageFailed : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getPlatformStatus ()Ljava/lang/Integer;
+}
+
+public final class id/tracive/sdk/TraciveException$Unknown : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$UnsupportedCreditSource : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$UnsupportedInputType : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveInitProvider : android/content/ContentProvider {
+	public fun <init> ()V
+	public fun delete (Landroid/net/Uri;Ljava/lang/String;[Ljava/lang/String;)I
+	public fun getType (Landroid/net/Uri;)Ljava/lang/String;
+	public fun insert (Landroid/net/Uri;Landroid/content/ContentValues;)Landroid/net/Uri;
+	public fun onCreate ()Z
+	public fun query (Landroid/net/Uri;[Ljava/lang/String;Ljava/lang/String;[Ljava/lang/String;Ljava/lang/String;)Landroid/database/Cursor;
+	public fun update (Landroid/net/Uri;Landroid/content/ContentValues;Ljava/lang/String;[Ljava/lang/String;)I
+}
+
+public final class id/tracive/sdk/TraciveQueryException : id/tracive/sdk/TraciveException {
+	public static final field COUNTRY_NOT_ALPHA3 Ljava/lang/String;
+	public static final field Companion Lid/tracive/sdk/TraciveQueryException$Companion;
+	public static final field EMPTY_ACCOUNT_ID Ljava/lang/String;
+	public static final field EMPTY_BANK_CODE Ljava/lang/String;
+	public static final field EMPTY_CHAIN Ljava/lang/String;
+	public static final field EMPTY_HANDLE Ljava/lang/String;
+	public static final field EMPTY_VALUE Ljava/lang/String;
+	public static final field INVALID_DOCUMENT_ID Ljava/lang/String;
+	public static final field NOT_E164 Ljava/lang/String;
+	public fun <init> (Ljava/lang/String;)V
+	public final fun getReason ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/TraciveQueryException$Companion {
+}
+
+public final class id/tracive/sdk/cache/AesGcmCacheCipher : id/tracive/sdk/cache/CacheCipher {
+	public static final field Companion Lid/tracive/sdk/cache/AesGcmCacheCipher$Companion;
+	public static final field ENVELOPE_VERSION I
+	public fun <init> (Lid/tracive/sdk/cache/CacheDataKey;)V
+	public fun <init> ([B)V
+	public fun open ([B[B)[B
+	public fun seal ([B[B[B)[B
+}
+
+public final class id/tracive/sdk/cache/AesGcmCacheCipher$Companion {
+}
+
+public abstract interface class id/tracive/sdk/cache/CacheCipher {
+	public abstract fun open ([B[B)[B
+	public abstract fun seal ([B[B[B)[B
+}
+
+public final class id/tracive/sdk/cache/CacheDataKey {
+	public static final field Companion Lid/tracive/sdk/cache/CacheDataKey$Companion;
+	public static final field KEY_SIZE I
+	public fun <init> (Ljava/lang/String;[B)V
+	public final fun getBytes ()[B
+	public final fun getId ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/cache/CacheDataKey$Companion {
+}
+
+public abstract interface class id/tracive/sdk/cache/CacheDataKeyStore {
+	public abstract fun createKey (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun deleteKey (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun loadKey (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface class id/tracive/sdk/cache/CheckCache {
+	public abstract fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun get (Lid/tracive/sdk/query/TraciveQuery;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun prune (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun put (Lid/tracive/sdk/query/TraciveQuery;Lid/tracive/sdk/model/CheckResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun remove (Lid/tracive/sdk/query/TraciveQuery;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun size (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class id/tracive/sdk/cache/DisabledCheckCache : id/tracive/sdk/cache/CheckCache {
+	public static final field INSTANCE Lid/tracive/sdk/cache/DisabledCheckCache;
+	public fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Lid/tracive/sdk/query/TraciveQuery;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun prune (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun put (Lid/tracive/sdk/query/TraciveQuery;Lid/tracive/sdk/model/CheckResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun remove (Lid/tracive/sdk/query/TraciveQuery;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun size (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/cache/InMemoryCacheDataKeyStore : id/tracive/sdk/cache/CacheDataKeyStore {
+	public fun <init> ([B)V
+	public fun createKey (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun deleteKey (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun loadKey (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class id/tracive/sdk/cache/InMemoryCheckCache : id/tracive/sdk/cache/CheckCache {
+	public fun <init> (Lid/tracive/sdk/cache/CacheDataKeyStore;Lid/tracive/sdk/model/CachePolicy;Lkotlinx/datetime/Clock;)V
+	public synthetic fun <init> (Lid/tracive/sdk/cache/CacheDataKeyStore;Lid/tracive/sdk/model/CachePolicy;Lkotlinx/datetime/Clock;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Lid/tracive/sdk/query/TraciveQuery;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun prune (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun put (Lid/tracive/sdk/query/TraciveQuery;Lid/tracive/sdk/model/CheckResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun remove (Lid/tracive/sdk/query/TraciveQuery;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun size (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/cache/SqlDelightCheckCache : id/tracive/sdk/cache/CheckCache {
+	public static final field Companion Lid/tracive/sdk/cache/SqlDelightCheckCache$Companion;
+	public fun <init> (Lapp/cash/sqldelight/db/SqlDriver;Lid/tracive/sdk/cache/CacheDataKeyStore;Lid/tracive/sdk/model/CachePolicy;Lkotlinx/datetime/Clock;Lkotlin/coroutines/CoroutineContext;)V
+	public synthetic fun <init> (Lapp/cash/sqldelight/db/SqlDriver;Lid/tracive/sdk/cache/CacheDataKeyStore;Lid/tracive/sdk/model/CachePolicy;Lkotlinx/datetime/Clock;Lkotlin/coroutines/CoroutineContext;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun get (Lid/tracive/sdk/query/TraciveQuery;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun prune (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun put (Lid/tracive/sdk/query/TraciveQuery;Lid/tracive/sdk/model/CheckResult;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun remove (Lid/tracive/sdk/query/TraciveQuery;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun size (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/cache/SqlDelightCheckCache$Companion {
+	public final fun getSchema ()Lapp/cash/sqldelight/db/SqlSchema;
+}
+
+public final class id/tracive/sdk/client/HttpMethod : java/lang/Enum {
+	public static final field GET Lid/tracive/sdk/client/HttpMethod;
+	public static final field POST Lid/tracive/sdk/client/HttpMethod;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lid/tracive/sdk/client/HttpMethod;
+	public static fun values ()[Lid/tracive/sdk/client/HttpMethod;
+}
+
+public final class id/tracive/sdk/client/HttpRequest {
+	public fun <init> (Lid/tracive/sdk/client/HttpMethod;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lid/tracive/sdk/client/HttpMethod;Ljava/lang/String;Ljava/util/Map;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBody ()Ljava/lang/String;
+	public final fun getContentType ()Ljava/lang/String;
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getMethod ()Lid/tracive/sdk/client/HttpMethod;
+	public final fun getUrl ()Ljava/lang/String;
+	public final fun header (Ljava/lang/String;)Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/client/HttpResponse {
+	public fun <init> (ILjava/lang/String;Ljava/util/Map;)V
+	public synthetic fun <init> (ILjava/lang/String;Ljava/util/Map;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getBody ()Ljava/lang/String;
+	public final fun getHeaders ()Ljava/util/Map;
+	public final fun getStatus ()I
+	public final fun header (Ljava/lang/String;)Ljava/lang/String;
+	public final fun isSuccessful ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract interface class id/tracive/sdk/client/HttpTransport {
+	public fun close ()V
+	public abstract fun execute (Lid/tracive/sdk/client/HttpRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class id/tracive/sdk/client/HttpTransport$DefaultImpls {
+	public static fun close (Lid/tracive/sdk/client/HttpTransport;)V
+}
+
+public final class id/tracive/sdk/client/KtorTransport : id/tracive/sdk/client/HttpTransport {
+	public fun <init> ()V
+	public fun <init> (Lio/ktor/client/HttpClient;Z)V
+	public synthetic fun <init> (Lio/ktor/client/HttpClient;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun close ()V
+	public fun execute (Lid/tracive/sdk/client/HttpRequest;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class id/tracive/sdk/client/RetryPolicy {
+	public static final field Companion Lid/tracive/sdk/client/RetryPolicy$Companion;
+	public synthetic fun <init> (IJDJDILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (IJDJDLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun backoffBefore-5sfh64U (I)J
+	public final fun component1 ()I
+	public final fun component2-UwyO8pc ()J
+	public final fun component3 ()D
+	public final fun component4-UwyO8pc ()J
+	public final fun component5 ()D
+	public final fun copy-7Q0yyfQ (IJDJD)Lid/tracive/sdk/client/RetryPolicy;
+	public static synthetic fun copy-7Q0yyfQ$default (Lid/tracive/sdk/client/RetryPolicy;IJDJDILjava/lang/Object;)Lid/tracive/sdk/client/RetryPolicy;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getBackoffMultiplier ()D
+	public final fun getInitialBackoff-UwyO8pc ()J
+	public final fun getJitterRatio ()D
+	public final fun getMaxAttempts ()I
+	public final fun getMaxBackoff-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/client/RetryPolicy$Companion {
+	public final fun getDefault ()Lid/tracive/sdk/client/RetryPolicy;
+	public final fun getNone ()Lid/tracive/sdk/client/RetryPolicy;
+}
+
+public final class id/tracive/sdk/client/TraciveClient {
+	public static final field Companion Lid/tracive/sdk/client/TraciveClient$Companion;
+	public static final field HEADER_IDEMPOTENCY_KEY Ljava/lang/String;
+	public static final field JSON_CONTENT_TYPE Ljava/lang/String;
+	public static final field PATH_CREDITS Ljava/lang/String;
+	public static final field PATH_PROFILE Ljava/lang/String;
+	public static final field PATH_SCAMMER_CHECKS Ljava/lang/String;
+	public static final field PROXY_MODE_MESSAGE Ljava/lang/String;
+	public fun <init> (Lid/tracive/sdk/model/TraciveMode;Lid/tracive/sdk/model/TraciveEnvironment;Lid/tracive/sdk/model/CachePolicy;Lid/tracive/sdk/model/Source;Lid/tracive/sdk/client/HttpTransport;Lkotlinx/datetime/Clock;Lid/tracive/sdk/cache/CheckCache;Lid/tracive/sdk/oauth/TokenStore;Lid/tracive/sdk/client/RetryPolicy;Lid/tracive/sdk/platform/AppPresenceChecker;Lid/tracive/sdk/platform/AuthorizeLauncher;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lid/tracive/sdk/model/TraciveMode;Lid/tracive/sdk/model/TraciveEnvironment;Lid/tracive/sdk/model/CachePolicy;Lid/tracive/sdk/model/Source;Lid/tracive/sdk/client/HttpTransport;Lkotlinx/datetime/Clock;Lid/tracive/sdk/cache/CheckCache;Lid/tracive/sdk/oauth/TokenStore;Lid/tracive/sdk/client/RetryPolicy;Lid/tracive/sdk/platform/AppPresenceChecker;Lid/tracive/sdk/platform/AuthorizeLauncher;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun checkScammer (Lid/tracive/sdk/query/TraciveQuery;Lid/tracive/sdk/model/Source;Lid/tracive/sdk/model/Detail;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun checkScammer$default (Lid/tracive/sdk/client/TraciveClient;Lid/tracive/sdk/query/TraciveQuery;Lid/tracive/sdk/model/Source;Lid/tracive/sdk/model/Detail;Ljava/lang/String;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun close ()V
+	public final fun credits (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun getCache ()Lid/tracive/sdk/cache/CheckCache;
+	public final fun getCachePolicy ()Lid/tracive/sdk/model/CachePolicy;
+	public final fun getDefaultSource ()Lid/tracive/sdk/model/Source;
+	public final fun getEnvironment ()Lid/tracive/sdk/model/TraciveEnvironment;
+	public final fun getMode ()Lid/tracive/sdk/model/TraciveMode;
+	public final fun getOauth ()Lid/tracive/sdk/oauth/TraciveOAuth;
+	public final fun getRetryPolicy ()Lid/tracive/sdk/client/RetryPolicy;
+	public final fun profile (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun signOut (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class id/tracive/sdk/client/TraciveClient$Companion {
+}
+
+public abstract class id/tracive/sdk/model/AuthResult {
+}
+
+public final class id/tracive/sdk/model/AuthResult$AppNotInstalled : id/tracive/sdk/model/AuthResult {
+	public static final field INSTANCE Lid/tracive/sdk/model/AuthResult$AppNotInstalled;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/AuthResult$Authorized : id/tracive/sdk/model/AuthResult {
+	public fun <init> (Ljava/util/List;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;)Lid/tracive/sdk/model/AuthResult$Authorized;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/AuthResult$Authorized;Ljava/util/List;ILjava/lang/Object;)Lid/tracive/sdk/model/AuthResult$Authorized;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getGrantedScopes ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/AuthResult$CodeReceived : id/tracive/sdk/model/AuthResult {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getCode ()Ljava/lang/String;
+	public final fun getCodeVerifier ()Ljava/lang/String;
+	public final fun getRedirectUri ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/AuthResult$Denied : id/tracive/sdk/model/AuthResult {
+	public static final field INSTANCE Lid/tracive/sdk/model/AuthResult$Denied;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/AuthResult$Failed : id/tracive/sdk/model/AuthResult {
+	public fun <init> (Lid/tracive/sdk/TraciveException;)V
+	public final fun component1 ()Lid/tracive/sdk/TraciveException;
+	public final fun copy (Lid/tracive/sdk/TraciveException;)Lid/tracive/sdk/model/AuthResult$Failed;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/AuthResult$Failed;Lid/tracive/sdk/TraciveException;ILjava/lang/Object;)Lid/tracive/sdk/model/AuthResult$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lid/tracive/sdk/TraciveException;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/Billing {
+	public static final field Companion Lid/tracive/sdk/model/Billing$Companion;
+	public fun <init> (Ljava/lang/String;ILjava/lang/Long;)V
+	public synthetic fun <init> (Ljava/lang/String;ILjava/lang/Long;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/Long;
+	public final fun copy (Ljava/lang/String;ILjava/lang/Long;)Lid/tracive/sdk/model/Billing;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/Billing;Ljava/lang/String;ILjava/lang/Long;ILjava/lang/Object;)Lid/tracive/sdk/model/Billing;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCreditSource ()Ljava/lang/String;
+	public final fun getPartnerBalanceRemaining ()Ljava/lang/Long;
+	public final fun getUnitsCharged ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class id/tracive/sdk/model/Billing$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lid/tracive/sdk/model/Billing$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lid/tracive/sdk/model/Billing;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lid/tracive/sdk/model/Billing;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/Billing$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/CachePolicy {
+	public static final field Companion Lid/tracive/sdk/model/CachePolicy$Companion;
+	public static final field SCHEMA_VERSION I
+	public synthetic fun <init> (ZJJJJZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (ZJJJJZLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Z
+	public final fun component2-UwyO8pc ()J
+	public final fun component3-UwyO8pc ()J
+	public final fun component4-UwyO8pc ()J
+	public final fun component5-UwyO8pc ()J
+	public final fun component6 ()Z
+	public final fun copy-lJiDeV0 (ZJJJJZ)Lid/tracive/sdk/model/CachePolicy;
+	public static synthetic fun copy-lJiDeV0$default (Lid/tracive/sdk/model/CachePolicy;ZJJJJZILjava/lang/Object;)Lid/tracive/sdk/model/CachePolicy;
+	public final fun effectiveTtl-3nIYWDw (Lid/tracive/sdk/model/RiskTier;Ljava/lang/Long;)J
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCautionTtl-UwyO8pc ()J
+	public final fun getElevatedTtl-UwyO8pc ()J
+	public final fun getEnabled ()Z
+	public final fun getHighTtl-UwyO8pc ()J
+	public final fun getHonorServerTtlOverride ()Z
+	public final fun getNoneTtl-UwyO8pc ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+	public final fun ttlFor-5sfh64U (Lid/tracive/sdk/model/RiskTier;)J
+}
+
+public final class id/tracive/sdk/model/CachePolicy$Companion {
+	public final fun getDefault ()Lid/tracive/sdk/model/CachePolicy;
+}
+
+public final class id/tracive/sdk/model/CheckResult {
+	public static final field Companion Lid/tracive/sdk/model/CheckResult$Companion;
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/Long;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/Long;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component10 ()Ljava/util/List;
+	public final fun component11 ()I
+	public final fun component12 ()Ljava/util/List;
+	public final fun component13 ()Ljava/util/List;
+	public final fun component14 ()Lid/tracive/sdk/model/Billing;
+	public final fun component15 ()Ljava/lang/Long;
+	public final fun component16 ()Ljava/lang/String;
+	public final fun component17 ()Lid/tracive/sdk/model/Origin;
+	public final fun component18 ()Lkotlinx/datetime/Instant;
+	public final fun component2 ()Z
+	public final fun component3 ()Lid/tracive/sdk/model/RiskTier;
+	public final fun component4 ()I
+	public final fun component5 ()I
+	public final fun component6 ()I
+	public final fun component7 ()Lkotlinx/datetime/Instant;
+	public final fun component8 ()Lkotlinx/datetime/Instant;
+	public final fun component9 ()Ljava/util/Map;
+	public final fun copy (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/Long;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;)Lid/tracive/sdk/model/CheckResult;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/CheckResult;Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/Long;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lid/tracive/sdk/model/CheckResult;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAmbiguousReports ()I
+	public final fun getBilling ()Lid/tracive/sdk/model/Billing;
+	public final fun getCacheTtlSeconds ()Ljava/lang/Long;
+	public final fun getCheckId ()Ljava/lang/String;
+	public final fun getComments ()Ljava/util/List;
+	public final fun getCredibleReports ()I
+	public final fun getDisclaimer ()Ljava/lang/String;
+	public final fun getFetchedAt ()Lkotlinx/datetime/Instant;
+	public final fun getFirstReportOn ()Lkotlinx/datetime/Instant;
+	public final fun getFound ()Z
+	public final fun getFraudAmount ()Ljava/util/Map;
+	public final fun getLastReportOn ()Lkotlinx/datetime/Instant;
+	public final fun getOrigin ()Lid/tracive/sdk/model/Origin;
+	public final fun getRelatedScammerCount ()I
+	public final fun getReportTotal ()I
+	public final fun getRiskTier ()Lid/tracive/sdk/model/RiskTier;
+	public final fun getTags ()Ljava/util/List;
+	public final fun getTopChronologies ()Ljava/util/List;
+	public fun hashCode ()I
+	public final fun toCacheable ()Lid/tracive/sdk/model/CheckResult;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class id/tracive/sdk/model/CheckResult$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lid/tracive/sdk/model/CheckResult$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lid/tracive/sdk/model/CheckResult;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lid/tracive/sdk/model/CheckResult;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/CheckResult$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/Chronology {
+	public static final field Companion Lid/tracive/sdk/model/Chronology$Companion;
+	public fun <init> (Ljava/lang/String;ILjava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;ILjava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()I
+	public final fun component3 ()Ljava/lang/String;
+	public final fun copy (Ljava/lang/String;ILjava/lang/String;)Lid/tracive/sdk/model/Chronology;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/Chronology;Ljava/lang/String;ILjava/lang/String;ILjava/lang/Object;)Lid/tracive/sdk/model/Chronology;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getChronology ()Ljava/lang/String;
+	public final fun getIncidentDate ()Ljava/lang/String;
+	public final fun getRiskLevel ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class id/tracive/sdk/model/Chronology$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lid/tracive/sdk/model/Chronology$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lid/tracive/sdk/model/Chronology;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lid/tracive/sdk/model/Chronology;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/Chronology$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/ClientType : java/lang/Enum {
+	public static final field CONFIDENTIAL Lid/tracive/sdk/model/ClientType;
+	public static final field PUBLIC Lid/tracive/sdk/model/ClientType;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lid/tracive/sdk/model/ClientType;
+	public static fun values ()[Lid/tracive/sdk/model/ClientType;
+}
+
+public final class id/tracive/sdk/model/Comment {
+	public static final field Companion Lid/tracive/sdk/model/Comment$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Z)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Z
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Z)Lid/tracive/sdk/model/Comment;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/Comment;Ljava/lang/String;Ljava/lang/String;ZILjava/lang/Object;)Lid/tracive/sdk/model/Comment;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDate ()Ljava/lang/String;
+	public final fun getFromCredibleReport ()Z
+	public final fun getText ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class id/tracive/sdk/model/Comment$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lid/tracive/sdk/model/Comment$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lid/tracive/sdk/model/Comment;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lid/tracive/sdk/model/Comment;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/Comment$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/CreditsInfo {
+	public static final field Companion Lid/tracive/sdk/model/CreditsInfo$Companion;
+	public fun <init> ()V
+	public fun <init> (ILjava/lang/String;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (ILjava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()I
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Lkotlinx/datetime/Instant;
+	public final fun copy (ILjava/lang/String;Lkotlinx/datetime/Instant;)Lid/tracive/sdk/model/CreditsInfo;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/CreditsInfo;ILjava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lid/tracive/sdk/model/CreditsInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getNextResetAt ()Lkotlinx/datetime/Instant;
+	public final fun getSubscriptionCredits ()I
+	public final fun getTier ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class id/tracive/sdk/model/CreditsInfo$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lid/tracive/sdk/model/CreditsInfo$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lid/tracive/sdk/model/CreditsInfo;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lid/tracive/sdk/model/CreditsInfo;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/CreditsInfo$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/Detail : java/lang/Enum {
+	public static final field Companion Lid/tracive/sdk/model/Detail$Companion;
+	public static final field FULL Lid/tracive/sdk/model/Detail;
+	public static final field MINIMAL Lid/tracive/sdk/model/Detail;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lid/tracive/sdk/model/Detail;
+	public static fun values ()[Lid/tracive/sdk/model/Detail;
+}
+
+public final class id/tracive/sdk/model/Detail$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/Origin : java/lang/Enum {
+	public static final field CACHE Lid/tracive/sdk/model/Origin;
+	public static final field Companion Lid/tracive/sdk/model/Origin$Companion;
+	public static final field SERVER Lid/tracive/sdk/model/Origin;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lid/tracive/sdk/model/Origin;
+	public static fun values ()[Lid/tracive/sdk/model/Origin;
+}
+
+public final class id/tracive/sdk/model/Origin$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/ProfileInfo {
+	public static final field Companion Lid/tracive/sdk/model/ProfileInfo$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/String;
+	public final fun component2 ()Ljava/lang/String;
+	public final fun component3 ()Ljava/lang/String;
+	public final fun component4 ()Ljava/lang/String;
+	public final fun component5 ()Lkotlinx/datetime/Instant;
+	public final fun copy (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/datetime/Instant;)Lid/tracive/sdk/model/ProfileInfo;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/ProfileInfo;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lid/tracive/sdk/model/ProfileInfo;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getCountry ()Ljava/lang/String;
+	public final fun getMemberSince ()Lkotlinx/datetime/Instant;
+	public final fun getName ()Ljava/lang/String;
+	public final fun getSub ()Ljava/lang/String;
+	public final fun getTier ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final synthetic class id/tracive/sdk/model/ProfileInfo$$serializer : kotlinx/serialization/internal/GeneratedSerializer {
+	public static final field INSTANCE Lid/tracive/sdk/model/ProfileInfo$$serializer;
+	public final fun childSerializers ()[Lkotlinx/serialization/KSerializer;
+	public final fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Lid/tracive/sdk/model/ProfileInfo;
+	public synthetic fun deserialize (Lkotlinx/serialization/encoding/Decoder;)Ljava/lang/Object;
+	public final fun getDescriptor ()Lkotlinx/serialization/descriptors/SerialDescriptor;
+	public final fun serialize (Lkotlinx/serialization/encoding/Encoder;Lid/tracive/sdk/model/ProfileInfo;)V
+	public synthetic fun serialize (Lkotlinx/serialization/encoding/Encoder;Ljava/lang/Object;)V
+	public fun typeParametersSerializers ()[Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/ProfileInfo$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/RiskTier : java/lang/Enum {
+	public static final field CAUTION Lid/tracive/sdk/model/RiskTier;
+	public static final field Companion Lid/tracive/sdk/model/RiskTier$Companion;
+	public static final field ELEVATED Lid/tracive/sdk/model/RiskTier;
+	public static final field HIGH Lid/tracive/sdk/model/RiskTier;
+	public static final field NONE Lid/tracive/sdk/model/RiskTier;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lid/tracive/sdk/model/RiskTier;
+	public static fun values ()[Lid/tracive/sdk/model/RiskTier;
+}
+
+public final class id/tracive/sdk/model/RiskTier$Companion {
+	public final fun serializer ()Lkotlinx/serialization/KSerializer;
+}
+
+public final class id/tracive/sdk/model/Source : java/lang/Enum {
+	public static final field CACHE Lid/tracive/sdk/model/Source;
+	public static final field CACHE_FIRST Lid/tracive/sdk/model/Source;
+	public static final field SERVER Lid/tracive/sdk/model/Source;
+	public static final field SERVER_FIRST Lid/tracive/sdk/model/Source;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lid/tracive/sdk/model/Source;
+	public static fun values ()[Lid/tracive/sdk/model/Source;
+}
+
+public abstract class id/tracive/sdk/model/TraciveEnvironment {
+	public abstract fun getBaseUrl ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/TraciveEnvironment$Custom : id/tracive/sdk/model/TraciveEnvironment {
+	public fun <init> (Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getBaseUrl ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/TraciveEnvironment$Production : id/tracive/sdk/model/TraciveEnvironment {
+	public static final field INSTANCE Lid/tracive/sdk/model/TraciveEnvironment$Production;
+	public fun getBaseUrl ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/TraciveEnvironment$Sandbox : id/tracive/sdk/model/TraciveEnvironment {
+	public static final field INSTANCE Lid/tracive/sdk/model/TraciveEnvironment$Sandbox;
+	public fun getBaseUrl ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class id/tracive/sdk/model/TraciveMode {
+}
+
+public final class id/tracive/sdk/model/TraciveMode$OAuth : id/tracive/sdk/model/TraciveMode {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lid/tracive/sdk/model/ClientType;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/util/List;Ljava/lang/String;Lid/tracive/sdk/model/ClientType;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getClientId ()Ljava/lang/String;
+	public final fun getClientType ()Lid/tracive/sdk/model/ClientType;
+	public final fun getPartnerUserId ()Ljava/lang/String;
+	public final fun getRedirectUri ()Ljava/lang/String;
+	public final fun getScopes ()Ljava/util/List;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/TraciveMode$Proxy : id/tracive/sdk/model/TraciveMode {
+	public fun <init> (Ljava/lang/String;Ljava/util/Map;)V
+	public final fun getAuthHeaders ()Ljava/util/Map;
+	public final fun getBaseUrl ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/oauth/AuthorizeUrlBuilder {
+	public static final field AUTHORIZE_PATH Ljava/lang/String;
+	public static final field Companion Lid/tracive/sdk/oauth/AuthorizeUrlBuilder$Companion;
+	public static final field PARAM_CLIENT_ID Ljava/lang/String;
+	public static final field PARAM_CODE_CHALLENGE Ljava/lang/String;
+	public static final field PARAM_CODE_CHALLENGE_METHOD Ljava/lang/String;
+	public static final field PARAM_PARTNER_USER_ID Ljava/lang/String;
+	public static final field PARAM_REDIRECT_URI Ljava/lang/String;
+	public static final field PARAM_RESPONSE_TYPE Ljava/lang/String;
+	public static final field PARAM_SCOPE Ljava/lang/String;
+	public static final field PARAM_STATE Ljava/lang/String;
+	public static final field PRODUCTION_AUTHORIZE_URL Ljava/lang/String;
+	public static final field SANDBOX_AUTHORIZE_URL Ljava/lang/String;
+	public fun <init> ()V
+	public fun <init> (Lid/tracive/sdk/model/TraciveEnvironment;Ljava/lang/String;)V
+	public synthetic fun <init> (Lid/tracive/sdk/model/TraciveEnvironment;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun build (Lid/tracive/sdk/model/TraciveMode$OAuth;Lid/tracive/sdk/oauth/Pkce;Ljava/lang/String;Ljava/util/Map;)Ljava/lang/String;
+	public static synthetic fun build$default (Lid/tracive/sdk/oauth/AuthorizeUrlBuilder;Lid/tracive/sdk/model/TraciveMode$OAuth;Lid/tracive/sdk/oauth/Pkce;Ljava/lang/String;Ljava/util/Map;ILjava/lang/Object;)Ljava/lang/String;
+	public final fun getEndpoint ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/oauth/AuthorizeUrlBuilder$Companion {
+	public final fun endpointFor (Lid/tracive/sdk/model/TraciveEnvironment;)Ljava/lang/String;
+	public final fun percentEncode (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/oauth/InMemoryTokenStore : id/tracive/sdk/oauth/TokenStore {
+	public fun <init> ()V
+	public fun <init> (Lid/tracive/sdk/oauth/TokenSet;)V
+	public synthetic fun <init> (Lid/tracive/sdk/oauth/TokenSet;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun load (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun save (Lid/tracive/sdk/oauth/TokenSet;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/oauth/Pkce {
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public final fun getCodeChallenge ()Ljava/lang/String;
+	public final fun getCodeChallengeMethod ()Ljava/lang/String;
+	public final fun getCodeVerifier ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/oauth/PkceGenerator {
+	public static final field DEFAULT_STATE_BYTES I
+	public static final field DEFAULT_VERIFIER_LENGTH I
+	public static final field INSTANCE Lid/tracive/sdk/oauth/PkceGenerator;
+	public static final field MAX_VERIFIER_LENGTH I
+	public static final field METHOD_S256 Ljava/lang/String;
+	public static final field MIN_VERIFIER_LENGTH I
+	public final fun challengeFor (Ljava/lang/String;)Ljava/lang/String;
+	public final fun generate (I)Lid/tracive/sdk/oauth/Pkce;
+	public static synthetic fun generate$default (Lid/tracive/sdk/oauth/PkceGenerator;IILjava/lang/Object;)Lid/tracive/sdk/oauth/Pkce;
+	public final fun randomState (I)Ljava/lang/String;
+	public static synthetic fun randomState$default (Lid/tracive/sdk/oauth/PkceGenerator;IILjava/lang/Object;)Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/oauth/TokenSet {
+	public static final field Companion Lid/tracive/sdk/oauth/TokenSet$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/datetime/Instant;Ljava/util/List;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Lkotlinx/datetime/Instant;Ljava/util/List;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getAccessToken ()Ljava/lang/String;
+	public final fun getExpiresAt ()Lkotlinx/datetime/Instant;
+	public final fun getGrantedScopes ()Ljava/util/List;
+	public final fun getRefreshToken ()Ljava/lang/String;
+	public final fun getTokenType ()Ljava/lang/String;
+	public final fun isExpiredAt-HG0u8IE (Lkotlinx/datetime/Instant;J)Z
+	public static synthetic fun isExpiredAt-HG0u8IE$default (Lid/tracive/sdk/oauth/TokenSet;Lkotlinx/datetime/Instant;JILjava/lang/Object;)Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/oauth/TokenSet$Companion {
+	public final fun getDEFAULT_EXPIRY_SKEW-UwyO8pc ()J
+}
+
+public abstract interface class id/tracive/sdk/oauth/TokenStore {
+	public abstract fun clear (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun load (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun save (Lid/tracive/sdk/oauth/TokenSet;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class id/tracive/sdk/oauth/TraciveOAuth {
+	public static final field Companion Lid/tracive/sdk/oauth/TraciveOAuth$Companion;
+	public static final field FORM_CONTENT_TYPE Ljava/lang/String;
+	public static final field INSTALL_ATTRIBUTION_PARAM Ljava/lang/String;
+	public static final field INSTALL_URL Ljava/lang/String;
+	public static final field PATH_REVOKE Ljava/lang/String;
+	public static final field PATH_TOKEN Ljava/lang/String;
+	public fun <init> (Lid/tracive/sdk/model/TraciveMode$OAuth;Lid/tracive/sdk/model/TraciveEnvironment;Lid/tracive/sdk/client/HttpTransport;Lid/tracive/sdk/oauth/TokenStore;Lid/tracive/sdk/platform/AppPresenceChecker;Lid/tracive/sdk/platform/AuthorizeLauncher;Lkotlinx/datetime/Clock;Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Lid/tracive/sdk/model/TraciveMode$OAuth;Lid/tracive/sdk/model/TraciveEnvironment;Lid/tracive/sdk/client/HttpTransport;Lid/tracive/sdk/oauth/TokenStore;Lid/tracive/sdk/platform/AppPresenceChecker;Lid/tracive/sdk/platform/AuthorizeLauncher;Lkotlinx/datetime/Clock;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun adoptTokens (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun adoptTokens$default (Lid/tracive/sdk/oauth/TraciveOAuth;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun authorize (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun authorize$default (Lid/tracive/sdk/oauth/TraciveOAuth;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
+	public final fun cancelPendingAuthorization (Ljava/lang/String;)Z
+	public static synthetic fun cancelPendingAuthorization$default (Lid/tracive/sdk/oauth/TraciveOAuth;Ljava/lang/String;ILjava/lang/Object;)Z
+	public final fun getAuthorizeEndpoint ()Ljava/lang/String;
+	public final fun getEnvironment ()Lid/tracive/sdk/model/TraciveEnvironment;
+	public final fun getInstallUrl ()Ljava/lang/String;
+	public final fun getMode ()Lid/tracive/sdk/model/TraciveMode$OAuth;
+	public final fun getPendingAuthorizationId ()Ljava/lang/String;
+	public final fun grantedScopes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun handleCallback (Ljava/lang/String;)Z
+	public final fun isAuthorized (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun signOut (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class id/tracive/sdk/oauth/TraciveOAuth$Companion {
+	public final fun defaultInstallUrl (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/platform/AndroidAppPresenceChecker : id/tracive/sdk/platform/AppPresenceChecker {
+	public fun <init> (Landroid/content/Context;Ljava/lang/String;)V
+	public synthetic fun <init> (Landroid/content/Context;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun isTraciveAppInstalled ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/platform/AndroidAppPresenceCheckerKt {
+	public static final fun defaultAppPresenceChecker ()Lid/tracive/sdk/platform/AppPresenceChecker;
+}
+
+public final class id/tracive/sdk/platform/AndroidAuthorizeLauncher : id/tracive/sdk/platform/AuthorizeLauncher {
+	public fun <init> (Landroid/content/Context;)V
+	public fun launchAuthorize (Ljava/lang/String;)V
+	public fun launchInstall (Ljava/lang/String;)V
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/platform/AndroidAuthorizeLauncherKt {
+	public static final fun defaultAuthorizeLauncher ()Lid/tracive/sdk/platform/AuthorizeLauncher;
+}
+
+public final class id/tracive/sdk/platform/AndroidSecureTokenStoreKt {
+	public static final fun SecureTokenStore ()Lid/tracive/sdk/oauth/TokenStore;
+}
+
+public abstract interface class id/tracive/sdk/platform/AppPresenceChecker {
+	public static final field ANDROID_PACKAGE Ljava/lang/String;
+	public static final field Companion Lid/tracive/sdk/platform/AppPresenceChecker$Companion;
+	public static final field IOS_URL_SCHEME Ljava/lang/String;
+	public abstract fun isTraciveAppInstalled ()Z
+}
+
+public final class id/tracive/sdk/platform/AppPresenceChecker$Companion {
+	public static final field ANDROID_PACKAGE Ljava/lang/String;
+	public static final field IOS_URL_SCHEME Ljava/lang/String;
+}
+
+public abstract interface class id/tracive/sdk/platform/AuthorizeLauncher {
+	public abstract fun launchAuthorize (Ljava/lang/String;)V
+	public abstract fun launchInstall (Ljava/lang/String;)V
+}
+
+public final class id/tracive/sdk/platform/CryptoProvider {
+	public static final field INSTANCE Lid/tracive/sdk/platform/CryptoProvider;
+	public final fun randomBytes (I)[B
+	public final fun sha256 ([B)[B
+	public final fun sha256Hex (Ljava/lang/String;)Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/query/TraciveQuery {
+	public static final field Companion Lid/tracive/sdk/query/TraciveQuery$Companion;
+	public synthetic fun <init> (Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getSearchQueryIndex ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/query/TraciveQuery$Companion {
+	public final fun bankAccount (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
+	public final fun crypto (Ljava/lang/String;Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
+	public final fun email (Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
+	public final fun iban (Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
+	public final fun phone (Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
+	public final fun username (Ljava/lang/String;Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
+}
+

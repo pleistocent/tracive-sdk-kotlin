@@ -199,8 +199,10 @@ Every test in this repo runs **with no network**. The HTTP transport is an injec
 to hit, and a suite that needed one would be untestable in CI anyway.
 
 Formatting is ktfmt **Google style, 2-space indent**, enforced by `ktfmtCheck` in `check`. The public
-surface is pinned by the binary-compatibility-validator; `apiCheck` fails CI on an unintended change,
-and the fix is `./gradlew apiDump` plus a look at the diff — the look is the point.
+surface is pinned by the binary-compatibility-validator, in two files — `api/tracive-sdk.klib.api`
+for the Apple targets and `api/tracive-sdk.android.api` for Android. `apiCheck` fails CI on an
+unintended change to either, and the fix is `./gradlew apiDump` plus a look at the diff — the look is
+the point.
 
 ## Documentation
 

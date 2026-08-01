@@ -28,6 +28,12 @@ version = providers.gradleProperty("tracive.version").get()
  * confined to the iOS targets. `strictValidation` stays off so a Linux runner, which cannot build
  * the Apple targets at all, infers those targets' ABI from the ones it can build instead of failing
  * the job. The macOS runner in CI is the one that actually checks them.
+ *
+ * The klib dump covers only the Apple targets, so it is half the story. This plugin wires an Android
+ * dump automatically only for a compilation named `release`, which AGP's KMP library plugin does not
+ * produce — so `:tracive-sdk` registers the Android dump itself, against `api/tracive-sdk.android
+ * .api`. See the comment above `androidApiBuild` in `tracive-sdk/build.gradle.kts`; without it
+ * `apiCheck` could not fail on a change to the Android surface at all.
  */
 apiValidation {
   // The sample app is an application, not a published artifact. It has no ABI to keep stable.

@@ -56,10 +56,12 @@ jobs:
       - name: Check formatting
         run: ./gradlew ktfmtCheck
 
-      # The public surface, pinned. A change here is not necessarily wrong — it is necessarily
-      # deliberate. If this fails, run `./gradlew apiDump` and review the diff; the review is the
-      # point, because partner apps upgrade on their own schedule and an accidental signature change
-      # is a broken build in someone else's release train.
+      # The public surface, pinned — both halves of it. `api/tracive-sdk.klib.api` covers the Apple
+      # targets and `api/tracive-sdk.android.api` covers the Android one, which is where most
+      # partners integrate. A change here is not necessarily wrong; it is necessarily deliberate. If
+      # this fails, run `./gradlew apiDump` and review the diff. The review is the point, because
+      # partner apps upgrade on their own schedule and an accidental signature change is a broken
+      # build in someone else's release train.
       - name: Check public API surface
         run: ./gradlew apiCheck
 

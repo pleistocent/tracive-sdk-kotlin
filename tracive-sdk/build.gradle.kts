@@ -71,6 +71,57 @@ kotlin {
   }
 }
 
+/*
+ * The Android half of the public surface, pinned.
+ *
+ * The binary-compatibility-validator plugin wires itself up automatically for a JVM target, and for
+ * an Android target it looks for a compilation named `release` — which is what the old
+ * `com.android.library` plugin produces. This module uses AGP's KMP library plugin, whose
+ * compilations are `main` and `hostTest`, so BCV matched nothing and `apiCheck` covered only the
+ * Kotlin/Native klib ABI. `TraciveAndroid`, `TraciveInitProvider`, `AndroidAppPresenceChecker`,
+ * `AndroidAuthorizeLauncher` and the Android `SecureTokenStore()` were in no dump at all, so the CI
+ * step named "Check public API surface" could not fail on a change to the half of this SDK most
+ * partners integrate against. A check that cannot fail is worse than no check: it reads as coverage.
+ *
+ * The three tasks below hand BCV's own dumper the Android `main` compilation and compare the result
+ * against `api/tracive-sdk.android.api`, so the Android surface is checked in the same format, with
+ * the same `ignoredPackages`, and `./gradlew apiDump` still regenerates everything.
+ */
+val androidApiFileName = "tracive-sdk.android.api"
+
+val androidMainClasses =
+  kotlin.targets.getByName("android").compilations.getByName("main").output.classesDirs
+
+val androidApiBuild =
+  tasks.register<kotlinx.validation.KotlinApiBuildTask>("androidApiBuild") {
+    description = "Dumps the public API of the Android target. Complementary to androidApiCheck."
+    // Only the compiled output, matching how BCV treats an Android compilation: the dependency
+    // classpath is an AAR-shaped mixture that its JVM reader cannot always resolve.
+    inputClassesDirs.from(androidMainClasses)
+    outputApiFile.set(layout.buildDirectory.file("api/android/$androidApiFileName"))
+    runtimeClasspath.from(configurations.named("bcv-rt-jvm-cp-resolver"))
+  }
+
+val androidApiCheck =
+  tasks.register<kotlinx.validation.KotlinApiCompareTask>("androidApiCheck") {
+    group = "verification"
+    description = "Checks the Android target's public API against api/$androidApiFileName."
+    projectApiFile.set(layout.projectDirectory.file("api/$androidApiFileName"))
+    generatedApiFile.set(androidApiBuild.flatMap { it.outputApiFile })
+    dependsOn(androidApiBuild)
+  }
+
+val androidApiDump =
+  tasks.register<Copy>("androidApiDump") {
+    description = "Overwrites api/$androidApiFileName with the Android target's current surface."
+    from(androidApiBuild.flatMap { it.outputApiFile })
+    into(layout.projectDirectory.dir("api"))
+  }
+
+tasks.named("apiCheck") { dependsOn(androidApiCheck) }
+
+tasks.named("apiDump") { dependsOn(androidApiDump) }
+
 sqldelight {
   databases {
     create("TraciveCacheDatabase") {
