@@ -200,6 +200,28 @@ class TraciveOAuth(
   /** Hands out the ids in [AuthorizationAttempt]. Only ever touched under [authorize]. */
   private var authorizationCounter: Long = 0L
 
+  /**
+   * Moves every time the grant is deliberately thrown away — [signOut] and [clearTokens].
+   *
+   * Every write of a token this class performs is conditional on it not having moved since that
+   * round trip began. Discarding credentials is instantaneous and obtaining them is not, so a
+   * refresh or a code exchange that was already on the wire when the user signed out still
+   * completes — and its write would refill a store the user just emptied, leaving a live grant on a
+   * device they may be about to hand to someone else. Worse, on the refresh path the token it
+   * writes back is the *rotated* one: the newest and longest-lived refresh token in the grant's
+   * history, stored on a device that has been told it is signed out.
+   *
+   * Waiting for the in-flight work inside [signOut] is not the alternative it looks like. It would
+   * make signing out depend on a network call finishing, which is exactly what [signOut] refuses to
+   * do — a sign-out has to be immediate and final even offline.
+   *
+   * The counter is only ever incremented, so a lost increment under a race cannot restore an
+   * earlier value: whatever a caller captured before a sign-out can never compare equal again. That
+   * is the only property the guard needs, which is why this is a plain volatile field rather than
+   * an atomic.
+   */
+  @Volatile private var credentialGeneration: Long = 0L
+
   init {
     // Refused here, at construction, because this is the loudest point available: it runs once, in
     // the host app's own code, on every run, during development, before any end user is involved.
@@ -594,6 +616,10 @@ class TraciveOAuth(
   suspend fun signOut() {
     val store = tokenStoreProvider.value
     val tokens = store.load()
+    // Before the revoke round trip, not after it: from here on, anything already in flight that
+    // comes back holding a token finds the generation moved and abandons it rather than writing it
+    // to a store this method is about to empty. See [credentialGeneration].
+    credentialGeneration += 1
     if (tokens != null) {
       // Revoking the refresh token is what actually ends the grant (RFC 7009 §2.1): the server
       // invalidates it and every access token issued under it. Revoking an access token alone would
@@ -689,6 +715,9 @@ class TraciveOAuth(
             "The access token was rejected and no refresh token is stored. Authorize again."
           )
 
+      // Read before the request goes out, checked again before the reply is stored.
+      val generation = credentialGeneration
+
       val response =
         post(
           url = environment.baseUrl + PATH_TOKEN,
@@ -706,6 +735,12 @@ class TraciveOAuth(
 
       val refreshed =
         tokenSetFrom(decodeTokenResponse(response), fallbackScopes = current.grantedScopes)
+      // The grant may have been discarded while this round trip was in flight. Writing now would
+      // undo a sign-out the user has already been told succeeded, and would leave the *rotated*
+      // refresh token — the newest one the server ever issued for this grant — on a device the
+      // user believes is signed out. The new pair is abandoned instead, which is what the server's
+      // own rotation already assumes for a token that is never presented.
+      requireSameCredentialGeneration(generation, "the refresh was in flight")
       // Replace both halves at once: a reader must never see the new access token beside the old
       // refresh token, because the old one is now the thing the server watches for replays.
       store.save(refreshed)
@@ -715,6 +750,8 @@ class TraciveOAuth(
 
   /** Drops the stored grant. Used when the server says it is gone. */
   internal suspend fun clearTokens() {
+    // A deliberate discard, on the same terms as signOut: nothing in flight may put it back.
+    credentialGeneration += 1
     tokenStoreProvider.value.clear()
   }
 
@@ -736,6 +773,25 @@ class TraciveOAuth(
 
   // --------------------------------------------------------------- internal ----
 
+  /**
+   * Refuses to store a credential that was obtained before the grant was thrown away.
+   *
+   * Called immediately before every token write that follows a round trip, with no suspension
+   * between the check and the write — so a sign-out either lands before this and the write is
+   * abandoned, or lands after the store has already accepted it and clears it in the normal way.
+   *
+   * @param generation what [credentialGeneration] held when that round trip started.
+   * @param during names what was in flight, for the message and nothing else.
+   * @throws TraciveException.GrantRevoked always, when the generation has moved. It is the right
+   *   shape for both callers: the grant this credential belongs to is gone, and the caller's next
+   *   step is to authorize again rather than to retry.
+   */
+  private fun requireSameCredentialGeneration(generation: Long, during: String) {
+    if (generation != credentialGeneration) {
+      throw TraciveException.GrantRevoked("The grant was dropped while $during.")
+    }
+  }
+
   /** Exchanges the authorization code, or hands it back for a confidential client to exchange. */
   private suspend fun complete(code: String, record: PendingAuthorization): AuthResult {
     if (mode.clientType == ClientType.CONFIDENTIAL) {
@@ -748,6 +804,10 @@ class TraciveOAuth(
       )
     }
 
+    // Same race the refresh path guards, and the same rule: a sign-out landing while the code is
+    // being exchanged wins. Storing afterwards would hand the user a live grant they had already
+    // abandoned finishing.
+    val generation = credentialGeneration
     return try {
       val response =
         post(
@@ -769,6 +829,7 @@ class TraciveOAuth(
         AuthResult.Failed(ApiErrors.toException(response))
       } else {
         val tokens = tokenSetFrom(decodeTokenResponse(response), fallbackScopes = mode.scopes)
+        requireSameCredentialGeneration(generation, "the authorization was completing")
         tokenStoreProvider.value.save(tokens)
         AuthResult.Authorized(tokens.grantedScopes)
       }
