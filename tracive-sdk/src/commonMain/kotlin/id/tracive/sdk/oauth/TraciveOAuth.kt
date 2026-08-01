@@ -227,12 +227,28 @@ class TraciveOAuth(
    * its code must not be redeemed. That case resolves [authorize] with
    * [AuthResult.Failed]`(InvalidRequest)`.
    *
-   * @return false when there is nothing pending — a stray link, a duplicate delivery, or a callback
-   *   that outlived the process. The host can treat false as "not mine".
+   * "Not mine" and "mine, and wrong" are different answers and this method keeps them apart. A URL
+   * that is not addressed to [TraciveMode.OAuth.redirectUri], or that carries none of `code`,
+   * `error` or `state`, is left entirely alone: the pending authorization is untouched and the
+   * answer is false. Only a URL that is genuinely this client's redirect is measured against
+   * `state`, and a `state` that is present and different is then treated as the security event it
+   * is.
+   *
+   * The distinction is not cosmetic. Hosts are encouraged to route every incoming deep link through
+   * here, and a redirect on a private-use scheme is one any other installed app may declare and
+   * fire. Without it, one empty deep link from any app on the device would abort a user's
+   * authorization — repeatedly, and with nothing to show for it.
+   *
+   * @return false when the URL is not this client's redirect, when it carries no OAuth parameters,
+   *   or when there is nothing pending — a stray link, a duplicate delivery, or a callback that
+   *   outlived the process. The host can treat false as "not mine". True means the pending
+   *   authorization has been resolved, successfully or not.
    */
   fun handleCallback(url: String): Boolean {
     val request = pending ?: return false
+    if (!isOurRedirect(url)) return false
     val parameters = parseQueryParameters(url)
+    if (OAUTH_CALLBACK_PARAMS.none { it in parameters }) return false
 
     val state = parameters[AuthorizeUrlBuilder.PARAM_STATE]
     if (state == null || state != request.state) {
@@ -246,7 +262,7 @@ class TraciveOAuth(
       return true
     }
 
-    val error = parameters["error"]
+    val error = parameters[PARAM_ERROR]
     if (error != null) {
       request.outcome.complete(
         if (error == ERROR_ACCESS_DENIED) CallbackOutcome.Denied
@@ -287,6 +303,24 @@ class TraciveOAuth(
     pending?.outcome?.complete(CallbackOutcome.Denied)
     pending = null
   }
+
+  /**
+   * Whether [url] is addressed to this client's own redirect URI.
+   *
+   * Compared as everything before the query and the fragment, which is scheme, authority and path —
+   * the parts a redirect registration fixes. Case-insensitively, because scheme and host are
+   * case-insensitive (RFC 3986 §3.1 and §3.2.2), and with a trailing slash ignored, because a
+   * browser adds one to a bare-authority URL and a registration usually does not carry it.
+   *
+   * Getting this wrong in the permissive direction costs nothing: `state` is still checked
+   * afterwards, and that is what actually decides whether a code may be redeemed. Getting it wrong
+   * in the restrictive direction would drop a real redirect, so it errs towards accepting.
+   */
+  private fun isOurRedirect(url: String): Boolean =
+    redirectTarget(url).equals(redirectTarget(mode.redirectUri), ignoreCase = true)
+
+  private fun redirectTarget(url: String): String =
+    url.substringBefore('#').substringBefore('?').trimEnd('/')
 
   // ---------------------------------------------------------------- tokens ----
 
@@ -599,6 +633,17 @@ class TraciveOAuth(
     private const val PARAM_REFRESH_TOKEN = "refresh_token"
     private const val GRANT_AUTHORIZATION_CODE = "authorization_code"
     private const val GRANT_REFRESH_TOKEN = "refresh_token"
+    private const val PARAM_ERROR = "error"
+
+    /**
+     * The parameters an authorization redirect must carry at least one of.
+     *
+     * A URL on this client's own redirect that has none of them did not come from the authorization
+     * server, so it is left alone rather than allowed to resolve a pending request.
+     */
+    private val OAUTH_CALLBACK_PARAMS =
+      listOf(AuthorizeUrlBuilder.PARAM_STATE, PARAM_CODE, PARAM_ERROR)
+
     private const val ERROR_ACCESS_DENIED = "access_denied"
     private const val ERROR_INVALID_GRANT = "invalid_grant"
     private const val TOKEN_TYPE_REFRESH = "refresh_token"

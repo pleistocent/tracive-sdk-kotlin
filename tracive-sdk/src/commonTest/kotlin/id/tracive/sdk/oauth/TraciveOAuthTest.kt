@@ -153,6 +153,39 @@ class TraciveOAuthTest {
     assertTrue(transport.requests.isEmpty())
   }
 
+  /**
+   * A link that is not this client's redirect, or carries no OAuth parameters, must be left alone.
+   *
+   * Hosts are told to route every incoming deep link through `handleCallback`, and the sample's
+   * redirect is a private-use scheme — which any other installed app may declare and fire. Treating
+   * such a link as a failed callback let any app on the device abort a user's authorization with
+   * one empty deep link, repeatedly and undetectably, and misfired benignly whenever an unrelated
+   * link arrived while the browser was open.
+   */
+  @Test
+  fun anUnrelatedDeepLinkLeavesAPendingAuthorizationAlone() = runSdkTest {
+    val transport = FakeHttpTransport { jsonResponse(tokenJson()) }
+    val launcher = RecordingAuthorizeLauncher()
+    val oauth = oauthUnderTest(transport, launcher)
+
+    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+
+    assertFalse(
+      oauth.handleCallback("tracive-other://oauth/callback?code=abc&state=whatever"),
+      "a link addressed elsewhere was claimed",
+    )
+    assertFalse(oauth.handleCallback(REDIRECT_URI), "our redirect with no query at all was claimed")
+    assertFalse(
+      oauth.handleCallback("$REDIRECT_URI?utm_source=newsletter"),
+      "our redirect carrying no OAuth parameter was claimed",
+    )
+
+    // None of that disturbed the request, so the real redirect still resolves it.
+    val state = stateOf(launcher.authorizeUrls.single())
+    assertTrue(oauth.handleCallback("$REDIRECT_URI?code=abc&state=$state"))
+    assertIs<AuthResult.Authorized>(outcome.await())
+  }
+
   @Test
   fun aCallbackWithNothingPendingIsNotOurs() = runSdkTest {
     val oauth =
