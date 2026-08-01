@@ -9,8 +9,50 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ## [Unreleased]
 
+### Fixed
+
+- **A Keychain or Keystore write that fails is no longer reported as a success.** The iOS token
+  store discarded every `OSStatus` it received, so a save that did not happen looked exactly like
+  one that did. After a refresh rotation that leaves the device holding the *retired* refresh token,
+  which the server's reuse detection reads as theft and answers by revoking the whole grant. Both
+  platform stores now raise the new `TraciveException.TokenStorageFailed`, carrying the platform's
+  numeric status and nothing else.
+- **`InMemoryCacheDataKeyStore.createKey()` returns fresh key material.** It used to hand back the
+  same bytes under a new id, forever. The cache's nonce counter restarts at zero for every new key,
+  so reissuing one produced a repeated (key, nonce) pair — the single failure AES-GCM does not
+  degrade gracefully from. `SqlDelightCheckCache` now refuses this key store outright.
+- **A stray deep link can no longer abort an authorization in flight.** `handleCallback` treated any
+  URL as a callback once a request was pending, including one with no query string at all, so any
+  app on the device could cancel a user's authorization by firing an empty link. It now answers
+  `false` and leaves the request alone unless the URL is this client's own redirect and carries at
+  least one of `code`, `error` or `state`.
+- The iOS `UIApplication` calls hop to the main queue themselves instead of asking the caller to.
+- The default HTTP client has explicit timeouts (request 30s, connect 10s, socket 30s) rather than
+  whatever the engine chose, and response bodies are capped at 512 KiB rather than read unbounded.
+- `TraciveAndroid`'s application `Context` and `TraciveOAuth`'s pending request are `@Volatile`; the
+  sample's double-checked lock is repaired.
+
 ### Changed
 
+- **Breaking:** `AppPresenceChecker.isTraciveAppInstalled`, `AuthorizeLauncher.launchAuthorize` and
+  `AuthorizeLauncher.launchInstall` are now `suspend`, so the iOS implementations can reach the main
+  queue. A custom implementation needs `suspend` added.
+- **Breaking:** `cancelPendingAuthorization` takes an optional authorization id and returns
+  `Boolean`. Passing the id read from the new `pendingAuthorizationId` stops a late "browser closed"
+  signal from cancelling a newer request. The no-argument call still compiles and behaves as before.
+- **Breaking:** `TokenSet.isExpiredAt`, `TokenSet.DEFAULT_EXPIRY_SKEW` and
+  `CryptoProvider.sha256Hex` are removed. All three were unused; the SDK refreshes on the 401 rather
+  than on a device clock it does not control.
+- `TraciveOAuth.close()` is public. Call it on any instance you built without passing a `transport`,
+  or it leaks the HTTP client it made for itself.
+- `apiCheck` now validates the **Android** public surface as well, against
+  `api/tracive-sdk.android.api`. It previously covered only the Kotlin/Native klib ABI, so no change
+  to `TraciveAndroid`, `TraciveInitProvider` or the Android platform classes could fail CI.
+- `query-grammar-vectors.json` updated to **version 3**: `crossLanguageSemantics.nfcScope` no longer
+  contradicts the `rules` section about NFC on the bank code, and a 34th vector pins the difference.
+- One SHA-256 implementation instead of two, and one lower-case hex encoder instead of two.
+- `docs/caching.md` no longer tells iOS integrators to construct a class that does not exist; it
+  shows the Keychain key store inline and says plainly that the SDK ships none.
 - `query-grammar-vectors.json` updated to **version 2**: 33 vectors (8 new) plus two new sections,
   `crossLanguageSemantics` and `documentIdGuard`. Every expected value in it was produced by running
   the real backend normalizers, so where the SDK and the fixture disagreed, the SDK was wrong.
