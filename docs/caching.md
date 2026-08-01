@@ -258,8 +258,11 @@ to query on would give all of that away at once.
 
 ### Full detail is never cached
 
-Only the fields invariant across `detail` and `locale` are stored. Dropped on the way in:
-`topChronologies`, `comments`, `billing`, `checkId`.
+`topChronologies`, `comments`, `billing` and `checkId` are dropped on the way in. What survives is
+invariant across `detail` — but not across `locale`: `tags` and `disclaimer` are localized and are
+kept. Safety comes from what is never written, not from the projection being locale-proof. A minimal
+check does not send a `locale` at all, so its answer has only one form; a `Detail.FULL` request,
+which does send one, never reaches the cache in either direction.
 
 The cache is keyed on the query **alone**, so anything varying with `detail` or `locale` would be
 served back under the wrong request — an Indonesian narrative answering an English one. Consequently:

@@ -19,8 +19,10 @@ import id.tracive.sdk.query.TraciveQuery
  * - The key is `SHA-256(query.searchQueryIndex)`. The identifier itself — the phone number, the
  *   account number, the wallet address — is never written to disk, in any form.
  * - The value is encrypted with AES-256-GCM under a key held in the platform key store.
- * - Only the fields that are invariant across `detail` and `locale` are kept. `topChronologies`,
- *   `comments`, `billing` and `checkId` are dropped on the way in — see [CheckResult.toCacheable].
+ * - `topChronologies`, `comments`, `billing` and `checkId` are dropped on the way in — see
+ *   [CheckResult.toCacheable]. What survives is invariant across `detail`, but not across `locale`:
+ *   `tags` and `disclaimer` are localized and are kept. Only a minimal check, which sends no
+ *   `locale`, is ever written here, so there is one form of the answer to store.
  *
  * Everything here suspends because the backing store does real I/O. Implementations must tolerate
  * concurrent callers.
