@@ -360,15 +360,28 @@ class TraciveClient(
   }
 
   /**
-   * Performs one API call: attaches the bearer token, applies the retry policy, and handles the one
-   * 401 that is worth handling.
+   * Performs one API call: attaches the bearer token, applies the retry policy, and handles the
+   * 401s that are worth handling.
    *
-   * The 401 path is deliberately narrow:
-   * - `expired_token` → refresh **once**, single-flight, and repeat the request. A second 401 after
-   *   a fresh token is not a token problem, so it surfaces.
+   * The 401 path is defined by what is **terminal**, not by one exact code:
    * - `grant_revoked` → clear the stored tokens and surface it. Never retry, never refresh: the
-   *   grant is gone, and hammering it looks like a replay to the server.
-   * - anything else → surface it.
+   *   grant is gone, and presenting it again looks like a replay to the server.
+   * - `invalid_token` → surface it. The server is saying the credential is not usable at all, so a
+   *   fresh one earns nothing.
+   * - **any other 401** → refresh **once**, single-flight, and repeat the request. A second 401
+   *   after a fresh token is not a token problem, so it surfaces.
+   *
+   * That last rule used to require the body to carry exactly `expired_token`. A bare `401
+   * Unauthorized` — no body at all, or nothing but a `WWW-Authenticate` header — is what CDNs, API
+   * gateways and misconfigured reverse proxies emit, and this SDK is explicitly designed to sit
+   * behind a partner gateway. Requiring the code left a client in that state permanently stuck: it
+   * never refreshed, so every call failed identically until the app happened to call `authorize()`
+   * again, and nothing in the failure said which of the two problems it was.
+   *
+   * Widening it costs nothing that was not already spent: the refresh is capped at one per request
+   * either way, and the replay carries an `Idempotency-Key` — [fetchCheck] attaches one even when
+   * the caller supplied none — so a check that was billed after all is collapsed rather than
+   * charged twice.
    */
   private suspend fun send(
     method: HttpMethod,
@@ -418,9 +431,21 @@ class TraciveClient(
 
       if (response.status == 401) {
         val envelope = ApiErrors.parseEnvelope(response.body)
-        when (envelope.code) {
-          TraciveException.CODE_EXPIRED_TOKEN -> {
-            if (refreshAttempted) throw ApiErrors.toException(response)
+        when {
+          // Terminal: the grant is gone. Clear it and surface it — never refresh, because
+          // presenting a retired token again is what an attacker's replay looks like.
+          envelope.code == TraciveException.CODE_GRANT_REVOKED -> {
+            flow.clearTokens()
+            throw ApiErrors.toException(response)
+          }
+          // Terminal at one remove: the server is saying this credential is not usable at all, so
+          // obtaining a fresh one earns nothing. It is also the answer to an empty bearer, which
+          // `TraciveOAuth.accessToken` repairs before the request rather than here.
+          envelope.code == TraciveException.CODE_INVALID_TOKEN ->
+            throw ApiErrors.toException(response)
+          // A second 401 after a fresh token is not a token problem.
+          refreshAttempted -> throw ApiErrors.toException(response)
+          else -> {
             refreshAttempted = true
             // Single-flight: concurrent 401s produce exactly one refresh. Several would spend the
             // rotating refresh token more than once, which the server reads as theft and answers by
@@ -428,11 +453,6 @@ class TraciveClient(
             token = flow.refreshedToken(token)
             continue
           }
-          TraciveException.CODE_GRANT_REVOKED -> {
-            flow.clearTokens()
-            throw ApiErrors.toException(response)
-          }
-          else -> throw ApiErrors.toException(response)
         }
       }
 

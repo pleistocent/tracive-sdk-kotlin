@@ -130,6 +130,74 @@ class RetryAndRefreshTest {
     assertEquals(2, transport.requestsTo("/scammer-checks").size, "the check ran more than twice")
   }
 
+  /**
+   * A 401 that carries no recognised code still triggers a refresh.
+   *
+   * A bare `401 Unauthorized` with no body — or with nothing but a `WWW-Authenticate` header — is
+   * what CDNs, API gateways and misconfigured reverse proxies emit, and this SDK is designed to sit
+   * behind a partner gateway. While the refresh required the body to say exactly `expired_token`, a
+   * client in that state was stuck for good: it never refreshed, every call failed identically, and
+   * nothing said which of the two problems it was.
+   */
+  @Test
+  fun aBareUnauthorizedRefreshesAndRepeatsTheRequest() = runSdkTest {
+    for (unauthorized in
+      listOf(
+        HttpResponse(401, ""),
+        HttpResponse(401, "", mapOf("WWW-Authenticate" to "Bearer")),
+        HttpResponse(401, errorJson("token_not_active_yet")),
+        HttpResponse(401, "<html>401 Unauthorized</html>"),
+      )) {
+      var checks = 0
+      val transport = FakeHttpTransport { request ->
+        if (request.url.endsWith(TraciveOAuth.PATH_TOKEN)) jsonResponse(tokenJson())
+        else {
+          checks += 1
+          if (checks == 1) unauthorized else jsonResponse(checkResultJson())
+        }
+      }
+      val client = testClient(transport)
+
+      assertTrue(
+        client.checkScammer(testQuery()).found,
+        "a 401 shaped like <${unauthorized.body}> never triggered a refresh",
+      )
+      assertEquals(1, transport.requestsTo(TraciveOAuth.PATH_TOKEN).size)
+      assertEquals("Bearer access-2", transport.requests.last().header("Authorization"))
+    }
+  }
+
+  /** Widening what triggers a refresh must not widen how many refreshes one request can cause. */
+  @Test
+  fun aBareUnauthorizedStillRefreshesOnlyOnce() = runSdkTest {
+    val transport = FakeHttpTransport { request ->
+      if (request.url.endsWith(TraciveOAuth.PATH_TOKEN)) jsonResponse(tokenJson())
+      else HttpResponse(401, "")
+    }
+    val client = testClient(transport)
+
+    assertFailsWith<TraciveException> { client.checkScammer(testQuery()) }
+
+    assertEquals(1, transport.requestsTo(TraciveOAuth.PATH_TOKEN).size, "more than one refresh")
+    assertEquals(2, transport.requestsTo(TraciveClient.PATH_SCAMMER_CHECKS).size)
+  }
+
+  /**
+   * `invalid_token` stays terminal. The server is saying the credential is not usable at all, so a
+   * fresh one earns nothing — and a grant whose access token is blank is repaired before the
+   * request goes out rather than by this path. See `DamagedGrantTest`.
+   */
+  @Test
+  fun anInvalidTokenIsNeverRefreshed() = runSdkTest {
+    val transport = FakeHttpTransport.always(HttpResponse(401, errorJson("invalid_token")))
+    val client = testClient(transport)
+
+    assertFailsWith<TraciveException.InvalidToken> { client.checkScammer(testQuery()) }
+
+    assertTrue(transport.requestsTo(TraciveOAuth.PATH_TOKEN).isEmpty(), "invalid_token refreshed")
+    assertEquals(1, transport.requestsTo(TraciveClient.PATH_SCAMMER_CHECKS).size)
+  }
+
   @Test
   fun aRevokedGrantIsClearedAndNeverRefreshed() = runSdkTest {
     val store = storedTokens()
