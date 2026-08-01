@@ -72,10 +72,30 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   sitting next to the `state` it answered to. And nothing looked at the clock: a callback arriving an
   hour after `authorize()` was accepted, its long-expired code sent to the token endpoint, and the
   only possible reply was an `invalid_grant` the user watched arrive for no reason anyone could
-  explain. Every terminal outcome now clears the record — a completed exchange, a code handed back to
-  a confidential client, a denial, a `state` mismatch, an expiry, `cancelPendingAuthorization()`, a
+  explain. Every outcome that consumes the attempt now clears the record — a completed exchange, a
+  code handed back to a confidential client, a denial, an expiry, `cancelPendingAuthorization()`, a
   failed exchange, a browser that would not open, and `signOut()` — and a callback older than the
-  window is refused locally with `AuthResult.Failed(InvalidRequest)` before anything is sent.
+  window is refused locally with `AuthResult.Failed(InvalidRequest)` before anything is sent. A
+  `state` mismatch is refused without erasing anything; see the entry below for why it is not one of
+  these.
+- **A callback whose `state` does not match no longer erases the pending authorization.** It is
+  still refused on exactly the same terms — `state` is compared before `error` or `code` is read,
+  the code is never redeemed, nothing is sent, and the answer is still
+  `AuthResult.Failed(InvalidRequest)` — but the record now stays where it is, so the user's own
+  redirect still completes the flow when it arrives. Erasing it handed every other app on the device
+  a one-call cancel button. Hosts are told to route every incoming deep link through
+  `handleCallback`, and a private-use redirect scheme is one any installed app may declare, so a
+  single URL carrying a foreign `state` was enough to end an authorization the user was in the
+  middle of giving: they finished consenting in the Tracive app, came back, and found the attempt
+  already abandoned with nothing left to complete. Nothing reported it either, because from the
+  SDK's side the forged URL had been turned away exactly as it should have been. The objection to
+  keeping the record is that a forged redirect must not leave a live PKCE verifier parked on the
+  device, and it resolves the other way: the forgery does not make the verifier sit there any
+  *longer* — it was already going to, for the ten minutes the user has to finish consenting — and
+  the expiry still retires it on time. What the erase bought was not a shorter window, only the
+  cancel button. A redirect arriving when no authorization is in progress is still
+  `AuthResult.Failed(InvalidRequest)`; there is nothing there to protect. The Flutter, Swift and
+  React Native SDKs all keep the record for the same reason.
 - **The document-id guard no longer refuses `__a\nb__`, a key the API accepts.** The reserved-id
   pattern is `^__.*__$`, and a regex `.` does not match a line terminator unless the `s` flag is
   set — which it is not. The guard was written as `startsWith("__") && endsWith("__")`, which has no

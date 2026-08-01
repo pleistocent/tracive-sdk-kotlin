@@ -103,8 +103,10 @@ private class TokenResponse(
  * - **A callback that outlives the host process completes anyway.** The pending record — `state`,
  *   the verifier, the redirect URI and a timestamp — is written to the token store before the
  *   browser opens, and [handleCallback] reads it back from there when this process holds nothing.
- *   It is erased on every terminal outcome, and refused once it is older than
- *   [pendingAuthorizationMaxAge] — see there for how long that is and why.
+ *   It is erased on every outcome that consumes the attempt, and refused once it is older than
+ *   [pendingAuthorizationMaxAge] — see there for how long that is and why. A callback whose `state`
+ *   does not match is not one of those outcomes; it leaves the record alone, so a URL from another
+ *   app cannot end a consent the user is still giving.
  *
  * There is no API-key parameter here or anywhere else in this SDK, in any mode. That is a hard
  * design invariant, not an omission.
@@ -249,11 +251,11 @@ class TraciveOAuth(
    * stale callback is exactly the confusion `state` exists to prevent.
    *
    * The [PendingAuthorization] is written to the token store **before** the browser opens, and
-   * erased again on every terminal outcome. A write that fails does not stop the authorization: the
-   * in-memory attempt can still complete a callback that reaches this same process, so the flow
-   * works and only its ability to survive a process death is lost. Refusing here would be worse
-   * than that — a confidential client whose store deliberately keeps nothing would be unable to
-   * authorize at all, even though it never asks this SDK to hold a token.
+   * erased again on every outcome that consumes it. A write that fails does not stop the
+   * authorization: the in-memory attempt can still complete a callback that reaches this same
+   * process, so the flow works and only its ability to survive a process death is lost. Refusing
+   * here would be worse than that — a confidential client whose store deliberately keeps nothing
+   * would be unable to authorize at all, even though it never asks this SDK to hold a token.
    *
    * @param extraAuthorizeParams extra query parameters for the authorize URL. OAuth parameters
    *   cannot be overridden.
@@ -311,10 +313,13 @@ class TraciveOAuth(
   /**
    * Drops [request] from memory and from the store, whatever ended it.
    *
-   * This is the single place a terminal outcome is cleaned up — a completed exchange, a code handed
-   * to a confidential client, a denial, a `state` mismatch, an expired attempt, a cancel, or a
+   * This is the single place an attempt that has been consumed is cleaned up — a completed
+   * exchange, a code handed to a confidential client, a denial, an expired attempt, a cancel, or a
    * browser that would not open. Routing them all through here is what makes "a spent attempt is
-   * never replayable" one fact rather than seven.
+   * never replayable" one fact rather than six.
+   *
+   * A `state` mismatch is deliberately not on that list. It says a URL arrived that this SDK did
+   * not ask for, which is not an outcome of the attempt the user started — see [handleCallback].
    *
    * The identity check is a guard, not a formality. Two authorizations can overlap — a double tap
    * is enough — and the one that loses must not erase the record the winner has just written, or
@@ -359,7 +364,12 @@ class TraciveOAuth(
    *
    * The `state` check happens before the code is used for anything: a callback whose `state` does
    * not match the one this SDK generated did not come from the request this SDK started, so its
-   * code must not be redeemed.
+   * code must not be redeemed. It is refused and **nothing else happens** — in particular the
+   * pending record stays. Any app on the device can hand this method a URL, so erasing on a
+   * mismatch would hand any of them a one-call cancel button for a consent the user is still in the
+   * middle of, and neither they nor the host would ever be told why the flow ended. Keeping it does
+   * not leave the verifier on the device any longer: the age check retires it on the same schedule
+   * regardless.
    *
    * "Not mine" and "mine, and wrong" are different answers and this method keeps them apart. A URL
    * that is not addressed to [TraciveMode.OAuth.redirectUri], or that carries none of `code`,
@@ -402,7 +412,13 @@ class TraciveOAuth(
 
     val state = parameters[AuthorizeUrlBuilder.PARAM_STATE]
     if (state == null || state != record.state) {
-      forget(request)
+      // Refused, and the pending record is deliberately left where it is. Any app on the device can
+      // hand this method a URL, so erasing here would give any of them a one-call cancel button for
+      // a consent the user is in the middle of: they finish in the Tracive app, come back, and find
+      // nothing left to complete — and nothing reports it, because from here the forged URL was
+      // turned away exactly as it should have been. Keeping the record does not leave the verifier
+      // on the device for any longer than it was already going to be there. The age check below is
+      // what retires it, and a forged callback does not push that deadline out.
       return AuthResult.Failed(
         TraciveException.InvalidRequest(
           "The authorization callback did not match this request (state mismatch)."

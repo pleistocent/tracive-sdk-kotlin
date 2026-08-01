@@ -66,7 +66,9 @@ The verifier is also written to the token store *before* the browser opens, as a
 is what a redirect arriving in a *new* process is completed from: `handleCallback` reads memory
 first and the store second, so a killed app comes back to a finished authorization rather than a
 dead flow. It is refused once it is ten minutes old — the authorization code's own lifetime — and
-erased on every terminal outcome, so a spent attempt cannot be replayed.
+erased on every outcome that consumes the attempt, so a spent one cannot be replayed. A callback
+whose `state` does not match is refused without erasing anything: any app on the device can send one,
+and a consent the user is still giving must not be cancellable by a stranger's URL.
 
 ```mermaid
 sequenceDiagram
@@ -96,7 +98,10 @@ sequenceDiagram
         App->>SDK: handleCallback(url)
         SDK->>Store: loadPending() when this process has no attempt in memory
         SDK->>SDK: compare state before the code is used for anything
-        alt state does not match, or the attempt is over 10 minutes old
+        alt state does not match
+            Note over SDK,Store: The record is left alone. Any app can send a URL here, so erasing would let any of them cancel a live consent.
+            SDK-->>App: AuthResult.Failed(InvalidRequest), nothing sent
+        else the attempt is over 10 minutes old
             SDK->>Store: savePending(null)
             SDK-->>App: AuthResult.Failed(InvalidRequest), nothing sent
         else ClientType.PUBLIC
@@ -122,7 +127,8 @@ Every outcome is a value rather than an exception, and all but one of them arriv
   `cancelPendingAuthorization()` instead, which erases the record and returns a `Boolean`; there is
   nothing waiting to be told.
 - **`AuthResult.Failed`** — including a `state` mismatch, which surfaces as
-  `TraciveException.InvalidRequest` and never redeems the code.
+  `TraciveException.InvalidRequest`, never redeems the code, and leaves the pending record intact so
+  the genuine redirect can still finish the job.
 - **`AuthResult.CodeReceived`** — a confidential client stops here and its own backend performs the
   exchange, then hands the tokens back through `adoptTokens(...)`.
 

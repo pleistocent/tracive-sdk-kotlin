@@ -40,10 +40,13 @@ import kotlinx.coroutines.async
  * The positive assertion is that a redirect arriving in a **new process** completes the
  * authorization from the stored record, which is the only reason the record is worth writing.
  *
- * Two of the assertions are negative and both cover silent failures:
- * - a spent or abandoned attempt **must not** be left on disk for a later redirect to replay, and
+ * Three of the assertions are negative and all of them cover silent failures:
+ * - a spent or abandoned attempt **must not** be left on disk for a later redirect to replay,
  * - an attempt older than the authorization code it is waiting for **must not** be exchanged,
- *   because that round trip can only come back `invalid_grant` — with the user watching.
+ *   because that round trip can only come back `invalid_grant` — with the user watching, and
+ * - a redirect this SDK did not ask for **must not** be able to end one it did. Any app on the
+ *   device can send a URL into `handleCallback`, and a consent the user is still giving has to
+ *   survive that.
  */
 class PendingAuthorizationTest {
 
@@ -216,14 +219,20 @@ class PendingAuthorizationTest {
   // ------------------------------------------------------------------- clearing ----
 
   /**
-   * Every way an authorization can end erases the record. All of them, in one test, on purpose.
+   * Every way an authorization is *consumed* erases the record. All of them, in one test, on
+   * purpose.
    *
    * "A spent attempt cannot be replayed" is a single property, and a suite that covered four of the
    * six exits would read as though it held. What is left behind is a live PKCE verifier next to the
    * `state` it answers to, which is exactly the pair a later redirect would need.
+   *
+   * Each case below is an outcome of the attempt the user actually started: it succeeded, they
+   * declined it, it ran out of time, the host abandoned it, or its single-use code has been spent.
+   * A `state` mismatch is none of those — it is a *different* URL arriving while the attempt is
+   * still live — so it is not here; see [aForgedRedirectIsRefusedAndTheGenuineOneStillCompletes].
    */
   @Test
-  fun everyTerminalOutcomeErasesTheRecord() = runSdkTest {
+  fun everyOutcomeThatConsumesTheAttemptErasesTheRecord() = runSdkTest {
     val authorized = startFlow(transport = FakeHttpTransport { jsonResponse(tokenJson()) })
     assertIs<AuthResult.Authorized>(authorized.deliverCode("auth-code"))
     assertNull(authorized.store.loadPending(), "a completed authorization was left on disk")
@@ -231,12 +240,6 @@ class PendingAuthorizationTest {
     val denied = startFlow()
     assertEquals(AuthResult.Denied, denied.deliver("error=access_denied"))
     assertNull(denied.store.loadPending(), "a declined authorization was left on disk")
-
-    val mismatched = startFlow()
-    assertIs<AuthResult.Failed>(
-      mismatched.oauth.handleCallback("$REDIRECT_URI?code=stolen&state=not-the-state")
-    )
-    assertNull(mismatched.store.loadPending(), "a mismatched callback left the verifier on disk")
 
     val expired = startFlow()
     expired.clock.advance(11.minutes)
@@ -262,6 +265,87 @@ class PendingAuthorizationTest {
       )
     assertIs<AuthResult.CodeReceived>(confidential.deliverCode("handed-back"))
     assertNull(confidential.store.loadPending(), "a handed-back code left the verifier on disk")
+  }
+
+  /**
+   * A forged redirect is refused, and the authorization it interrupted still completes.
+   *
+   * Any app on the device can hand this one a URL — a private-use redirect scheme is one any
+   * installed app may declare, and even an App Link is only a link. Erasing the record on a `state`
+   * that does not match therefore handed whichever app sent it a one-call cancel button: the user
+   * is still inside the Tracive app consenting, and the redirect they eventually come back with
+   * finds nothing left to complete. Nothing anywhere reports it, because from this SDK's side the
+   * forged URL was refused exactly as it should have been.
+   *
+   * The objection this replaces is that a forged redirect must not leave a live verifier parked on
+   * the device, and it is a real concern that resolves the other way. The forgery does not make the
+   * verifier sit there any *longer*: it was already going to, for the ten minutes the user has to
+   * finish consenting, and the expiry still ends it on time. What the erase bought was not a
+   * shorter window, only the cancel button.
+   *
+   * The second half of this test is the point. That the record survives proves nothing on its own —
+   * what says the user can still finish is that the genuine redirect afterwards is answered with
+   * `AuthResult.Authorized`.
+   */
+  @Test
+  fun aForgedRedirectIsRefusedAndTheGenuineOneStillCompletes() = runSdkTest {
+    val flow = startFlow(transport = FakeHttpTransport { jsonResponse(tokenJson()) })
+
+    val forged =
+      assertIs<AuthResult.Failed>(
+        flow.oauth.handleCallback("$REDIRECT_URI?code=stolen&state=not-the-state"),
+        "a redirect on this client's own URI carrying a foreign state was not answered",
+      )
+    assertIs<TraciveException.InvalidRequest>(forged.error)
+    assertNotNull(
+      flow.store.loadPending(),
+      "a forged redirect erased the attempt the user is still consenting to",
+    )
+
+    assertIs<AuthResult.Authorized>(
+      flow.deliverCode("the-genuine-one"),
+      "the user's own redirect could no longer complete the authorization",
+    )
+    assertNull(flow.store.loadPending(), "a completed authorization was left on disk")
+  }
+
+  /**
+   * The same protection when the record on disk is all that is left.
+   *
+   * This is the case with the most to lose and its own code path: the host process was killed while
+   * the user was consenting, so nothing is held in memory and `handleCallback` answers entirely
+   * from the store. A forged redirect erasing the record there destroys the only copy of the
+   * verifier there is, and the flow becomes unrecoverable rather than merely interrupted.
+   */
+  @Test
+  fun aForgedRedirectDoesNotEraseARecoveredRecordEither() = runSdkTest {
+    val store = InMemoryTokenStore()
+    val launcher = RecordingAuthorizeLauncher()
+    val doomed = oauthUnderTest(launcher = launcher, tokenStore = store)
+
+    assertNull(doomed.authorize())
+    val state =
+      TraciveOAuth.parseQueryParameters(launcher.authorizeUrls.single())[
+          AuthorizeUrlBuilder.PARAM_STATE]
+
+    // A new process over the same store, holding no attempt of its own.
+    val relaunched =
+      oauthUnderTest(
+        transport = FakeHttpTransport { jsonResponse(tokenJson()) },
+        launcher = RecordingAuthorizeLauncher(),
+        tokenStore = store,
+      )
+
+    assertIs<AuthResult.Failed>(
+      relaunched.handleCallback("$REDIRECT_URI?code=stolen&state=not-the-state"),
+      "a redirect on this client's own URI carrying a foreign state was not answered",
+    )
+    assertNotNull(store.loadPending(), "a forged redirect erased the only copy of the verifier")
+
+    assertIs<AuthResult.Authorized>(
+      relaunched.handleCallback("$REDIRECT_URI?code=abc&state=$state"),
+      "the recovered authorization could no longer be completed",
+    )
   }
 
   /**

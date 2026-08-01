@@ -42,14 +42,14 @@ handleCallback(url)
   │
   ├─ pending record: from memory, else from TokenStore.loadPending()  [survives a process death]
   │     ├─ nothing pending ──> AuthResult.Failed(InvalidRequest)
-  │     ├─ state mismatch ──> AuthResult.Failed(InvalidRequest)
+  │     ├─ state mismatch ──> AuthResult.Failed(InvalidRequest)   [the record is left alone]
   │     └─ older than 10 minutes ──> AuthResult.Failed(InvalidRequest)
   │
   ├─ error=access_denied      ──> AuthResult.Denied
   ├─ ClientType.PUBLIC        ──> POST /oauth/token with code + verifier ──> Authorized(scopes)
   └─ ClientType.CONFIDENTIAL  ──> CodeReceived(code, codeVerifier, redirectUri)
         │
-        └─ every one of those outcomes ──> TokenStore.savePending(null)
+        └─ every outcome that consumes the attempt ──> TokenStore.savePending(null)
 ```
 
 Two calls rather than one awaitable call, because it is not one process. The consent screen belongs
@@ -138,6 +138,15 @@ The authorize page opens in the system browser: Custom Tabs on Android, `UIAppli
 `AuthResult.Failed(InvalidRequest)` and the code is never redeemed — a callback whose `state` does
 not match did not come from the request this SDK started.
 
+**A mismatch does not cancel the authorization.** It is refused and nothing else happens: the pending
+record stays exactly where it was, so the user's own redirect still completes the flow when it
+arrives. Any app on the device can hand you a URL to pass in here, and erasing the record on a
+mismatch would give any of them a one-call cancel button — the user finishes consenting in the
+Tracive app, comes back, and finds the attempt already gone, with nothing in your logs or ours
+saying why. Keeping it costs nothing in exposure: the verifier was always going to sit on the device
+until the user finished or the ten-minute window closed, and a forged redirect does not move that
+deadline. The Flutter, Swift and React Native SDKs behave the same way.
+
 `handleCallback` **suspends**, because completing an authorization means reading the secure store
 and, for a public client, exchanging the code. Call it from a coroutine in your deep-link handler,
 and **act on what it returns** — this is the only place an authorization succeeds.
@@ -194,10 +203,11 @@ disk and turns a hopeless attempt into a round trip that can come back nothing b
 Pass `pendingAuthorizationMaxAge` to narrow it; the Flutter and React Native SDKs expose the same
 knob.
 
-**Every terminal outcome erases it** — a completed exchange, a code handed back to a confidential
-client, a denial, a `state` mismatch, an expiry, `cancelPendingAuthorization()`, a failed exchange, a
+**Every outcome that consumes the attempt erases it** — a completed exchange, a code handed back to
+a confidential client, a denial, an expiry, `cancelPendingAuthorization()`, a failed exchange, a
 browser that would not open, and `signOut()`. A spent attempt cannot be replayed by a redirect that
-turns up afterwards.
+turns up afterwards. A `state` mismatch is not on that list, for the reason given in §4: it is a URL
+this SDK did not ask for, not an ending of the attempt the user started.
 
 **And a redirect arriving in a new process completes the flow.** `handleCallback` takes the record
 from memory when this process is the one that started the authorization, and from the `TokenStore`

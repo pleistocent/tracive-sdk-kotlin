@@ -191,8 +191,10 @@ interface TokenStore {
   /**
    * Stores [pending], or erases the stored one when it is null.
    *
-   * Called immediately before the authorize URL is opened and again on every terminal outcome, so
-   * that a spent or abandoned attempt cannot be replayed by a redirect that arrives later.
+   * Called immediately before the authorize URL is opened and again on every outcome that consumes
+   * the attempt, so that a spent or abandoned attempt cannot be replayed by a redirect that arrives
+   * later. A callback whose `state` does not match is not such an outcome and does not erase
+   * anything; see [TraciveOAuth.handleCallback].
    *
    * **Must throw when it did not store**, on the same terms as [save] and carrying the same
    * [TraciveException.TokenStorageFailed][id.tracive.sdk.TraciveException.TokenStorageFailed].
@@ -332,7 +334,7 @@ internal object TokenSetCodec {
  *
  * It is stored separately from the grant rather than folded into it. The two have unrelated
  * lifetimes: a grant outlives many launches, while this record is written minutes before it is
- * deleted, and every terminal outcome erases it without touching the tokens.
+ * deleted, and every outcome that consumes the attempt erases it without touching the tokens.
  */
 internal object PendingAuthorizationCodec {
 
