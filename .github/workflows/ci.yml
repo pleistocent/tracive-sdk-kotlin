@@ -40,6 +40,26 @@ jobs:
           # because a PR runs code from a fork.
           cache-read-only: ${{ github.ref != 'refs/heads/main' }}
 
+      # The fixture itself, pinned by content hash.
+      #
+      # `query-grammar-vectors.json` is vendored byte-identically into four SDK repositories and its
+      # expected values were produced by the server's own key normalizer, so this file is a shared
+      # contract rather than test data — an edit here is a change to what four clients agree the
+      # server does. The hash is the same one the sibling repositories pin.
+      #
+      # The step below this one does currently notice an edit to the JSON, because the embedded
+      # Kotlin copy is regenerated from it and diffed. That is protection by side effect: it is
+      # aimed at drift between the two copies, it says nothing about the fixture in the CI log, and
+      # it would disappear the day the embedded copy is generated differently or at build time.
+      # Reading ci.yml would not have told you the fixture was protected at all. This step says so.
+      #
+      # If it fails, the fix is never to update the hash on its own. A grammar change starts at the
+      # Tracive API and lands in all four SDKs together, and the hash moves in all four with it.
+      - name: Verify the query-grammar fixture is unmodified
+        run: |
+          echo "f94bf48164c82bcc59fda30669d9d8c25dbc36ecc7ad93fcd7fb56ba2cdf2901  tracive-sdk/src/commonTest/resources/query-grammar-vectors.json" \
+            | shasum -a 256 --check --strict
+
       # The embedded copy of the grammar fixture must be the fixture. Kotlin Multiplatform cannot
       # read a test resource from commonTest, so `QueryGrammarVectorsJson.kt` carries the file as a
       # constant — and a constant that drifts from the JSON beside it is exactly the silent failure
