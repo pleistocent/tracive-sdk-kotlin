@@ -66,11 +66,12 @@ object TraciveAndroid {
 /**
  * Captures the application context at process start.
  *
- * A no-op `ContentProvider` is the standard mechanism for this — it is what `androidx.startup` and
- * Firebase both use — because the framework creates every provider before `Application.onCreate`
- * returns, and the SDK's manifest is merged into the host app automatically. The alternative is
- * making every integrator remember an `initialize(context)` call, and the failure mode for
- * forgetting is a crash in a token store rather than a compile error.
+ * A no-op `ContentProvider` is the standard mechanism for this — it is what `androidx.startup` is
+ * built on, and what any library that has to be ready before the host's first line of code ends up
+ * using — because the framework creates every provider before `Application.onCreate` returns, and
+ * the SDK's manifest is merged into the host app automatically. The alternative is making every
+ * integrator remember an `initialize(context)` call, and the failure mode for forgetting is a crash
+ * in a token store rather than a compile error.
  *
  * It is `exported="false"` and answers nothing: it exists purely for [onCreate].
  */
