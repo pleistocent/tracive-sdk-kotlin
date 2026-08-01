@@ -211,6 +211,7 @@ Everything throws a subclass of `TraciveException`, mapped from the server's `er
 | `InsufficientCredits` | 402 | Prompt to top up. Do not pre-check with `credits()`. |
 | `ExpiredToken` | 401 | Nothing — the SDK refreshes and retries once, single-flight. |
 | `GrantRevoked` | 401 | Tokens are already cleared. Send the user through `authorize()` again. Never retry. |
+| `InvalidToken` | — | No usable grant is stored: either nobody has authorised yet, or the stored record lost its access token and had no refresh token left to renew from. Send the user through `authorize()`. Nothing was sent to the server. |
 | `RateLimited` | 429 | Wait `retryAfter`. Never auto-retried. |
 | `CacheMiss` | — | `Source.CACHE` with no live entry. Never a silent empty result. |
 | `NotImplemented` | — | You called something in Proxy mode. |

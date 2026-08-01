@@ -276,6 +276,8 @@ try {
   promptTopUp()
 } catch (e: TraciveException.GrantRevoked) {
   reauthorize()                                  // tokens are already cleared; never retry
+} catch (e: TraciveException.InvalidToken) {
+  reauthorize()                                  // no usable grant stored; nothing was sent
 } catch (e: TraciveException.RateLimited) {
   backOff(e.retryAfter)                          // never auto-retried
 } catch (e: TraciveException.Network) {
@@ -284,6 +286,16 @@ try {
 ```
 
 You do not need to handle `ExpiredToken` — the SDK refreshes and retries once, single-flight.
+
+`InvalidToken` means there is no usable grant: either nobody has authorised yet, or the stored record
+has neither an access token nor a refresh token left. Nothing reaches the server on that path, so
+nothing is billed.
+
+A record that has lost only its access token is **not** that case. While the refresh token beside it
+is still good, the SDK renews it with a single token request and carries on — so you may see one
+unexplained refresh before the call you actually made. That state is reachable from a partial write,
+a save interrupted by process death, or a restored backup, and the alternative would be to send the
+user back through consent to replace a credential that never stopped working.
 
 Two rules that cost real money if ignored:
 
