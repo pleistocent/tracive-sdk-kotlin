@@ -30,18 +30,32 @@ authorize()
   ├─ generate code_verifier + code_challenge (S256) + state
   ├─ TokenStore.savePending(state, verifier, redirectUri, createdAt)   [before the browser, always]
   ├─ open the authorize URL in a Custom Tab / Universal Link           [never a WebView]
+  │     └─ the OS refuses ──> roll the record back ──> AuthResult.Failed
   │
-  ⋮  (user consents in the Tracive app)
+  └─ returns null: the page is open, and this call is finished
+  ⋮
+  ⋮  (user consents in the Tracive app; your process may be killed meanwhile)
+  ⋮
+handleCallback(url)
   │
-  ├─ redirect arrives ──> handleCallback(url)
+  ├─ not our redirect, or no code/error/state on it ──> null, nothing touched
+  │
+  ├─ pending record: from memory, else from TokenStore.loadPending()  [survives a process death]
+  │     ├─ nothing pending ──> AuthResult.Failed(InvalidRequest)
   │     ├─ state mismatch ──> AuthResult.Failed(InvalidRequest)
   │     └─ older than 10 minutes ──> AuthResult.Failed(InvalidRequest)
   │
-  ├─ ClientType.PUBLIC       ──> POST /oauth/token with code + verifier ──> Authorized(scopes)
-  └─ ClientType.CONFIDENTIAL ──> CodeReceived(code, codeVerifier, redirectUri)
+  ├─ error=access_denied      ──> AuthResult.Denied
+  ├─ ClientType.PUBLIC        ──> POST /oauth/token with code + verifier ──> Authorized(scopes)
+  └─ ClientType.CONFIDENTIAL  ──> CodeReceived(code, codeVerifier, redirectUri)
         │
         └─ every one of those outcomes ──> TokenStore.savePending(null)
 ```
+
+Two calls rather than one awaitable call, because it is not one process. The consent screen belongs
+to the Tracive app, so your app spends the whole of it in the background — which on Android makes it
+an ordinary candidate for being killed. Anything parked waiting for the redirect would be gone by
+the time it arrived. The Flutter and React Native SDKs are shaped the same way.
 
 ### 1. The install pre-check comes first
 
@@ -120,19 +134,32 @@ The authorize page opens in the system browser: Custom Tabs on Android, `UIAppli
 
 ### 4. `state` is verified before the code is used
 
-`handleCallback(url)` checks `state` first. A mismatch resolves `authorize()` with
+`handleCallback(url)` checks `state` before the code is used for anything. A mismatch answers
 `AuthResult.Failed(InvalidRequest)` and the code is never redeemed — a callback whose `state` does
 not match did not come from the request this SDK started.
 
-`handleCallback` does not suspend, so it is safe to call directly from `onNewIntent` / `onOpenURL`.
-Any token exchange happens on the coroutine that called `authorize()`.
+`handleCallback` **suspends**, because completing an authorization means reading the secure store
+and, for a public client, exchanging the code. Call it from a coroutine in your deep-link handler,
+and **act on what it returns** — this is the only place an authorization succeeds.
 
-It returns `false` when nothing is pending — a stray link, a duplicate delivery, or a callback that
-outlived the process. Treat `false` as "not mine", not as an error.
+It returns `null` when the URL is not this client's redirect, or carries none of `code`, `error` or
+`state`. That is "not mine": nothing was touched, and you should go on routing the link to whatever
+else in your app handles deep links. It matters because a private-use redirect scheme can be
+declared and fired by any app on the device, and one empty deep link must not be able to abort a
+user's authorization.
 
-Calling `authorize()` again while one is pending supersedes the first, which returns
-`AuthResult.Failed` rather than hanging forever. Only one `state` can be outstanding, and honouring a
-stale callback is the exact confusion `state` exists to prevent.
+A URL that *is* this client's redirect but has nothing left to complete — already spent, expired, or
+started by nobody — answers `AuthResult.Failed(InvalidRequest)` rather than `null`. Deliver each
+redirect once: on Android, clear `intent.data` after handing it over, or a configuration change will
+replay a spent redirect and produce that failure for no reason.
+
+Calling `authorize()` again while one is pending supersedes the first. Only one `state` can be
+outstanding, so the earlier attempt's redirect is then refused as a mismatch — honouring a stale
+callback is the exact confusion `state` exists to prevent.
+
+`cancelPendingAuthorization()` suspends too, and it is how you erase the record when the browser
+closes with no redirect. There is no `AuthResult.Denied` for the caller to receive at that point;
+nothing is waiting.
 
 ### 5. The pending authorization is written down, and it expires
 
@@ -172,15 +199,16 @@ client, a denial, a `state` mismatch, an expiry, `cancelPendingAuthorization()`,
 browser that would not open, and `signOut()`. A spent attempt cannot be replayed by a redirect that
 turns up afterwards.
 
-**What this does not yet do.** The record survives a process death; the suspended `authorize()` call
-does not. There is no continuation left to resume, so a redirect that arrives in a *new* process
-still answers `false` and the user has to start again. Persisting the record is the half that cannot
-be reconstructed later — completing a recovered authorization needs an API this SDK does not have
-yet, and the Flutter and React Native SDKs get it by returning the outcome from `handleCallback`
-instead of from `authorize`.
+**And a redirect arriving in a new process completes the flow.** `handleCallback` takes the record
+from memory when this process is the one that started the authorization, and from the `TokenStore`
+when it is not. So a user whose phone killed your app while they were consenting comes back to a
+finished authorization rather than to a dead flow, which is the whole reason the record is written
+down at all.
 
 A `TokenStore` that cannot write the record does not fail the authorization. Only process-death
-survival is lost, and the in-flight call still resolves normally.
+recovery is lost: a callback that reaches the process that started the flow is still completed from
+memory. A store that cannot be *read* answers "nothing pending" rather than throwing —
+`handleCallback` is called from a deep-link handler, which is no place to raise from.
 
 ## Redirect URI: App Link over custom scheme
 
@@ -205,7 +233,7 @@ ClientType.PUBLIC        // the SDK performs the PKCE token exchange itself
 ClientType.CONFIDENTIAL  // the SDK stops at the code; your backend exchanges it
 ```
 
-**Public** is the normal choice for a mobile app with no backend. `authorize()` returns
+**Public** is the normal choice for a mobile app with no backend. `handleCallback()` returns
 `AuthResult.Authorized(grantedScopes)` and the tokens are already stored.
 
 **Confidential** is for a partner whose backend holds a `client_secret`. The SDK does no exchange and

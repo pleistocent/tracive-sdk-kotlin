@@ -902,8 +902,8 @@ public final class id/tracive/sdk/oauth/TraciveOAuth {
 	public static synthetic fun adoptTokens$default (Lid/tracive/sdk/oauth/TraciveOAuth;Ljava/lang/String;Ljava/lang/String;Ljava/lang/Long;Ljava/util/List;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun authorize (Ljava/util/Map;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public static synthetic fun authorize$default (Lid/tracive/sdk/oauth/TraciveOAuth;Ljava/util/Map;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
-	public final fun cancelPendingAuthorization (Ljava/lang/String;)Z
-	public static synthetic fun cancelPendingAuthorization$default (Lid/tracive/sdk/oauth/TraciveOAuth;Ljava/lang/String;ILjava/lang/Object;)Z
+	public final fun cancelPendingAuthorization (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun cancelPendingAuthorization$default (Lid/tracive/sdk/oauth/TraciveOAuth;Ljava/lang/String;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun close ()V
 	public final fun getAuthorizeEndpoint ()Ljava/lang/String;
 	public final fun getEnvironment ()Lid/tracive/sdk/model/TraciveEnvironment;
@@ -911,7 +911,7 @@ public final class id/tracive/sdk/oauth/TraciveOAuth {
 	public final fun getMode ()Lid/tracive/sdk/model/TraciveMode$OAuth;
 	public final fun getPendingAuthorizationId ()Ljava/lang/String;
 	public final fun grantedScopes (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
-	public final fun handleCallback (Ljava/lang/String;)Z
+	public final fun handleCallback (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun isAuthorized (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun signOut (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }

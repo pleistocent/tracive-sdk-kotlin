@@ -21,11 +21,8 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   `PendingAuthorization` (`state`, `codeVerifier`, `redirectUri`, `createdAt`) is stored through
   `TokenStore`, so it lands in the Android Keystore / iOS Keychain beside the tokens — it carries a
   live verifier and is a secret on exactly the same terms. Its `toString()` redacts both the verifier
-  and the `state`. **This does not yet let a new process finish an authorization**: the record
-  survives, but the suspended `authorize()` call does not, and there is no continuation left to
-  resume. Persisting it is the half that cannot be reconstructed afterwards; delivering a recovered
-  outcome needs public API this SDK does not have, and is the shape the Flutter and React Native SDKs
-  reach by returning the result from `handleCallback` rather than from `authorize`.
+  and the `state`. The record is now also what a **new process** completes an authorization from;
+  see the `handleCallback` entry under Changed for the API change that made that reachable.
 - **A pending authorization now expires after ten minutes**, exposed as
   `TraciveOAuth.DEFAULT_PENDING_AUTHORIZATION_MAX_AGE` and overridable per instance with the new
   `pendingAuthorizationMaxAge` constructor parameter — the same knob the Flutter and React Native
@@ -94,8 +91,8 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 - **A stray deep link can no longer abort an authorization in flight.** `handleCallback` treated any
   URL as a callback once a request was pending, including one with no query string at all, so any
   app on the device could cancel a user's authorization by firing an empty link. It now answers
-  `false` and leaves the request alone unless the URL is this client's own redirect and carries at
-  least one of `code`, `error` or `state`.
+  `null` — "not mine", go on routing it — and leaves the request alone unless the URL is this
+  client's own redirect and carries at least one of `code`, `error` or `state`.
 - The iOS `UIApplication` calls hop to the main queue themselves instead of asking the caller to.
 - The default HTTP client has explicit timeouts (request 30s, connect 10s, socket 30s) rather than
   whatever the engine chose, and response bodies are capped at 512 KiB rather than read unbounded.
@@ -104,6 +101,33 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Changed
 
+- **Breaking: an authorization now ends at `handleCallback`, and `authorize()` returns as soon as
+  the consent page is open.** `handleCallback` is `suspend` and returns `AuthResult?` instead of
+  `Boolean`; `authorize()` returns `AuthResult?` instead of `AuthResult`, where `null` means "the
+  page was opened, the outcome will arrive at `handleCallback`". `cancelPendingAuthorization` is
+  `suspend` as well, because abandoning an authorization now has to erase the stored record itself.
+  **What an integrator must change:** move the `when` that handled `authorize()`'s result into the
+  deep-link handler and switch it to `handleCallback`'s; give that handler a coroutine scope that
+  outlives it (`lifecycleScope`, not a composable's), and act on the value — a handler that drops it
+  now drops a real grant. `authorize()` keeps only three answers: `null`, `AppNotInstalled`, and
+  `Failed` for an operating system that refused to open the page. Prefer `client.oauth!!` over
+  `client.oauth?.authorize()`, since a safe call folds "Proxy mode" and "the page opened" into the
+  same `null`. On iOS, `handleCallback` and `cancelPendingAuthorization` are now `async` in the
+  generated Swift interface and need a `Task`.
+  **Why it is worth the break now.** The previous release persisted the PKCE verifier so that
+  consent could survive the host process being killed — which is the ordinary case, not an edge
+  one, because consent happens inside the Tracive app and the partner app spends the whole of it in
+  the background. But the record could not be *used*: `authorize()` was parked on a continuation,
+  and a continuation dies with its process, so a redirect arriving in a new process answered `false`
+  and the user's consent was thrown away anyway. Half the fix shipped and the visible half did not.
+  `handleCallback` can now read the record back from the secure store, exchange the code, and return
+  the grant, so a killed app comes back to a finished authorization. The alternative — giving the
+  SDK its own `CoroutineScope` so the parked `authorize()` could still be resumed — was rejected
+  because it leaves one result with two shapes: an outcome that sometimes returns from `authorize()`
+  and sometimes from `handleCallback` is one integrators reliably get wrong. This is also the shape
+  the Flutter and React Native SDKs already have, so a partner spanning more than one of them writes
+  the same flow in each. Breaking it while the version is `0.x` and the Open API is not live costs
+  less than breaking it later.
 - **Breaking: `TokenStore` gains `loadPending()` and `savePending(PendingAuthorization?)`.** A custom
   implementation has to add both; there is no default body, deliberately. A no-op default would have
   compiled everywhere and silently switched off the one thing the record exists for, and a store that
@@ -144,7 +168,9 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   queue. A custom implementation needs `suspend` added.
 - **Breaking:** `cancelPendingAuthorization` takes an optional authorization id and returns
   `Boolean`. Passing the id read from the new `pendingAuthorizationId` stops a late "browser closed"
-  signal from cancelling a newer request. The no-argument call still compiles and behaves as before.
+  signal from cancelling a newer request. `pendingAuthorizationId` is memory-only and is therefore
+  null in a process that did not open the browser; cancelling with no id still erases whatever is
+  stored.
 - **Breaking:** `TokenSet.isExpiredAt`, `TokenSet.DEFAULT_EXPIRY_SKEW` and
   `CryptoProvider.sha256Hex` are removed. All three were unused; the SDK refreshes on the 401 rather
   than on a device clock it does not control.

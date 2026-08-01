@@ -22,7 +22,6 @@ import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -64,32 +63,47 @@ private class TokenResponse(
  * 4. On the callback, verify `state`, then either exchange the code (a [ClientType.PUBLIC] client)
  *    or hand it back for the partner's backend to exchange (a [ClientType.CONFIDENTIAL] one).
  *
- * ### Driving it from a host app
+ * ### The outcome arrives in exactly one place
+ *
+ * [authorize] starts the flow and returns; [handleCallback] says what happened. It is deliberately
+ * not one awaitable call, because it is not one process. Consent happens inside the Tracive app, so
+ * this app is in the background for the whole of it — and on Android that makes it an ordinary
+ * candidate for being killed. A call parked on a continuation would simply be gone by the time the
+ * redirect came back, and the record it wrote to disk would have nowhere to deliver itself. The
+ * Flutter and React Native SDKs are shaped the same way for the same reason.
  *
  * ```
  * // In a coroutine, typically a viewModelScope:
- * when (val result = client.oauth!!.authorize()) {
+ * when (val start = client.oauth!!.authorize()) {
+ *   null -> Unit                                        // the page is open; the answer comes later
+ *   AuthResult.AppNotInstalled -> showInstallMessage()  // the install page is already open
+ *   is AuthResult.Failed -> showError(start.error)      // nothing was opened
+ *   else -> Unit                                        // authorize() returns nothing else
+ * }
+ *
+ * // Wherever the redirect arrives — Android onNewIntent, iOS onOpenURL — also in a coroutine:
+ * when (val result = client.oauth!!.handleCallback(url)) {
+ *   null -> Unit                                        // not a Tracive redirect; keep routing it
  *   is AuthResult.Authorized -> proceed(result.grantedScopes)
  *   is AuthResult.CodeReceived -> myBackend.exchange(result.code, result.codeVerifier, result.redirectUri)
  *   AuthResult.Denied -> showDeclinedMessage()
- *   AuthResult.AppNotInstalled -> showInstallMessage()  // the install page is already open
  *   is AuthResult.Failed -> showError(result.error)
+ *   AuthResult.AppNotInstalled -> Unit                  // never returned here
  * }
- *
- * // Wherever the redirect arrives — Android onNewIntent, iOS onOpenURL:
- * client.oauth?.handleCallback(url)
  * ```
  *
- * [authorize] suspends until [handleCallback] delivers the redirect, so the whole outcome arrives
- * as one value. Two consequences worth stating plainly:
+ * **Never throw away what [handleCallback] returns.** It is the only place an authorization
+ * succeeds, and one of the things it can hand back is a grant belonging to a process that no longer
+ * exists.
+ *
+ * Two consequences worth stating plainly:
  * - If the user backs out of the browser without a redirect, nothing arrives. Call
- *   [cancelPendingAuthorization] when the browser closes, or cancel the calling coroutine.
- * - **A callback that outlives the host process is refused.** The pending record — `state`, the
- *   verifier, the redirect URI and a timestamp — is written to the token store before the browser
- *   opens and survives a process death, but the suspended [authorize] call does not: there is no
- *   coroutine left to resume, so nothing in the current public surface can deliver the recovered
- *   outcome. The record is kept anyway because it is the half that cannot be reconstructed
- *   afterwards. It is erased on every terminal outcome, and refused once it is older than
+ *   [cancelPendingAuthorization] when the browser closes, so a live verifier does not sit on the
+ *   device until it ages out.
+ * - **A callback that outlives the host process completes anyway.** The pending record — `state`,
+ *   the verifier, the redirect URI and a timestamp — is written to the token store before the
+ *   browser opens, and [handleCallback] reads it back from there when this process holds nothing.
+ *   It is erased on every terminal outcome, and refused once it is older than
  *   [pendingAuthorizationMaxAge] — see there for how long that is and why.
  *
  * There is no API-key parameter here or anywhere else in this SDK, in any mode. That is a hard
@@ -164,32 +178,22 @@ class TraciveOAuth(
   private val refreshMutex = Mutex()
 
   /**
-   * The authorization currently waiting for its redirect.
+   * The authorization *this* process started and has not yet resolved.
+   *
+   * A cache of what is on disk, never the authority. [handleCallback] prefers it and falls back to
+   * the token store, which is what lets a redirect arriving in a new process finish a flow this
+   * object never started — and what lets an in-process callback finish one whose store refused the
+   * write. It also carries the attempt's id, which is not persisted and therefore only ever answers
+   * for a flow this instance began; see [pendingAuthorizationId].
    *
    * Written by [authorize] on whatever coroutine the host used, and read by [handleCallback] and
    * [cancelPendingAuthorization] on a platform callback thread — Android's `onNewIntent`, iOS's
-   * `onOpenURL`. Completing the [CompletableDeferred] inside is atomic, but that says nothing about
-   * the *reference*: without `@Volatile` neither the JVM nor Kotlin/Native memory model gives the
-   * reader a happens-before edge on the field write, so a callback can legitimately observe null
-   * after `authorize` has installed a request. The consequence is an `authorize()` that hangs
-   * forever, since it has no timeout and nobody is left to complete its deferred.
+   * `onOpenURL`. Without `@Volatile` neither the JVM nor Kotlin/Native memory model gives the
+   * reader a happens-before edge on the field write, so a callback could legitimately observe null
+   * just after `authorize` installed an attempt, and would then treat a flow this process is in the
+   * middle of as one recovered from a previous one.
    */
   @Volatile private var pending: AuthorizationAttempt? = null
-
-  /**
-   * Which attempt the [PendingAuthorization] currently in the token store belongs to.
-   *
-   * Separate from [pending] because the two stop agreeing, and the gap is where a record gets
-   * deleted by the wrong owner. [cancelPendingAuthorization] clears [pending] the moment it
-   * resolves an attempt, but the coroutine inside [authorize] resumes later — and if a fresh
-   * `authorize()` runs in between, it finds nothing pending to supersede and stores its own record.
-   * The resumed cleanup would then erase a record belonging to the attempt the user is presently
-   * looking at, costing that flow its process-death recovery with nothing anywhere to say so.
-   *
-   * Tracking the disk slot's owner in one field, written only where the slot itself is written,
-   * makes that unrepresentable: [forget] erases only what its own attempt put there.
-   */
-  @Volatile private var storedRecordOwner: AuthorizationAttempt? = null
 
   /** Hands out the ids in [AuthorizationAttempt]. Only ever touched under [authorize]. */
   private var authorizationCounter: Long = 0L
@@ -223,27 +227,38 @@ class TraciveOAuth(
   // ------------------------------------------------------------------ flow ----
 
   /**
-   * Runs one authorization and suspends until it resolves.
+   * Starts one authorization and returns as soon as the page is open.
    *
-   * Returns [AuthResult.AppNotInstalled] without starting anything when the Tracive app is missing;
-   * the install page is opened first so the user has somewhere to go. Otherwise the browser opens
-   * and this call waits for [handleCallback], [cancelPendingAuthorization], or cancellation.
+   * There are exactly three answers, and only one of them is an outcome:
+   * - **null** — the authorization page was opened. What the user decides arrives at
+   *   [handleCallback], possibly in a different process from this one.
+   * - [AuthResult.AppNotInstalled] — the Tracive app is missing, so nothing was started: no PKCE
+   *   pair, no `state`, nothing written down. The clean install page has already been opened, so
+   *   the user has somewhere to go, and there is no deferred resume — they install Tracive and try
+   *   again here.
+   * - [AuthResult.Failed] — the operating system refused to open the page. The pending record is
+   *   rolled back, so a redirect turning up later cannot be matched against it.
    *
-   * Calling it again while one is pending supersedes the first: the earlier call returns
-   * [AuthResult.Failed] rather than hanging forever, because only one `state` can be outstanding
-   * and honouring a stale callback is exactly the confusion `state` exists to prevent.
+   * A grant, a denial and a `state` mismatch are deliberately not among them. Every one of those is
+   * something the *redirect* says, and the redirect is delivered by the OS to whatever process is
+   * alive when it arrives — so they all come back from [handleCallback], and there is one place to
+   * handle an authorization ending rather than two.
+   *
+   * Calling it again while one is pending supersedes the first: only one `state` is outstanding at
+   * a time, and the earlier attempt's redirect is then refused as a mismatch, because honouring a
+   * stale callback is exactly the confusion `state` exists to prevent.
    *
    * The [PendingAuthorization] is written to the token store **before** the browser opens, and
    * erased again on every terminal outcome. A write that fails does not stop the authorization: the
-   * in-memory attempt is what resolves this call, so the flow still works and only its ability to
-   * survive a process death is lost. Refusing here would be worse than that — a confidential client
-   * whose store deliberately keeps nothing would be unable to authorize at all, even though it
-   * never asks this SDK to hold a token.
+   * in-memory attempt can still complete a callback that reaches this same process, so the flow
+   * works and only its ability to survive a process death is lost. Refusing here would be worse
+   * than that — a confidential client whose store deliberately keeps nothing would be unable to
+   * authorize at all, even though it never asks this SDK to hold a token.
    *
    * @param extraAuthorizeParams extra query parameters for the authorize URL. OAuth parameters
    *   cannot be overridden.
    */
-  suspend fun authorize(extraAuthorizeParams: Map<String, String> = emptyMap()): AuthResult {
+  suspend fun authorize(extraAuthorizeParams: Map<String, String> = emptyMap()): AuthResult? {
     if (!presenceProvider.value.isTraciveAppInstalled()) {
       // Fire-and-forget: the user is going to the store, and there is nothing to resume when they
       // come back. Failing to open the page is not worth turning into an error — the caller still
@@ -262,19 +277,7 @@ class TraciveOAuth(
       )
     authorizationCounter += 1
     val request = AuthorizationAttempt("authorization-$authorizationCounter", record)
-
-    pending
-      ?.outcome
-      ?.complete(
-        CallbackOutcome.Failed(
-          TraciveException.InvalidRequest("A newer authorization request superseded this one.")
-        )
-      )
     pending = request
-
-    // Claimed before the write, not after: from here on this attempt is the one entitled to erase
-    // the stored record, whether or not the write below actually lands.
-    storedRecordOwner = request
 
     // Persisted before the URL is opened, never after. Consent happens in the Tracive app, so this
     // process is in the background for the whole of it and may not be alive when the redirect
@@ -284,7 +287,8 @@ class TraciveOAuth(
     } catch (cancellation: CancellationException) {
       throw cancellation
     } catch (_: Throwable) {
-      // Non-fatal by design; see this method's documentation. The attempt below still resolves.
+      // Non-fatal by design; see this method's documentation. A callback reaching this process can
+      // still be completed from the attempt above.
     }
 
     val url = urlBuilder.build(mode, pkce, record.state, extraAuthorizeParams)
@@ -292,7 +296,7 @@ class TraciveOAuth(
       launcherProvider.value.launchAuthorize(url)
     } catch (cancellation: CancellationException) {
       throw cancellation
-    } catch (failure: Throwable) {
+    } catch (_: Throwable) {
       forget(request)
       return AuthResult.Failed(
         TraciveException.Unknown(
@@ -301,41 +305,31 @@ class TraciveOAuth(
       )
     }
 
-    val outcome =
-      try {
-        request.outcome.await()
-      } finally {
-        forget(request)
-      }
-
-    return when (outcome) {
-      is CallbackOutcome.Denied -> AuthResult.Denied
-      is CallbackOutcome.Failed -> AuthResult.Failed(outcome.error)
-      is CallbackOutcome.Code -> complete(outcome.code, request.record)
-    }
+    return null
   }
 
   /**
    * Drops [request] from memory and from the store, whatever ended it.
    *
-   * This is the single place a terminal outcome is cleaned up — success, denial, a `state`
-   * mismatch, an expired attempt, a cancel, a browser that would not open, or the caller's own
-   * coroutine being cancelled. Routing them all through here is what makes "a spent attempt is
+   * This is the single place a terminal outcome is cleaned up — a completed exchange, a code handed
+   * to a confidential client, a denial, a `state` mismatch, an expired attempt, a cancel, or a
+   * browser that would not open. Routing them all through here is what makes "a spent attempt is
    * never replayable" one fact rather than seven.
    *
-   * Two guards, answering two different questions. The identity check on [pending] keeps a resolved
-   * attempt from clearing the in-memory slot a newer one has taken. The check on
-   * [storedRecordOwner] does the same for the record on disk, and it has to be its own field rather
-   * than an inference from [pending] — see [storedRecordOwner] for the interleaving that costs.
+   * The identity check is a guard, not a formality. Two authorizations can overlap — a double tap
+   * is enough — and the one that loses must not erase the record the winner has just written, or
+   * the flow the user is actually looking at silently loses its ability to survive a process death.
+   * Passing null means "the attempt recovered from the store", which owns the stored record only
+   * while this process has none of its own; a concurrent [authorize] that has installed one wins,
+   * and its record stays.
    *
-   * [NonCancellable] because the most common caller is a `finally` block, and in a cancelled
-   * coroutine every suspending call throws — which would leave the spent verifier on disk precisely
-   * when the flow was abandoned.
+   * [NonCancellable] because a caller may already be inside a cancelled coroutine, where every
+   * suspending call throws — which would leave the spent verifier on disk precisely when the flow
+   * was abandoned.
    */
-  private suspend fun forget(request: AuthorizationAttempt) {
-    if (pending === request) pending = null
-    if (storedRecordOwner !== request) return
-    storedRecordOwner = null
+  private suspend fun forget(request: AuthorizationAttempt?) {
+    if (pending !== request) return
+    pending = null
     withContext(NonCancellable) {
       try {
         tokenStoreProvider.value.savePending(null)
@@ -348,20 +342,29 @@ class TraciveOAuth(
   }
 
   /**
-   * Hands a redirect URI back to the pending authorization.
+   * Completes the authorization the redirect in [url] belongs to, and says how it ended.
    *
-   * Safe to call from a platform callback — Android's `onNewIntent`, iOS's `onOpenURL` — because it
-   * does not suspend. Any exchange happens on the coroutine that called [authorize].
+   * Call it from wherever the OS delivers a deep link — Android's `onNewIntent` and `onCreate`,
+   * iOS's `onOpenURL` — inside a coroutine, and **act on what it returns**. This is the only place
+   * an authorization succeeds. It suspends because completing one means reading the token store
+   * and, for a [ClientType.PUBLIC] client, exchanging the code.
    *
-   * The `state` check happens here, before the code is used for anything: a callback whose `state`
-   * does not match the one this SDK generated did not come from the request this SDK started, so
-   * its code must not be redeemed. That case resolves [authorize] with
-   * [AuthResult.Failed]`(InvalidRequest)`.
+   * The pending record is taken from memory when this process is the one that started the flow, and
+   * from the token store when it is not. That fallback is the whole point of writing the record
+   * down: consent happens in another app, so this one can be killed while the user is in the middle
+   * of it, and the redirect then arrives in a process that has never heard of the attempt. It
+   * finishes anyway, because `state`, the verifier and the redirect URI are all on disk. A store
+   * that cannot be read answers "nothing pending" rather than throwing — a deep-link handler is not
+   * a place to raise an exception from, and it is indistinguishable from a store holding nothing.
+   *
+   * The `state` check happens before the code is used for anything: a callback whose `state` does
+   * not match the one this SDK generated did not come from the request this SDK started, so its
+   * code must not be redeemed.
    *
    * "Not mine" and "mine, and wrong" are different answers and this method keeps them apart. A URL
    * that is not addressed to [TraciveMode.OAuth.redirectUri], or that carries none of `code`,
    * `error` or `state`, is left entirely alone: the pending authorization is untouched and the
-   * answer is false. Only a URL that is genuinely this client's redirect is measured against
+   * answer is null. Only a URL that is genuinely this client's redirect is measured against
    * `state`, and a `state` that is present and different is then treated as the security event it
    * is.
    *
@@ -374,88 +377,116 @@ class TraciveOAuth(
    * checked and before the code is used. [DEFAULT_PENDING_AUTHORIZATION_MAX_AGE] explains why the
    * age is worth checking at all.
    *
-   * @return false when the URL is not this client's redirect, when it carries no OAuth parameters,
-   *   or when there is nothing pending — a stray link, a duplicate delivery, or a callback that
-   *   outlived the process. The host can treat false as "not mine". True means the pending
-   *   authorization has been resolved, successfully or not.
+   * @return null when [url] is not this client's redirect or carries no OAuth parameter at all —
+   *   "not mine", not an error, and nothing was touched. Otherwise the outcome:
+   *   [AuthResult.Authorized], [AuthResult.CodeReceived], [AuthResult.Denied], or
+   *   [AuthResult.Failed]. [AuthResult.AppNotInstalled] is never returned here. A redirect on this
+   *   client's own URI with nothing left to complete — already spent, expired, or never started —
+   *   is [AuthResult.Failed]`(InvalidRequest)`, so deliver each redirect once rather than replaying
+   *   a stored intent on every recreation.
    */
-  fun handleCallback(url: String): Boolean {
-    val request = pending ?: return false
-    if (!isOurRedirect(url)) return false
+  suspend fun handleCallback(url: String): AuthResult? {
+    if (!isOurRedirect(url)) return null
     val parameters = parseQueryParameters(url)
-    if (OAUTH_CALLBACK_PARAMS.none { it in parameters }) return false
+    if (OAUTH_CALLBACK_PARAMS.none { it in parameters }) return null
 
-    val state = parameters[AuthorizeUrlBuilder.PARAM_STATE]
-    if (state == null || state != request.record.state) {
-      request.outcome.complete(
-        CallbackOutcome.Failed(
+    val request = pending
+    val record =
+      request?.record
+        ?: recoveredRecord()
+        ?: return AuthResult.Failed(
           TraciveException.InvalidRequest(
-            "The authorization callback did not match this request (state mismatch)."
+            "No authorization is in progress on this device. Call authorize() first."
           )
         )
+
+    val state = parameters[AuthorizeUrlBuilder.PARAM_STATE]
+    if (state == null || state != record.state) {
+      forget(request)
+      return AuthResult.Failed(
+        TraciveException.InvalidRequest(
+          "The authorization callback did not match this request (state mismatch)."
+        )
       )
-      return true
     }
 
     // Only now, once the callback is known to be this request's own. A redirect whose `state` does
     // not match is not this attempt's, so "expired" would be the wrong thing to say about it — the
     // mismatch is the finding, and it is the one the host needs.
-    if (request.record.isStaleAt(clock.now(), pendingAuthorizationMaxAge)) {
-      request.outcome.complete(
-        CallbackOutcome.Failed(
-          TraciveException.InvalidRequest(
-            "The authorization attempt expired before its callback arrived. Start it again."
-          )
+    if (record.isStaleAt(clock.now(), pendingAuthorizationMaxAge)) {
+      forget(request)
+      return AuthResult.Failed(
+        TraciveException.InvalidRequest(
+          "The authorization attempt expired before its callback arrived. Start it again."
         )
       )
-      return true
     }
 
     val error = parameters[PARAM_ERROR]
     if (error != null) {
-      request.outcome.complete(
-        if (error == ERROR_ACCESS_DENIED) CallbackOutcome.Denied
-        else
-          CallbackOutcome.Failed(
-            TraciveException.fromApiError(
-              status = 400,
-              code = error,
-              message = parameters["error_description"],
-            )
+      forget(request)
+      return if (error == ERROR_ACCESS_DENIED) AuthResult.Denied
+      else
+        AuthResult.Failed(
+          TraciveException.fromApiError(
+            status = 400,
+            code = error,
+            message = parameters["error_description"],
           )
-      )
-      return true
+        )
     }
 
     val code = parameters["code"]
     if (code.isNullOrEmpty()) {
-      request.outcome.complete(
-        CallbackOutcome.Failed(
-          TraciveException.InvalidRequest("The authorization callback carried no code.")
-        )
+      forget(request)
+      return AuthResult.Failed(
+        TraciveException.InvalidRequest("The authorization callback carried no code.")
       )
-      return true
     }
 
-    request.outcome.complete(CallbackOutcome.Code(code))
-    return true
+    // Erased before the exchange goes out rather than after it. An authorization code is single-use
+    // and the record that redeems it is spent the moment it is sent, whatever the server answers —
+    // so a failed exchange must not leave a verifier behind for a replayed redirect to try again.
+    forget(request)
+    return complete(code, record)
   }
 
   /**
-   * The id of the authorization currently waiting for its redirect, or null when none is.
+   * The record a previous process left behind, or null when there is none to be had.
+   *
+   * A store that refuses the read is reported as absence, on the same terms as the write failure
+   * [authorize] tolerates: the alternative is throwing out of a deep-link handler, and the caller
+   * could do nothing with the distinction anyway. The user is told to authorize again either way.
+   */
+  private suspend fun recoveredRecord(): PendingAuthorization? =
+    try {
+      tokenStoreProvider.value.loadPending()
+    } catch (cancellation: CancellationException) {
+      throw cancellation
+    } catch (_: Throwable) {
+      null
+    }
+
+  /**
+   * The id of the authorization this process is waiting on, or null when there is none.
    *
    * Read it once the browser is open and pass it back to [cancelPendingAuthorization] later. That
    * is the only way a cancel can be sure of what it is cancelling — see that method.
+   *
+   * It is memory-only, deliberately: a cancel is a *this process saw the browser close* signal, and
+   * a process that did not open a browser has no such signal to disambiguate. So this is null after
+   * a process death even when a record is still on disk, and a cancel naming an id from a previous
+   * process is refused. Cancelling with no id still erases whatever is stored.
    */
   val pendingAuthorizationId: String?
     get() = pending?.id
 
   /**
-   * Abandons the pending authorization, resolving [authorize] with [AuthResult.Denied].
+   * Abandons the pending authorization, so nothing can complete it later.
    *
    * Call this when the browser closes without a redirect — the user pressed back, or dismissed the
-   * Custom Tab. Nothing else will ever arrive in that case, so without this the [authorize] call
-   * would wait forever.
+   * Custom Tab. Nothing will ever arrive in that case, and without this the record sits on the
+   * device with a live verifier next to the `state` it answers to until it ages out.
    *
    * **Pass [authorizationId] whenever the caller can.** A browser-closed signal arrives from the
    * Activity or the scene, not from the code that started the flow, and it can arrive late.
@@ -467,14 +498,16 @@ class TraciveOAuth(
    * @param authorizationId the value [pendingAuthorizationId] held when the browser was opened.
    *   Null cancels whatever is pending, which is correct for a host that never has two
    *   authorizations in flight and is the hazard above for one that does.
-   * @return whether a pending authorization was cancelled. False means there was nothing pending,
+   * @return whether a pending authorization was abandoned. False means there was nothing pending,
    *   or what was pending is not what [authorizationId] named.
    */
-  fun cancelPendingAuthorization(authorizationId: String? = null): Boolean {
-    val request = pending ?: return false
-    if (authorizationId != null && authorizationId != request.id) return false
-    request.outcome.complete(CallbackOutcome.Denied)
-    pending = null
+  suspend fun cancelPendingAuthorization(authorizationId: String? = null): Boolean {
+    val request = pending
+    if (authorizationId != null && authorizationId != request?.id) return false
+    // The store is only consulted when this process has nothing of its own, which is the case where
+    // the answer cannot be known without looking: a record left behind by an earlier process.
+    if (request == null && recoveredRecord() == null) return false
+    forget(request)
     return true
   }
 
@@ -779,27 +812,15 @@ class TraciveOAuth(
   }
 
   /**
-   * One authorization attempt: the persistable [record], plus the parts that cannot be persisted.
+   * One authorization attempt: the persistable [record], plus the [id] that is not persisted.
    *
    * [id] identifies *this* attempt so a cancellation raised for it cannot land on a later one; see
    * [cancelPendingAuthorization]. It is not `state`: `state` travels to the authorization server
    * and back, and an identifier a host is asked to hold on to should not be the same value an
-   * attacker would like to learn.
-   *
-   * [outcome] is the reason a recovered [record] alone cannot finish a flow. It is the continuation
-   * [authorize] is parked on, and a continuation does not survive the process that owns it.
+   * attacker would like to learn. It is also the reason this class exists at all rather than a bare
+   * [PendingAuthorization] field — the record is what survives a process, the id is what does not.
    */
-  private class AuthorizationAttempt(val id: String, val record: PendingAuthorization) {
-    val outcome: CompletableDeferred<CallbackOutcome> = CompletableDeferred()
-  }
-
-  private sealed class CallbackOutcome {
-    class Code(val code: String) : CallbackOutcome()
-
-    object Denied : CallbackOutcome()
-
-    class Failed(val error: TraciveException) : CallbackOutcome()
-  }
+  private class AuthorizationAttempt(val id: String, val record: PendingAuthorization)
 
   companion object {
     /** `POST` here to exchange a code or a refresh token. Relative to the API base URL. */

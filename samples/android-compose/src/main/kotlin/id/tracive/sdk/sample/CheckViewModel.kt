@@ -58,26 +58,70 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
   }
 
   /**
-   * Starts the OAuth flow and suspends until the redirect comes back through
-   * [MainActivity.onNewIntent].
+   * Opens the consent screen and returns; the answer arrives at [handleRedirect].
    *
-   * There is no deferred resume by design: if the Tracive app is not installed the SDK opens the
-   * install page and stops. The user installs it and taps this again.
+   * `authorize()` has exactly three answers and none of them is a grant. Null means the page is
+   * open and the user is now in the Tracive app. `AppNotInstalled` means nothing was started and
+   * the install page has already been opened — there is no deferred resume, so the user installs
+   * Tracive and taps this again. `Failed` means the device could not open the page at all.
+   *
+   * Note the explicit null check on `client.oauth` before the call rather than `client.oauth?.`:
+   * with a nullable result, a safe call would fold "this is Proxy mode" and "the page opened" into
+   * the same null.
    */
   fun authorize() {
+    val oauth = client.oauth
+    if (oauth == null) {
+      _state.update { it.copy(message = "Proxy mode has no OAuth flow of its own.") }
+      return
+    }
     launchGuarded {
-      when (val outcome = client.oauth?.authorize()) {
+      when (val start = oauth.authorize()) {
+        null ->
+          _state.update {
+            it.copy(message = "Consent screen opened. Finish it in the Tracive app.")
+          }
+
+        AuthResult.AppNotInstalled ->
+          _state.update {
+            it.copy(message = "Install the Tracive app first — the install page has been opened.")
+          }
+
+        is AuthResult.Failed -> _state.update { it.copy(message = describe(start.error)) }
+
+        else ->
+          // Unreachable: authorize() returns only the three answers above. The branch exists
+          // because the `when` is exhaustive and quietly dropping an outcome is how a flow ends up
+          // stuck with nothing on screen.
+          _state.update { it.copy(message = "Unexpected result from authorize(): $start") }
+      }
+    }
+  }
+
+  /**
+   * Hands a redirect to the SDK and renders whatever it says.
+   *
+   * This is where an authorization actually succeeds, including one begun by a process Android has
+   * since killed — so the result is never discarded. A null means the link was not a Tracive
+   * redirect, and a real app would go on routing it to whatever else handles deep links.
+   *
+   * Deliberately not [launchGuarded]: that drops the work when something else is already running,
+   * and a redirect is the one thing here that must never be dropped.
+   */
+  fun handleRedirect(url: String) {
+    viewModelScope.launch {
+      when (val result = client.oauth?.handleCallback(url)) {
+        null -> Unit // Not ours. Let the rest of the app have it.
+
         is AuthResult.Authorized ->
           _state.update {
             it.copy(
               authorized = true,
-              message = "Authorized. Scopes granted: ${outcome.grantedScopes.joinToString()}",
+              message = "Authorized. Scopes granted: ${result.grantedScopes.joinToString()}",
             )
           }
 
-        // Only reachable for a CONFIDENTIAL client. This sample is PUBLIC, so it never gets here —
-        // the branch exists because the `when` is exhaustive and silently dropping an outcome is
-        // how a flow ends up hanging with no explanation.
+        // Only reachable for a CONFIDENTIAL client. This sample is PUBLIC, so it never gets here.
         is AuthResult.CodeReceived ->
           _state.update {
             it.copy(message = "Authorization code received. Forward it to your own backend.")
@@ -85,20 +129,13 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
 
         AuthResult.Denied -> _state.update { it.copy(message = "You declined the request.") }
 
-        AuthResult.AppNotInstalled ->
-          _state.update {
-            it.copy(message = "Install the Tracive app first — the install page has been opened.")
-          }
+        // Never returned by handleCallback; the `when` is exhaustive over AuthResult.
+        AuthResult.AppNotInstalled -> Unit
 
-        is AuthResult.Failed -> _state.update { it.copy(message = describe(outcome.error)) }
-
-        null -> _state.update { it.copy(message = "Proxy mode has no OAuth flow of its own.") }
+        is AuthResult.Failed -> _state.update { it.copy(message = describe(result.error)) }
       }
     }
   }
-
-  /** Hands a redirect back to the SDK. Returns false when the link was not ours. */
-  fun handleRedirect(url: String): Boolean = client.oauth?.handleCallback(url) == true
 
   fun check() {
     val input = _state.value.phone

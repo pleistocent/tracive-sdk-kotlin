@@ -36,7 +36,10 @@ import kotlinx.serialization.DeserializationStrategy
  *   ),
  * )
  *
- * when (val auth = client.oauth!!.authorize()) { /* … */ }
+ * // Opens the consent page and returns. The outcome arrives at handleCallback, wherever the OS
+ * // delivers the redirect — see TraciveOAuth.
+ * client.oauth!!.authorize()
+ * when (val auth = client.oauth!!.handleCallback(redirectUrl)) { /* … */ }
  *
  * val result = client.checkScammer(TraciveQuery.phone("+6281234567891"))
  * // Always show result.disclaimer next to result.riskTier.

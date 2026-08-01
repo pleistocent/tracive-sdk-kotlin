@@ -4,6 +4,7 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -30,7 +31,6 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import id.tracive.sdk.model.CheckResult
 import id.tracive.sdk.model.Origin
 import id.tracive.sdk.model.RiskTier
@@ -45,33 +45,35 @@ import androidx.compose.foundation.text.KeyboardOptions
  */
 class MainActivity : ComponentActivity() {
 
-  private var viewModel: CheckViewModel? = null
+  /**
+   * Obtained here rather than inside `setContent`, because a cold start caused by the redirect has
+   * to reach the ViewModel before the first composition has necessarily run. Reading it from the
+   * composition left a window in which the redirect that started the app was delivered to nothing —
+   * and that window is exactly the process-death case the SDK now recovers from.
+   */
+  private val viewModel: CheckViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     setContent {
-      MaterialTheme {
-        Surface(modifier = Modifier.fillMaxSize()) {
-          val model: CheckViewModel = viewModel()
-          viewModel = model
-          SampleScreen(model)
-        }
-      }
+      MaterialTheme { Surface(modifier = Modifier.fillMaxSize()) { SampleScreen(viewModel) } }
     }
-    // A cold start launched *by* the redirect arrives here rather than in onNewIntent.
-    intent?.data?.let { deliverRedirect(it.toString()) }
+    // A cold start launched *by* the redirect arrives here rather than in onNewIntent. Consuming
+    // the URI keeps a configuration change from replaying an already-spent redirect, which the SDK
+    // would answer as "no authorization is in progress".
+    intent?.data?.let {
+      intent.data = null
+      viewModel.handleRedirect(it.toString())
+    }
   }
 
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     setIntent(intent)
-    intent.data?.let { deliverRedirect(it.toString()) }
-  }
-
-  private fun deliverRedirect(url: String) {
-    // A false return means the SDK had nothing pending — a stray link, a duplicate delivery, or a
-    // callback that outlived the process. Treat it as "not mine" rather than as an error.
-    viewModel?.handleRedirect(url)
+    intent.data?.let {
+      intent.data = null
+      viewModel.handleRedirect(it.toString())
+    }
   }
 }
 

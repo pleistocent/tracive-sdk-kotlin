@@ -82,21 +82,33 @@ val client = TraciveClient(
   environment = TraciveEnvironment.Sandbox,
 )
 
-// 1. Authorise once. Opens the Tracive app's consent screen in a Custom Tab.
-when (val auth = client.oauth!!.authorize()) {
-  is AuthResult.Authorized -> proceed(auth.grantedScopes)
+// 1. Authorise once. Opens the Tracive app's consent screen in a Custom Tab and returns.
+when (val start = client.oauth!!.authorize()) {
+  null -> waitForTheRedirect()                                 // the page is open
   is AuthResult.AppNotInstalled -> tellUserToInstallTracive()   // already sent them to the store
-  is AuthResult.Denied -> respectThat()
-  is AuthResult.CodeReceived -> sendToOwnBackend(auth.code, auth.codeVerifier, auth.redirectUri)
-  is AuthResult.Failed -> report(auth.error)
+  is AuthResult.Failed -> report(start.error)                   // nothing was opened
+  else -> error("authorize() returns nothing else")
 }
 
-// 2. Route the redirect back in, from onNewIntent / onOpenURL.
-client.oauth!!.handleCallback(incomingUrl)
+// 2. Route the redirect back in, from onNewIntent / onOpenURL, in a coroutine. This is where the
+//    authorization actually ends — never discard what it returns.
+when (val auth = client.oauth!!.handleCallback(incomingUrl)) {
+  null -> keepRoutingThisDeepLink()                            // not a Tracive redirect
+  is AuthResult.Authorized -> proceed(auth.grantedScopes)
+  is AuthResult.CodeReceived -> sendToOwnBackend(auth.code, auth.codeVerifier, auth.redirectUri)
+  is AuthResult.Denied -> respectThat()
+  is AuthResult.Failed -> report(auth.error)
+  else -> Unit                                                 // AppNotInstalled never arrives here
+}
 
 // 3. Check.
 val result = client.checkScammer(TraciveQuery.phone("+6281234567891"))
 ```
+
+The split is not cosmetic. Consent happens inside the Tracive app, so your app is in the
+background throughout and Android may kill it; a call parked waiting for the redirect would be gone
+by the time it arrived. `handleCallback` reads the pending authorization back from the secure store,
+so a grant survives that — and it is the one place an authorization ever succeeds.
 
 Full walkthrough, including the Android and iOS wiring: [docs/integration.md](docs/integration.md).
 

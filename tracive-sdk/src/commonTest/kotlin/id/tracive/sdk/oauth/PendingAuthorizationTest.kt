@@ -25,20 +25,22 @@ import kotlin.test.assertTrue
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.minutes
 import kotlin.time.Duration.Companion.seconds
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 
 /**
- * The pending authorization: where it lives, how long it lives, and when it dies.
+ * The pending authorization: where it lives, how long it lives, when it dies, and what it rescues.
  *
  * Consent happens in the Tracive app, so the host process is in the background for the whole of it
  * and on Android is an ordinary candidate for being killed. The PKCE verifier is the half of the
  * pair that never leaves the device, so a verifier held only in a field dies with the process, and
  * the returning callback then names a `state` nothing can match. Every test here follows from that.
  *
- * Two of the assertions here are negative and both cover silent failures:
+ * The positive assertion is that a redirect arriving in a **new process** completes the
+ * authorization from the stored record, which is the only reason the record is worth writing.
+ *
+ * Two of the assertions are negative and both cover silent failures:
  * - a spent or abandoned attempt **must not** be left on disk for a later redirect to replay, and
  * - an attempt older than the authorization code it is waiting for **must not** be exchanged,
  *   because that round trip can only come back `invalid_grant` — with the user watching.
@@ -61,7 +63,7 @@ class PendingAuthorizationTest {
     val launcher = StoreInspectingLauncher(store)
     val oauth = oauthUnderTest(launcher = launcher, tokenStore = store)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertNull(oauth.authorize(), "the authorization page was not opened")
 
     val atLaunch =
       assertNotNull(
@@ -74,26 +76,25 @@ class PendingAuthorizationTest {
       atLaunch.state,
       "the stored record does not describe the request that was opened",
     )
-
-    oauth.cancelPendingAuthorization()
-    outcome.await()
   }
 
   /**
-   * The verifier outlives the process that generated it — and the continuation does not.
+   * A redirect reaching a process that never started the flow completes it anyway.
    *
-   * The first half is the point of persisting at all: a new process finds `state`, the verifier and
-   * the redirect URI exactly as they were sent, so nothing the exchange needs has been lost.
+   * This is the whole reason the record is written down. The first half checks what survives: a new
+   * process finds `state`, the verifier and the redirect URI exactly as they were sent, so nothing
+   * the exchange needs has been lost. The second half checks that it is actually *used* — the code
+   * goes out with the recovered verifier, tokens come back, and the caller is handed
+   * `AuthResult.Authorized` from `handleCallback` rather than from the `authorize()` call that no
+   * longer exists.
    *
-   * The second half is pinned deliberately rather than left implicit. `authorize()` suspends until
-   * its redirect arrives, and a suspended call does not survive the process that owns it, so a
-   * recovered record has nowhere to deliver its outcome and `handleCallback` answers `false`. That
-   * is a limit of the current public surface, not of the stored record. Whoever adds a way to
-   * complete a recovered authorization will have to change this assertion, which is the point of
-   * writing it down.
+   * This assertion used to say the opposite, because `authorize()` suspended until its redirect
+   * arrived and a suspended call does not survive the process that owns it. Delivering the outcome
+   * from `handleCallback` is what removed that limit; if this test ever goes back to expecting a
+   * refusal, the recovery went with it.
    */
   @Test
-  fun theRecordSurvivesTheProcessThatStartedItButTheContinuationDoesNot() = runSdkTest {
+  fun aRedirectDeliveredInANewProcessCompletesTheAuthorization() = runSdkTest {
     // One store, two TraciveOAuth instances. The platform store is what actually spans a process
     // death; InMemoryTokenStore stands in for it, holding its contents across the two objects.
     val store = InMemoryTokenStore()
@@ -101,10 +102,8 @@ class PendingAuthorizationTest {
     val doomed = oauthUnderTest(launcher = launcher, tokenStore = store)
 
     // Started, then abandoned without cancelling. A cancel is a terminal outcome and would erase
-    // the record; a process death runs no cleanup at all, which is what this simulates. Nothing
-    // below ever resumes this coroutine.
-    @Suppress("DeferredResultUnused")
-    async(start = CoroutineStart.UNDISPATCHED) { doomed.authorize() }
+    // the record; a process death runs no cleanup at all, which is what this simulates.
+    assertNull(doomed.authorize())
     val authorizeUrl = launcher.authorizeUrls.single()
     val parameters = TraciveOAuth.parseQueryParameters(authorizeUrl)
 
@@ -125,14 +124,30 @@ class PendingAuthorizationTest {
     assertFalse(recovered.toString().contains(recovered.state), "toString leaked the state")
 
     // A new process, over the same store. The record is still there and still unspent.
-    val relaunched = oauthUnderTest(launcher = RecordingAuthorizeLauncher(), tokenStore = store)
+    val transport = FakeHttpTransport { jsonResponse(tokenJson()) }
+    val relaunched =
+      oauthUnderTest(
+        transport = transport,
+        launcher = RecordingAuthorizeLauncher(),
+        tokenStore = store,
+      )
     assertNotNull(store.loadPending(), "building a new instance consumed the stored record")
 
-    assertFalse(
-      relaunched.handleCallback("$REDIRECT_URI?code=abc&state=${recovered.state}"),
-      "handleCallback claimed a redirect the new process has no continuation to resume",
+    val outcome = relaunched.handleCallback("$REDIRECT_URI?code=abc&state=${recovered.state}")
+
+    assertIs<AuthResult.Authorized>(
+      outcome,
+      "a redirect arriving in a new process did not complete the authorization",
     )
-    assertNotNull(store.loadPending(), "a callback that resolved nothing still spent the record")
+    // The proof that the *recovered* verifier is what redeemed the code, rather than a fresh one
+    // this instance generated: only the record on disk knew it.
+    val body = assertNotNull(transport.requestsTo("/oauth/token").single().body)
+    assertTrue(
+      body.contains("code_verifier=${recovered.codeVerifier}"),
+      "the exchange did not send the verifier the previous process persisted",
+    )
+    assertNotNull(store.load(), "the recovered authorization stored no grant")
+    assertNull(store.loadPending(), "a completed authorization was left on disk")
   }
 
   // --------------------------------------------------------------------- expiry ----
@@ -150,23 +165,22 @@ class PendingAuthorizationTest {
     val insideTransport = FakeHttpTransport { jsonResponse(tokenJson()) }
     val inside = startFlow(transport = insideTransport)
     inside.clock.advance(10.minutes - 1.seconds)
-    assertTrue(inside.deliverCode("still-good"))
     assertIs<AuthResult.Authorized>(
-      inside.outcome.await(),
+      inside.deliverCode("still-good"),
       "a callback one second inside the window was refused",
     )
 
     val outsideTransport = FakeHttpTransport { jsonResponse(tokenJson()) }
     val outside = startFlow(transport = outsideTransport)
     outside.clock.advance(10.minutes + 1.seconds)
-    assertTrue(outside.deliverCode("long-dead"))
+    val outcome = outside.deliverCode("long-dead")
     // Asserted before the result is inspected, because this is the sentence that names the bug: a
     // window wider than ten minutes shows up here first, as a dead code going out on the wire.
     assertTrue(
       outsideTransport.requests.isEmpty(),
       "a callback one second outside the window was exchanged",
     )
-    val refused = assertIs<AuthResult.Failed>(outside.outcome.await())
+    val refused = assertIs<AuthResult.Failed>(outcome)
     assertIs<TraciveException.InvalidRequest>(refused.error)
     assertNull(outside.store.load(), "an expired attempt stored a grant")
   }
@@ -191,9 +205,11 @@ class PendingAuthorizationTest {
     val flow = startFlow(transport = transport, maxAge = 30.seconds)
 
     flow.clock.advance(31.seconds)
-    assertTrue(flow.deliverCode("just-too-late"))
 
-    assertIs<AuthResult.Failed>(flow.outcome.await(), "the narrowed window was not applied")
+    assertIs<AuthResult.Failed>(
+      flow.deliverCode("just-too-late"),
+      "the narrowed window was not applied",
+    )
     assertNull(flow.store.loadPending(), "an expired attempt was left on disk")
   }
 
@@ -209,37 +225,33 @@ class PendingAuthorizationTest {
   @Test
   fun everyTerminalOutcomeErasesTheRecord() = runSdkTest {
     val authorized = startFlow(transport = FakeHttpTransport { jsonResponse(tokenJson()) })
-    authorized.deliverCode("auth-code")
-    assertIs<AuthResult.Authorized>(authorized.outcome.await())
+    assertIs<AuthResult.Authorized>(authorized.deliverCode("auth-code"))
     assertNull(authorized.store.loadPending(), "a completed authorization was left on disk")
 
     val denied = startFlow()
-    assertTrue(denied.deliver("error=access_denied"))
-    assertEquals(AuthResult.Denied, denied.outcome.await())
+    assertEquals(AuthResult.Denied, denied.deliver("error=access_denied"))
     assertNull(denied.store.loadPending(), "a declined authorization was left on disk")
 
     val mismatched = startFlow()
-    assertTrue(mismatched.oauth.handleCallback("$REDIRECT_URI?code=stolen&state=not-the-state"))
-    assertIs<AuthResult.Failed>(mismatched.outcome.await())
+    assertIs<AuthResult.Failed>(
+      mismatched.oauth.handleCallback("$REDIRECT_URI?code=stolen&state=not-the-state")
+    )
     assertNull(mismatched.store.loadPending(), "a mismatched callback left the verifier on disk")
 
     val expired = startFlow()
     expired.clock.advance(11.minutes)
-    assertTrue(expired.deliverCode("long-dead"))
-    assertIs<AuthResult.Failed>(expired.outcome.await())
+    assertIs<AuthResult.Failed>(expired.deliverCode("long-dead"))
     assertNull(expired.store.loadPending(), "an expired attempt was left on disk")
 
     val cancelled = startFlow()
     assertTrue(cancelled.oauth.cancelPendingAuthorization())
-    assertEquals(AuthResult.Denied, cancelled.outcome.await())
     assertNull(cancelled.store.loadPending(), "a cancelled authorization was left on disk")
 
     val failedExchange =
       startFlow(
         transport = FakeHttpTransport { HttpResponse(400, "{\"error\":\"invalid_grant\"}") }
       )
-    failedExchange.deliverCode("spent")
-    assertIs<AuthResult.Failed>(failedExchange.outcome.await())
+    assertIs<AuthResult.Failed>(failedExchange.deliverCode("spent"))
     assertNull(failedExchange.store.loadPending(), "a failed exchange left the verifier on disk")
 
     val confidential =
@@ -248,8 +260,7 @@ class PendingAuthorizationTest {
           FakeHttpTransport { fail("a confidential client exchanges on its own backend") },
         clientType = ClientType.CONFIDENTIAL,
       )
-    confidential.deliverCode("handed-back")
-    assertIs<AuthResult.CodeReceived>(confidential.outcome.await())
+    assertIs<AuthResult.CodeReceived>(confidential.deliverCode("handed-back"))
     assertNull(confidential.store.loadPending(), "a handed-back code left the verifier on disk")
   }
 
@@ -272,38 +283,46 @@ class PendingAuthorizationTest {
   }
 
   /**
-   * A superseding `authorize()` owns the record, and the call it replaced must not delete it.
+   * A rolled-back authorization must not delete the record that replaced it.
    *
-   * The superseded call resolves immediately and runs the same cleanup as any other terminal
-   * outcome. Without a guard that cleanup erases the record the *newer* call has just written — and
-   * the flow the user is actually looking at becomes unrecoverable, silently, on nothing worse than
-   * a double tap.
+   * Two authorizations overlap — a double tap is enough — and the first one's browser then refuses
+   * to open. Its rollback runs the same cleanup as any other terminal outcome, and without an
+   * ownership guard it erases the record the *second* call has already written. The flow the user
+   * is actually looking at would then be unrecoverable after a process death, silently, with
+   * nothing anywhere reporting it.
+   *
+   * The interleaving is produced rather than hoped for: `launchAuthorize` is a suspending seam, so
+   * the launcher parks the first call inside it, the second call runs to completion, and only then
+   * is the first one failed. Nothing here depends on timing.
    */
   @Test
-  fun supersedingAnAuthorizationLeavesTheNewRecordInPlace() = runSdkTest {
+  fun aRolledBackAuthorizationLeavesTheRecordThatReplacedItAlone() = runSdkTest {
     val store = InMemoryTokenStore()
-    val launcher = RecordingAuthorizeLauncher()
-    val oauth =
-      oauthUnderTest(
-        transport = FakeHttpTransport { jsonResponse(tokenJson()) },
-        launcher = launcher,
-        tokenStore = store,
-      )
+    val launcher = ParkingLauncher()
+    val oauth = oauthUnderTest(launcher = launcher, tokenStore = store)
 
     val first = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
-    val second = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertEquals(1, launcher.authorizeUrls.size, "the first call is not parked in the launcher")
 
-    assertIs<AuthResult.Failed>(first.await(), "the first call should have been superseded")
-
-    val live = assertNotNull(store.loadPending(), "the superseded call erased the newer record")
+    assertNull(oauth.authorize(), "the second authorization did not open its page")
     val secondState =
       TraciveOAuth.parseQueryParameters(launcher.authorizeUrls.last())[
           AuthorizeUrlBuilder.PARAM_STATE]
-    assertEquals(secondState, live.state, "the record on disk belongs to the superseded call")
+    assertEquals(
+      secondState,
+      assertNotNull(store.loadPending()).state,
+      "the newer call did not take over the record on disk",
+    )
 
-    assertTrue(oauth.handleCallback("$REDIRECT_URI?code=abc&state=$secondState"))
-    assertIs<AuthResult.Authorized>(second.await())
-    assertNull(store.loadPending())
+    launcher.refuseTheParkedBrowser()
+
+    assertIs<AuthResult.Failed>(
+      first.await(),
+      "a browser that would not open did not fail its call",
+    )
+    val survivor =
+      assertNotNull(store.loadPending(), "the rolled-back call erased the newer call's record")
+    assertEquals(secondState, survivor.state, "the record on disk is no longer the newer call's")
   }
 
   /** Sign-out means nothing of the user's stays here, a half-finished authorization included. */
@@ -315,7 +334,10 @@ class PendingAuthorizationTest {
     flow.oauth.signOut()
 
     assertNull(flow.store.loadPending(), "sign-out left a pending authorization on the device")
-    assertEquals(AuthResult.Denied, flow.outcome.await())
+    assertIs<AuthResult.Failed>(
+      flow.deliverCode("too-late"),
+      "a redirect arriving after sign-out was still honoured",
+    )
   }
 
   // --------------------------------------------------------- storage that fails ----
@@ -323,10 +345,10 @@ class PendingAuthorizationTest {
   /**
    * A store that cannot hold the record does not stop the authorization.
    *
-   * Only the ability to survive a process death is lost, and the in-memory attempt still resolves
-   * this call — so refusing here would trade a working flow for a failure. It would also be
-   * unworkable for a confidential client, whose backend holds the tokens and whose store may
-   * legitimately keep nothing at all.
+   * Only the ability to survive a process death is lost: a callback reaching the process that
+   * started the flow is completed from the attempt held in memory, so refusing here would trade a
+   * working flow for a failure. It would also be unworkable for a confidential client, whose
+   * backend holds the tokens and whose store may legitimately keep nothing at all.
    */
   @Test
   fun anUnwritablePendingRecordDoesNotBreakTheFlow() = runSdkTest {
@@ -338,14 +360,13 @@ class PendingAuthorizationTest {
         tokenStore = PendingRefusingTokenStore(),
       )
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertNull(oauth.authorize())
     val state =
       TraciveOAuth.parseQueryParameters(launcher.authorizeUrls.single())[
           AuthorizeUrlBuilder.PARAM_STATE]
-    assertTrue(oauth.handleCallback("$REDIRECT_URI?code=abc&state=$state"))
 
     assertIs<AuthResult.Authorized>(
-      outcome.await(),
+      oauth.handleCallback("$REDIRECT_URI?code=abc&state=$state"),
       "a pending-record write failure aborted an otherwise fine authorization",
     )
   }
@@ -401,18 +422,18 @@ class PendingAuthorizationTest {
   /** One started authorization, plus everything a test needs to steer and inspect it. */
   private class StartedFlow(
     val oauth: TraciveOAuth,
-    val outcome: Deferred<AuthResult>,
     val state: String,
     val store: InMemoryTokenStore,
     val clock: FixedClock,
   ) {
     /** Delivers a redirect carrying [query] plus this flow's own `state`. */
-    fun deliver(query: String): Boolean = oauth.handleCallback("$REDIRECT_URI?$query&state=$state")
+    suspend fun deliver(query: String): AuthResult? =
+      oauth.handleCallback("$REDIRECT_URI?$query&state=$state")
 
-    fun deliverCode(code: String): Boolean = deliver("code=$code")
+    suspend fun deliverCode(code: String): AuthResult? = deliver("code=$code")
   }
 
-  private fun CoroutineScope.startFlow(
+  private suspend fun startFlow(
     transport: FakeHttpTransport = FakeHttpTransport { fail("no request expected") },
     maxAge: Duration = TraciveOAuth.DEFAULT_PENDING_AUTHORIZATION_MAX_AGE,
     clientType: ClientType = ClientType.PUBLIC,
@@ -429,11 +450,11 @@ class PendingAuthorizationTest {
         maxAge = maxAge,
         clientType = clientType,
       )
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    if (oauth.authorize() != null) fail("the authorization page was not opened")
     val state =
       TraciveOAuth.parseQueryParameters(launcher.authorizeUrls.single())[
           AuthorizeUrlBuilder.PARAM_STATE] ?: fail("the authorize URL carried no state")
-    return StartedFlow(oauth, outcome, state, store, clock)
+    return StartedFlow(oauth, state, store, clock)
   }
 
   private fun oauthUnderTest(
@@ -478,6 +499,35 @@ class PendingAuthorizationTest {
       throw IllegalStateException("no browser")
 
     override suspend fun launchInstall(url: String) = Unit
+  }
+
+  /**
+   * Holds the *first* `launchAuthorize` open until the test releases it, then fails it.
+   *
+   * The seam is real rather than contrived: launching the browser is a suspending call on both
+   * platforms, so a second `authorize()` genuinely can run while the first is still inside it.
+   * Parking there is what makes the ordering deterministic instead of a race the test hopes to win.
+   */
+  private class ParkingLauncher : AuthorizeLauncher {
+
+    val authorizeUrls: MutableList<String> = mutableListOf()
+
+    private val released = CompletableDeferred<Unit>()
+
+    override suspend fun launchAuthorize(url: String) {
+      authorizeUrls += url
+      if (authorizeUrls.size == 1) {
+        released.await()
+        throw IllegalStateException("no browser")
+      }
+    }
+
+    override suspend fun launchInstall(url: String) = Unit
+
+    /** Resumes the parked call and gives it the failure a device with no browser would. */
+    fun refuseTheParkedBrowser() {
+      released.complete(Unit)
+    }
   }
 
   /**

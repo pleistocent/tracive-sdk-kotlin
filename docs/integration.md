@@ -112,21 +112,44 @@ class MainActivity : ComponentActivity() {
   override fun onCreate(savedInstanceState: Bundle?) {
     super.onCreate(savedInstanceState)
     // A cold start launched *by* the redirect arrives here, not in onNewIntent.
-    intent?.data?.let { client.oauth?.handleCallback(it.toString()) }
+    intent?.data?.let { deliver(it.toString()) }
   }
 
   override fun onNewIntent(intent: Intent) {
     super.onNewIntent(intent)
     setIntent(intent)
-    intent.data?.let { client.oauth?.handleCallback(it.toString()) }
+    intent.data?.let { deliver(it.toString()) }
+  }
+
+  private fun deliver(url: String) {
+    // Consume it, so a configuration change cannot replay a redirect that has already been spent.
+    intent.data = null
+    lifecycleScope.launch {
+      when (val auth = client.oauth?.handleCallback(url)) {
+        null -> Unit                                       // not ours: keep routing the link
+        is AuthResult.Authorized -> onAuthorized(auth.grantedScopes)
+        is AuthResult.CodeReceived -> forwardToYourBackend(auth.code, auth.codeVerifier, auth.redirectUri)
+        is AuthResult.Denied -> respectThat()
+        is AuthResult.Failed -> report(auth.error)
+        is AuthResult.AppNotInstalled -> Unit              // never returned here
+      }
+    }
   }
 }
 ```
 
-Handle **both**. A cold start caused by the redirect never reaches `onNewIntent`.
+Handle **both**. A cold start caused by the redirect never reaches `onNewIntent`, and that cold
+start is exactly the case where Android killed your app while the user was consenting — the SDK
+recovers the pending authorization from its secure store and finishes it, so this is where the grant
+arrives. Discarding the result would throw that grant away silently.
 
-`handleCallback` returns `false` when nothing was pending — a stray link, a duplicate delivery, or a
-callback that outlived the process. Treat `false` as "not mine", not as an error.
+`handleCallback` suspends, so it needs a coroutine. Use a scope that outlives the call —
+`lifecycleScope` here; a composable's scope would be wrong.
+
+`null` means the URL is not this client's redirect, or carries none of `code`, `error` or `state`.
+Treat it as "not mine" and go on routing the link. A redirect that *is* ours but has nothing left to
+complete answers `AuthResult.Failed` instead, which is why the snippet clears `intent.data`: without
+that, every rotation would replay a spent redirect and report a failure.
 
 ### Context
 
@@ -146,13 +169,25 @@ Without it, `canOpenURL` returns `false` and every user with the Tracive app ins
 App Store instead.
 
 Then route the callback into the same client instance your shared Kotlin code exposes to Swift.
-`handleCallback` does not suspend, so it is callable directly from Swift with no completion handler:
+`handleCallback` suspends, so Kotlin/Native exposes it to Swift as an `async` function — and its
+result is the authorization, so do not drop it:
 
 ```swift
 .onOpenURL { url in
-  // `shared` here is whatever your shared module exposes — an `object` holding the one
-  // TraciveClient, the same way `TraciveSample` does on Android.
-  SharedClient.shared.client.oauth?.handleCallback(url: url.absoluteString)
+  Task {
+    // `shared` here is whatever your shared module exposes — an `object` holding the one
+    // TraciveClient, the same way `TraciveSample` does on Android.
+    let oauth = SharedClient.shared.client.oauth
+    let auth = try? await oauth?.handleCallback(url: url.absoluteString)
+    switch auth {
+    case nil: break                                     // not ours: keep routing the link
+    case let authorized as AuthResult.Authorized: onAuthorized(authorized.grantedScopes)
+    case let received as AuthResult.CodeReceived: forwardToYourBackend(received)
+    case is AuthResult.Denied: respectThat()
+    case let failed as AuthResult.Failed: report(failed.error)
+    default: break
+    }
+  }
 }
 ```
 
@@ -162,17 +197,21 @@ rather than a custom scheme, for the same reason Android should prefer an App Li
 ## 5. Authorise
 
 ```kotlin
-when (val auth = client.oauth!!.authorize()) {
-  is AuthResult.Authorized -> proceed(auth.grantedScopes)
-  is AuthResult.CodeReceived -> forwardToYourBackend(auth.code, auth.codeVerifier, auth.redirectUri)
-  is AuthResult.Denied -> respectThat()
+when (val start = client.oauth!!.authorize()) {
+  null -> showWaitingForConsent()                  // the page is open; the callback delivers the rest
   is AuthResult.AppNotInstalled -> showInstallMessage()
-  is AuthResult.Failed -> report(auth.error)
+  is AuthResult.Failed -> report(start.error)      // nothing was opened
+  else -> error("authorize() returns nothing else")
 }
 ```
 
-`authorize()` suspends until the redirect comes back through `handleCallback`, so call it from a
-coroutine tied to a scope that survives the trip to the browser — a ViewModel's, not a composable's.
+`authorize()` returns as soon as the page is open. It never returns a grant, a denial or a `state`
+mismatch: those are things the *redirect* says, and the redirect can arrive in a different process,
+so they all come back from the `handleCallback` handler wired up in sections 3 and 4. One place to
+handle an authorization ending, not two.
+
+Use `client.oauth!!` (or an explicit null check) rather than `client.oauth?.authorize()`. With a
+nullable result, a safe call folds "this is Proxy mode" and "the page opened" into the same `null`.
 
 `AppNotInstalled` means the SDK **already opened the install page**; there is nothing to resume when
 the user returns, so show a "install Tracive, then try again" message and let them retry. Details in

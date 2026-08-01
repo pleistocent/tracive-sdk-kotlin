@@ -51,19 +51,22 @@ or an IPA is a key that has been published.
 
 ## B. OAuth authorization with PKCE
 
-`authorize()` suspends until the redirect comes back, so one call produces one `AuthResult`. The
-consent screen belongs to the Tracive app, never to a WebView inside your process: an App Link does
-not fire from an in-app WebView, and RFC 8252 forbids embedded user agents for OAuth anyway.
+`authorize()` opens the page and returns; `handleCallback(url)` says how the authorization ended.
+Two calls rather than one, because it is not one process: the consent screen belongs to the Tracive
+app, so your app is in the background throughout and Android may collect it, and anything parked
+waiting for the redirect would be gone by the time it arrived. The screen is never a WebView inside
+your process either — an App Link does not fire from an in-app WebView, and RFC 8252 forbids
+embedded user agents for OAuth anyway.
 
 PKCE is `S256` only. The verifier stays on the device and only its SHA-256 digest travels in the
 authorize URL, which is what stops an intercepted authorization code from being redeemable.
 
 The verifier is also written to the token store *before* the browser opens, as a
-`PendingAuthorization` carrying `state`, the verifier, the redirect URI and a timestamp. Consent
-happens in another app, so this process is in the background throughout and may be killed; the
-record is the part that cannot be reconstructed afterwards. It is refused once it is ten minutes old
-— the authorization code's own lifetime — and erased on every terminal outcome, so a spent attempt
-cannot be replayed.
+`PendingAuthorization` carrying `state`, the verifier, the redirect URI and a timestamp. That record
+is what a redirect arriving in a *new* process is completed from: `handleCallback` reads memory
+first and the store second, so a killed app comes back to a finished authorization rather than a
+dead flow. It is refused once it is ten minutes old — the authorization code's own lifetime — and
+erased on every terminal outcome, so a spent attempt cannot be replayed.
 
 ```mermaid
 sequenceDiagram
@@ -85,18 +88,22 @@ sequenceDiagram
         Note over SDK,Store: Before the browser, never after. The process can be killed the moment it backgrounds.
         Note over SDK,OS: Custom Tab on Android, UIApplication.open on iOS. Never a WebView.
         SDK->>OS: launchAuthorize with client_id, redirect_uri, scope, state, code_challenge, S256
+        SDK-->>App: null, the page is open and this call is done
         OS->>Tracive: App Link / Universal Link on the authorize origin
         Tracive->>Tracive: the user reviews the scopes and consents
+        Note over App,Tracive: The host app may be killed anywhere in here. Only the stored record survives.
         Tracive->>App: redirect to your redirectUri carrying code and state
         App->>SDK: handleCallback(url)
+        SDK->>Store: loadPending() when this process has no attempt in memory
         SDK->>SDK: compare state before the code is used for anything
         alt state does not match, or the attempt is over 10 minutes old
             SDK->>Store: savePending(null)
             SDK-->>App: AuthResult.Failed(InvalidRequest), nothing sent
         else ClientType.PUBLIC
+            SDK->>Store: savePending(null)
             SDK->>API: POST /oauth/token with code, code_verifier, client_id, redirect_uri
             API-->>SDK: access_token, refresh_token, scope
-            SDK->>Store: save(TokenSet) then savePending(null)
+            SDK->>Store: save(TokenSet)
             SDK-->>App: AuthResult.Authorized(grantedScopes)
         else ClientType.CONFIDENTIAL
             SDK->>Store: savePending(null)
@@ -105,27 +112,29 @@ sequenceDiagram
     end
 ```
 
-Four outcomes are not on the happy path and all four are values rather than exceptions:
+Every outcome is a value rather than an exception, and all but one of them arrives at
+`handleCallback`:
 
-- **`AuthResult.AppNotInstalled`** — the install page is already open. There is no deferred resume;
-  the user installs Tracive, comes back, and tries again.
-- **`AuthResult.Denied`** — the user declined, or the host called `cancelPendingAuthorization()`
-  because the browser closed with no redirect.
-- **`AuthResult.Failed`** — including a `state` mismatch, which resolves as
+- **`AuthResult.AppNotInstalled`** — the only outcome `authorize()` itself reports, alongside a
+  `Failed` for an OS that would not open the page. The install page is already open. There is no
+  deferred resume; the user installs Tracive, comes back, and tries again.
+- **`AuthResult.Denied`** — the user declined. A host whose browser closed with no redirect calls
+  `cancelPendingAuthorization()` instead, which erases the record and returns a `Boolean`; there is
+  nothing waiting to be told.
+- **`AuthResult.Failed`** — including a `state` mismatch, which surfaces as
   `TraciveException.InvalidRequest` and never redeems the code.
 - **`AuthResult.CodeReceived`** — a confidential client stops here and its own backend performs the
   exchange, then hands the tokens back through `adoptTokens(...)`.
 
-`handleCallback(url)` returns `false` for a URL that is not this client's redirect, that carries
-none of `state`, `code` or `error`, or that arrives with nothing pending. Treat `false` as "not
-mine" rather than as an error.
+`handleCallback(url)` returns `null` for a URL that is not this client's redirect or that carries
+none of `state`, `code` or `error`. Treat `null` as "not mine" rather than as an error, and go on
+routing the link. A redirect that *is* this client's but has nothing left to complete answers
+`AuthResult.Failed(InvalidRequest)`, so deliver each one once.
 
-That last case includes a redirect arriving in a **new process**. The `PendingAuthorization` outlives
-a process death, but the suspended `authorize()` call does not — there is no continuation left to
-resume, so the recovered record cannot be delivered anywhere and the user starts again. Persisting it
-is what keeps that door open; opening it needs public API this SDK does not have yet, which the
-Flutter and React Native SDKs solve by returning the outcome from `handleCallback` rather than from
-`authorize`. Full detail in [oauth.md](oauth.md).
+A redirect arriving in a **new process** completes normally. The `PendingAuthorization` outlives a
+process death and `handleCallback` reads it back from the store, so the grant the user consented to
+is not thrown away because Android reclaimed some memory while they were in another app. Full detail
+in [oauth.md](oauth.md).
 
 ---
 

@@ -23,9 +23,6 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
-import kotlinx.coroutines.CoroutineStart
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
 
 /**
  * The authorization flow, end to end, with no browser and no server.
@@ -170,7 +167,7 @@ class TraciveOAuthTest {
     val launcher = RecordingAuthorizeLauncher()
     val oauth = oauthUnderTest(FakeHttpTransport { fail("no request yet") }, launcher)
 
-    val job = launch(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertNull(oauth.authorize(), "the authorization page was not opened")
     val parameters = TraciveOAuth.parseQueryParameters(launcher.authorizeUrls.single())
 
     assertEquals("code", parameters["response_type"])
@@ -188,7 +185,6 @@ class TraciveOAuthTest {
     assertFalse(url.contains("api_key"), url)
 
     oauth.cancelPendingAuthorization()
-    job.join()
   }
 
   // ------------------------------------------------------------ state checking ----
@@ -201,11 +197,14 @@ class TraciveOAuthTest {
     val store = InMemoryTokenStore()
     val oauth = oauthUnderTest(transport, launcher, tokenStore = store)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
-    val handled = oauth.handleCallback("$REDIRECT_URI?code=stolen-code&state=not-the-state")
+    assertNull(oauth.authorize())
+    val outcome = oauth.handleCallback("$REDIRECT_URI?code=stolen-code&state=not-the-state")
 
-    assertTrue(handled, "the callback belonged to this SDK and should have been consumed")
-    val result = assertIs<AuthResult.Failed>(outcome.await())
+    val result =
+      assertIs<AuthResult.Failed>(
+        outcome,
+        "the callback belonged to this SDK and should have been answered",
+      )
     assertIs<TraciveException.InvalidRequest>(result.error)
     assertTrue(transport.requests.isEmpty(), "the SDK exchanged a code from a mismatched callback")
     assertNull(store.load(), "a mismatched callback stored a grant")
@@ -217,10 +216,9 @@ class TraciveOAuthTest {
     val launcher = RecordingAuthorizeLauncher()
     val oauth = oauthUnderTest(transport, launcher)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
-    oauth.handleCallback("$REDIRECT_URI?code=abc")
+    assertNull(oauth.authorize())
 
-    assertIs<AuthResult.Failed>(outcome.await())
+    assertIs<AuthResult.Failed>(oauth.handleCallback("$REDIRECT_URI?code=abc"))
     assertTrue(transport.requests.isEmpty())
   }
 
@@ -234,11 +232,12 @@ class TraciveOAuthTest {
     val launcher = RecordingAuthorizeLauncher()
     val oauth = oauthUnderTest(transport, launcher)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertNull(oauth.authorize())
     val state = stateOf(launcher.authorizeUrls.single())
-    oauth.handleCallback("$REDIRECT_URI?code=abc&state=forged&state=$state")
 
-    assertIs<AuthResult.Failed>(outcome.await())
+    assertIs<AuthResult.Failed>(
+      oauth.handleCallback("$REDIRECT_URI?code=abc&state=forged&state=$state")
+    )
     assertTrue(transport.requests.isEmpty())
   }
 
@@ -257,33 +256,43 @@ class TraciveOAuthTest {
     val launcher = RecordingAuthorizeLauncher()
     val oauth = oauthUnderTest(transport, launcher)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertNull(oauth.authorize())
 
-    assertFalse(
+    assertNull(
       oauth.handleCallback("tracive-other://oauth/callback?code=abc&state=whatever"),
       "a link addressed elsewhere was claimed",
     )
-    assertFalse(oauth.handleCallback(REDIRECT_URI), "our redirect with no query at all was claimed")
-    assertFalse(
+    assertNull(oauth.handleCallback(REDIRECT_URI), "our redirect with no query at all was claimed")
+    assertNull(
       oauth.handleCallback("$REDIRECT_URI?utm_source=newsletter"),
       "our redirect carrying no OAuth parameter was claimed",
     )
 
-    // None of that disturbed the request, so the real redirect still resolves it.
+    // None of that disturbed the request, so the real redirect still completes it.
     val state = stateOf(launcher.authorizeUrls.single())
-    assertTrue(oauth.handleCallback("$REDIRECT_URI?code=abc&state=$state"))
-    assertIs<AuthResult.Authorized>(outcome.await())
+    assertIs<AuthResult.Authorized>(oauth.handleCallback("$REDIRECT_URI?code=abc&state=$state"))
   }
 
+  /**
+   * "Not mine" and "mine, with nothing left to finish" are different answers.
+   *
+   * A URL on this client's own redirect carrying OAuth parameters *is* addressed here, so it gets a
+   * real answer rather than the null that means "keep routing this deep link". The distinction
+   * matters because the same method now also answers for a record recovered from disk: a host that
+   * saw null here could not tell "there was nothing to complete" from "this link was for something
+   * else entirely", and the first of those is a message worth showing a user.
+   */
   @Test
-  fun aCallbackWithNothingPendingIsNotOurs() = runSdkTest {
+  fun aCallbackWithNothingPendingSaysSoRatherThanStayingSilent() = runSdkTest {
     val oauth =
       oauthUnderTest(FakeHttpTransport { fail("no request") }, RecordingAuthorizeLauncher())
 
-    assertFalse(
-      oauth.handleCallback("$REDIRECT_URI?code=abc&state=whatever"),
-      "a stray link was claimed by a flow that never started",
-    )
+    val outcome =
+      assertIs<AuthResult.Failed>(
+        oauth.handleCallback("$REDIRECT_URI?code=abc&state=whatever"),
+        "a redirect on our own URI was treated as somebody else's",
+      )
+    assertIs<TraciveException.InvalidRequest>(outcome.error)
   }
 
   // ----------------------------------------------------------------- outcomes ----
@@ -297,11 +306,12 @@ class TraciveOAuthTest {
     val store = InMemoryTokenStore()
     val oauth = oauthUnderTest(transport, launcher, tokenStore = store)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertNull(oauth.authorize())
     val authorizeUrl = launcher.authorizeUrls.single()
-    oauth.handleCallback("$REDIRECT_URI?code=auth-code-1&state=${stateOf(authorizeUrl)}")
+    val outcome =
+      oauth.handleCallback("$REDIRECT_URI?code=auth-code-1&state=${stateOf(authorizeUrl)}")
 
-    val result = assertIs<AuthResult.Authorized>(outcome.await())
+    val result = assertIs<AuthResult.Authorized>(outcome)
     assertEquals(listOf("scammer.check", "profile.read"), result.grantedScopes)
 
     val exchange = transport.requestsTo("/oauth/token").single()
@@ -336,11 +346,12 @@ class TraciveOAuthTest {
     val oauth =
       oauthUnderTest(transport, launcher, tokenStore = store, clientType = ClientType.CONFIDENTIAL)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertNull(oauth.authorize())
     val authorizeUrl = launcher.authorizeUrls.single()
-    oauth.handleCallback("$REDIRECT_URI?code=auth-code-2&state=${stateOf(authorizeUrl)}")
+    val outcome =
+      oauth.handleCallback("$REDIRECT_URI?code=auth-code-2&state=${stateOf(authorizeUrl)}")
 
-    val result = assertIs<AuthResult.CodeReceived>(outcome.await())
+    val result = assertIs<AuthResult.CodeReceived>(outcome)
     assertEquals("auth-code-2", result.code)
     assertEquals(REDIRECT_URI, result.redirectUri)
     assertEquals(
@@ -358,12 +369,13 @@ class TraciveOAuthTest {
     val launcher = RecordingAuthorizeLauncher()
     val oauth = oauthUnderTest(FakeHttpTransport { fail("no exchange") }, launcher)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
-    oauth.handleCallback(
-      "$REDIRECT_URI?error=access_denied&state=${stateOf(launcher.authorizeUrls.single())}"
-    )
+    assertNull(oauth.authorize())
+    val outcome =
+      oauth.handleCallback(
+        "$REDIRECT_URI?error=access_denied&state=${stateOf(launcher.authorizeUrls.single())}"
+      )
 
-    assertEquals(AuthResult.Denied, outcome.await())
+    assertEquals(AuthResult.Denied, outcome)
   }
 
   @Test
@@ -371,13 +383,14 @@ class TraciveOAuthTest {
     val launcher = RecordingAuthorizeLauncher()
     val oauth = oauthUnderTest(FakeHttpTransport { fail("no exchange") }, launcher)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
-    oauth.handleCallback(
-      "$REDIRECT_URI?error=invalid_request&error_description=bad%20scope" +
-        "&state=${stateOf(launcher.authorizeUrls.single())}"
-    )
+    assertNull(oauth.authorize())
+    val outcome =
+      oauth.handleCallback(
+        "$REDIRECT_URI?error=invalid_request&error_description=bad%20scope" +
+          "&state=${stateOf(launcher.authorizeUrls.single())}"
+      )
 
-    val result = assertIs<AuthResult.Failed>(outcome.await())
+    val result = assertIs<AuthResult.Failed>(outcome)
     assertIs<TraciveException.InvalidRequest>(result.error)
     assertEquals("bad scope", result.error.message)
   }
@@ -387,10 +400,11 @@ class TraciveOAuthTest {
     val launcher = RecordingAuthorizeLauncher()
     val oauth = oauthUnderTest(FakeHttpTransport { fail("no exchange") }, launcher)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
-    oauth.handleCallback("$REDIRECT_URI?state=${stateOf(launcher.authorizeUrls.single())}")
+    assertNull(oauth.authorize())
 
-    assertIs<AuthResult.Failed>(outcome.await())
+    assertIs<AuthResult.Failed>(
+      oauth.handleCallback("$REDIRECT_URI?state=${stateOf(launcher.authorizeUrls.single())}")
+    )
   }
 
   @Test
@@ -402,43 +416,59 @@ class TraciveOAuthTest {
     }
     val oauth = oauthUnderTest(transport, launcher, tokenStore = store)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
-    oauth.handleCallback(
-      "$REDIRECT_URI?code=spent&state=${stateOf(launcher.authorizeUrls.single())}"
-    )
+    assertNull(oauth.authorize())
+    val outcome =
+      oauth.handleCallback(
+        "$REDIRECT_URI?code=spent&state=${stateOf(launcher.authorizeUrls.single())}"
+      )
 
-    assertIs<AuthResult.Failed>(outcome.await())
+    assertIs<AuthResult.Failed>(outcome)
     assertNull(store.load(), "a failed exchange must not leave a grant behind")
   }
 
   /**
-   * Only one `state` can be outstanding, so a second `authorize()` supersedes the first. The first
-   * has to resolve rather than wait forever — a coroutine parked on a callback that can no longer
-   * arrive is a leak the host cannot see.
+   * Only one `state` can be outstanding, so a second `authorize()` supersedes the first.
+   *
+   * The second one's redirect is the one that completes, and the superseded one's — arriving late
+   * from a browser tab the user never closed — must not. Honouring it is exactly the confusion
+   * `state` exists to prevent.
    */
   @Test
   fun aSecondAuthorizationSupersedesThePendingOne() = runSdkTest {
+    val transport = FakeHttpTransport { jsonResponse(tokenJson()) }
     val launcher = RecordingAuthorizeLauncher()
-    val oauth = oauthUnderTest(FakeHttpTransport { fail("no exchange") }, launcher)
+    val oauth = oauthUnderTest(transport, launcher)
 
-    val first = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
-    val second = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
-
-    assertIs<AuthResult.Failed>(first.await())
-    oauth.cancelPendingAuthorization()
-    assertEquals(AuthResult.Denied, second.await())
+    assertNull(oauth.authorize())
+    assertNull(oauth.authorize())
     assertEquals(2, launcher.authorizeUrls.size)
+
+    assertIs<AuthResult.Authorized>(
+      oauth.handleCallback("$REDIRECT_URI?code=abc&state=${stateOf(launcher.authorizeUrls.last())}")
+    )
+
+    val late =
+      oauth.handleCallback(
+        "$REDIRECT_URI?code=stale&state=${stateOf(launcher.authorizeUrls.first())}"
+      )
+    assertIs<AuthResult.Failed>(late, "a superseded attempt's redirect was still honoured")
+    assertEquals(1, transport.requests.size, "the superseded attempt's code was redeemed too")
   }
 
   @Test
-  fun cancellingAPendingAuthorizationResolvesIt() = runSdkTest {
+  fun cancellingAPendingAuthorizationLeavesNothingToComplete() = runSdkTest {
     val launcher = RecordingAuthorizeLauncher()
     val oauth = oauthUnderTest(FakeHttpTransport { fail("no exchange") }, launcher)
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
-    oauth.cancelPendingAuthorization()
+    assertNull(oauth.authorize())
+    val state = stateOf(launcher.authorizeUrls.single())
 
-    assertEquals(AuthResult.Denied, outcome.await())
+    assertTrue(oauth.cancelPendingAuthorization())
+
+    assertIs<AuthResult.Failed>(
+      oauth.handleCallback("$REDIRECT_URI?code=abc&state=$state"),
+      "a cancelled authorization was still completable",
+    )
   }
 
   // ----------------------------------------------------------------- sign out ----
@@ -498,14 +528,12 @@ class TraciveOAuthTest {
     val launcher = RecordingAuthorizeLauncher()
     val oauth = oauthUnderTest(transport, launcher)
 
-    val first = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertNull(oauth.authorize())
     val firstId = assertNotNull(oauth.pendingAuthorizationId)
 
-    val second = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertNull(oauth.authorize())
     val secondId = assertNotNull(oauth.pendingAuthorizationId)
     assertNotEquals(firstId, secondId)
-    // The first call is already resolved: starting a second one supersedes it.
-    assertIs<AuthResult.Failed>(first.await())
 
     assertFalse(
       oauth.cancelPendingAuthorization(firstId),
@@ -513,8 +541,7 @@ class TraciveOAuthTest {
     )
 
     val state = stateOf(launcher.authorizeUrls.last())
-    assertTrue(oauth.handleCallback("$REDIRECT_URI?code=abc&state=$state"))
-    assertIs<AuthResult.Authorized>(second.await())
+    assertIs<AuthResult.Authorized>(oauth.handleCallback("$REDIRECT_URI?code=abc&state=$state"))
   }
 
   @Test
@@ -524,10 +551,10 @@ class TraciveOAuthTest {
 
     assertFalse(oauth.cancelPendingAuthorization(), "nothing is pending yet")
 
-    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertNull(oauth.authorize())
     assertTrue(oauth.cancelPendingAuthorization())
-    assertEquals(AuthResult.Denied, outcome.await())
     assertNull(oauth.pendingAuthorizationId)
+    assertFalse(oauth.cancelPendingAuthorization(), "the same authorization was cancelled twice")
   }
 
   // ----------------------------------------------------------- token storage ----
