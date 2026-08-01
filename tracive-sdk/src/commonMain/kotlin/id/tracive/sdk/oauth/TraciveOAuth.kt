@@ -607,14 +607,38 @@ class TraciveOAuth(
   /**
    * The access token to send, or a typed failure when there is no grant.
    *
-   * @throws TraciveException.InvalidToken when nothing is stored. The caller has to authorize
-   *   first; there is no anonymous mode.
+   * A stored grant whose access token is **blank** is not the same thing as no grant. The refresh
+   * token beside the empty field is a live credential, and it is the grant; the empty field is
+   * damage, which a partial write, a save interrupted by a kill, or a restored backup can all leave
+   * behind. So the token is renewed here, through [refreshedToken] and its single flight, and the
+   * caller never learns anything happened.
+   *
+   * Renewing rather than re-consenting is the whole point. Asking the user to authorize again
+   * throws away a grant that still works, to repair one empty field they cannot see and did not
+   * cause.
+   *
+   * The 401 path cannot do this job. An empty bearer is not an *expired* token — a malformed one is
+   * answered with `invalid_token`, which this SDK treats as terminal — so the damaged record would
+   * never heal itself, and would spend a round trip failing permanently. The check therefore
+   * belongs here, before the request is built. It costs the healthy path one blank test.
+   *
+   * @throws TraciveException.InvalidToken when nothing is stored, and when the stored access token
+   *   is blank with no refresh token to renew it from. Both are terminal for the same reason: there
+   *   is no credential left to spend. The caller has to authorize first; there is no anonymous
+   *   mode.
    */
-  internal suspend fun accessToken(): String =
-    tokenStoreProvider.value.load()?.accessToken
-      ?: throw TraciveException.InvalidToken(
-        "No Tracive grant is stored on this device. Call authorize() first."
-      )
+  internal suspend fun accessToken(): String {
+    val stored =
+      tokenStoreProvider.value.load()
+        ?: throw TraciveException.InvalidToken(
+          "No Tracive grant is stored on this device. Call authorize() first."
+        )
+    // The blank token is passed as the stale one, so a caller that arrives while another coroutine
+    // is already renewing sees a stored token that differs from it and takes that instead of
+    // starting a second refresh.
+    if (stored.accessToken.isBlank()) return refreshedToken(stored.accessToken)
+    return stored.accessToken
+  }
 
   /**
    * Refreshes the access token, **single-flight**, and returns the new one.

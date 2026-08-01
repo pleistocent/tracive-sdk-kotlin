@@ -21,7 +21,14 @@ import kotlinx.serialization.json.Json
  * why [TokenStore.save] must replace the pair atomically and why the SDK refreshes single-flight.
  */
 class TokenSet(
-  /** The bearer token sent as `Authorization: Bearer …`. A JWT with roughly an hour of life. */
+  /**
+   * The bearer token sent as `Authorization: Bearer …`. A JWT with roughly an hour of life.
+   *
+   * **May be blank, and blank does not mean the grant is gone.** A partial write, a save
+   * interrupted by a kill, or a restored backup can leave this field empty beside a refresh token
+   * that still works. The SDK renews from that refresh token on first use rather than sending
+   * `Bearer ` or asking the user to consent again; see `TraciveOAuth.accessToken`.
+   */
   val accessToken: String,
 
   /**
@@ -55,7 +62,13 @@ class TokenSet(
 ) {
 
   init {
-    require(accessToken.isNotBlank()) { "A TokenSet needs an access token." }
+    // One live credential, not specifically an access token. A record holding only a refresh token
+    // is a grant that still works, and refusing it here is what used to turn a recoverable partial
+    // write into a re-consent. A record holding neither is genuinely nothing, and pretending
+    // otherwise would make isAuthorized() answer yes for a device that cannot make a single call.
+    require(accessToken.isNotBlank() || !refreshToken.isNullOrBlank()) {
+      "A TokenSet needs a live credential: an access token, a refresh token, or both."
+    }
   }
 
   /**
@@ -281,9 +294,15 @@ internal object TokenSetCodec {
    * The inverse of [encode].
    *
    * @return null when [text] is not a blob this version wrote — corrupt, truncated, or from a
-   *   future schema. Null means "no stored grant", which costs the user one re-authorization and is
-   *   the only safe reading: half-decoded credentials would be sent and rejected, and a rejected
-   *   refresh token looks like theft to the server.
+   *   future schema — or when it carries no live credential at all. Null means "no stored grant",
+   *   which costs the user one re-authorization and is the only safe reading: half-decoded
+   *   credentials would be sent and rejected, and a rejected refresh token looks like theft to the
+   *   server.
+   *
+   * A blank `at` beside a usable `rt` is **not** one of those cases and is returned intact. That
+   * pairing is what an interrupted write leaves behind, and the refresh token in it is a live
+   * credential the grant can be rebuilt from — discarding it here would spend a user's consent to
+   * repair a field, and would do it silently.
    */
   fun decode(text: String): TokenSet? {
     val stored =
@@ -292,7 +311,8 @@ internal object TokenSetCodec {
       } catch (_: Throwable) {
         return null
       }
-    if (stored.version != VERSION || stored.accessToken.isBlank()) return null
+    if (stored.version != VERSION) return null
+    if (stored.accessToken.isBlank() && stored.refreshToken.isNullOrBlank()) return null
     return TokenSet(
       accessToken = stored.accessToken,
       refreshToken = stored.refreshToken,

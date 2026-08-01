@@ -49,6 +49,23 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Fixed
 
+- **A stored grant whose access token is blank is now repaired from its refresh token instead of
+  being thrown away.** A partial write, a keystore save interrupted by the process being killed, or
+  a restored backup can leave that field empty next to a refresh token that still works. Two things
+  then happened, both silently. The stored record was discarded wholesale on the way in — a blank
+  access token was read as an unusable blob, so the live refresh token went with it, and the user
+  was sent back through consent to repair a field they could not see and did not cause. And had the
+  record survived, `Bearer ` would have gone on the wire: an empty bearer is not an *expired* token,
+  so it comes back `invalid_token`, which this SDK treats as terminal — the damaged record could
+  never heal itself on a retry, it simply failed permanently one wasted round trip later. A grant
+  now survives storage whenever either half of the pair is usable, and a blank access token is
+  renewed through the **existing** single-flight refresh before the first request is built, so the
+  caller sees nothing at all. Re-consent was the wrong answer to this: it discards a grant that
+  still works. With no refresh token there is genuinely no credential left in the record, and that
+  case is unchanged — it reads as no stored grant and raises `TraciveException.InvalidToken` without
+  sending anything. `TokenSet` correspondingly asks for *a* live credential rather than specifically
+  an access token, and still refuses one holding neither. The React Native, Swift and Flutter SDKs
+  carry the same repair, so the four behave identically here.
 - **A spent or abandoned authorization is no longer left behind, and a long-dead one is no longer
   exchanged.** Two halves of the same omission. Nothing erased the attempt once it had resolved, so a
   redirect delivered twice — or delivered late by an OS that had queued it — met a verifier still

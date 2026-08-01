@@ -275,6 +275,25 @@ cannot happen. If you ever wrap the token store or the transport, preserve that 
 
 A new refresh token replaces the stored one atomically.
 
+### A blank access token is repaired, not re-consented
+
+A stored grant can come back with an **empty access token beside a refresh token that still works** —
+a partial write, a save interrupted by the process being killed, or a restored backup. The SDK reads
+that as damage rather than as the end of the grant: the refresh token is a live credential, so it is
+spent to mint a new access token through the same single-flight refresh, before the first request is
+built. Your call proceeds and you are told nothing.
+
+This has to be checked locally, because nothing on the wire can fix it. An empty bearer is not an
+*expired* token — a malformed one is answered with `invalid_token`, which is terminal here — so the
+damaged record would never heal itself on a retry. It would fail permanently, one wasted round trip
+later.
+
+With **no** refresh token there is no credential left in the record at all. That reads as no stored
+grant, raises `TraciveException.InvalidToken`, and sends nothing; the user authorizes again. Note
+that `adoptTokens()` stores what you hand it without validating it, so a confidential-client backend
+that returns an empty access token lands in exactly the recoverable case above — provided it also
+delegated a refresh token.
+
 ### `grant_revoked` is terminal
 
 A 401 `grant_revoked` clears the stored tokens and raises `TraciveException.GrantRevoked`. **Do not

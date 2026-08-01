@@ -149,8 +149,17 @@ Refresh tokens rotate, so two simultaneous refreshes would present the same toke
 presentation is indistinguishable from a stolen-token replay, and the server answers reuse by
 revoking the whole grant.
 
+There is one local check before any of that, and it is the only one: a stored access token that is
+**blank** is renewed before the request is built. That is damage, not expiry — see the third note
+below — and it is the sole route into a refresh that a server did not ask for.
+
 ```mermaid
 flowchart TD
+    Load["accessToken(): read the stored grant"] --> Stored{"what is stored"}
+    Stored -->|"nothing"| NoGrant["Throw InvalidToken. Nothing is sent."]
+    Stored -->|"blank access token, refresh token present"| Refresh
+    Stored -->|"blank access token, no refresh token"| NoGrant
+    Stored -->|"access token present"| Send
     Send["TraciveClient.send with Authorization: Bearer"] --> Status{"reply"}
     Status -->|"2xx"| Ok["Return it"]
     Status -->|"5xx or transport failure"| Retry{"RetryPolicy, and only for a retryable request"}
@@ -168,17 +177,22 @@ flowchart TD
     Post -->|"2xx"| Save["TokenStore.save replaces access and refresh together"]
     Post -->|"grant_revoked or invalid_grant"| Dead["Clear the grant, throw GrantRevoked"]
     Post -->|"other failure"| Surface
-    Save --> Again["Repeat the original request once"]
+    Save --> Again["Send with the renewed token, once"]
     Coalesce --> Again
 ```
 
-Two details worth stating plainly:
+Three details worth stating plainly:
 
 - **`invalid_grant` is treated exactly like `grant_revoked` on the refresh path.** A standards-shaped
   authorization server answers a *reused* refresh token that way, and both readings are terminal:
   the stored grant is cleared, because sending it again looks like an attack.
 - **A caller that lost the race performs no network call.** It takes the mutex, sees that the stored
   access token is no longer the one it failed with, and returns that instead.
+- **A blank stored access token is damage, and the reactive path cannot repair it.** An interrupted
+  write or a restored backup can empty that field while leaving the refresh token intact, and an
+  empty bearer is answered with `invalid_token` rather than `expired_token` — terminal here, so the
+  record would fail permanently instead of healing on a retry. It is renewed locally instead, and
+  only the *blank* case is: nothing else consults the stored token before sending it.
 
 "Retryable" in the diagram is narrower than it looks. `GET /credits` and `GET /profile` are safe to
 repeat by definition, but a check is repeated **only when the caller supplied an `idempotencyKey`** —
