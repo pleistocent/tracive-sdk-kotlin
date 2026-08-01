@@ -17,6 +17,7 @@ import id.tracive.sdk.platform.AuthorizeLauncher
 import id.tracive.sdk.platform.SecureTokenStore
 import id.tracive.sdk.platform.defaultAppPresenceChecker
 import id.tracive.sdk.platform.defaultAuthorizeLauncher
+import kotlin.concurrent.Volatile
 import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -134,11 +135,18 @@ class TraciveOAuth(
   /**
    * The authorization currently waiting for its redirect.
    *
-   * Written by [authorize] before the browser opens and read by [handleCallback] when the redirect
-   * arrives, which are always far apart in wall-clock time. The value that actually crosses threads
-   * is the [CompletableDeferred] inside it, and completing one is atomic.
+   * Written by [authorize] on whatever coroutine the host used, and read by [handleCallback] and
+   * [cancelPendingAuthorization] on a platform callback thread — Android's `onNewIntent`, iOS's
+   * `onOpenURL`. Completing the [CompletableDeferred] inside is atomic, but that says nothing about
+   * the *reference*: without `@Volatile` neither the JVM nor Kotlin/Native memory model gives the
+   * reader a happens-before edge on the field write, so a callback can legitimately observe null
+   * after `authorize` has installed a request. The consequence is an `authorize()` that hangs
+   * forever, since it has no timeout and nobody is left to complete its deferred.
    */
-  private var pending: PendingAuthorization? = null
+  @Volatile private var pending: PendingAuthorization? = null
+
+  /** Hands out the ids in [PendingAuthorization]. Only ever touched under [authorize]. */
+  private var authorizationCounter: Long = 0L
 
   /** The install page for a device without the Tracive app. Never carries OAuth parameters. */
   val installUrl: String =
@@ -177,7 +185,8 @@ class TraciveOAuth(
 
     val pkce = PkceGenerator.generate()
     val state = PkceGenerator.randomState()
-    val request = PendingAuthorization(state, pkce)
+    authorizationCounter += 1
+    val request = PendingAuthorization("authorization-$authorizationCounter", state, pkce)
 
     pending
       ?.outcome
@@ -293,15 +302,40 @@ class TraciveOAuth(
   }
 
   /**
+   * The id of the authorization currently waiting for its redirect, or null when none is.
+   *
+   * Read it once the browser is open and pass it back to [cancelPendingAuthorization] later. That
+   * is the only way a cancel can be sure of what it is cancelling — see that method.
+   */
+  val pendingAuthorizationId: String?
+    get() = pending?.id
+
+  /**
    * Abandons the pending authorization, resolving [authorize] with [AuthResult.Denied].
    *
    * Call this when the browser closes without a redirect — the user pressed back, or dismissed the
    * Custom Tab. Nothing else will ever arrive in that case, so without this the [authorize] call
    * would wait forever.
+   *
+   * **Pass [authorizationId] whenever the caller can.** A browser-closed signal arrives from the
+   * Activity or the scene, not from the code that started the flow, and it can arrive late.
+   * Consider the double-tap: `authorize()` runs twice, the second call supersedes the first, and
+   * *then* the first browser's close event turns up. Cancelling unconditionally at that point kills
+   * the second request — the one the user is actually looking at. With the id, a stale signal is
+   * recognised and ignored.
+   *
+   * @param authorizationId the value [pendingAuthorizationId] held when the browser was opened.
+   *   Null cancels whatever is pending, which is correct for a host that never has two
+   *   authorizations in flight and is the hazard above for one that does.
+   * @return whether a pending authorization was cancelled. False means there was nothing pending,
+   *   or what was pending is not what [authorizationId] named.
    */
-  fun cancelPendingAuthorization() {
-    pending?.outcome?.complete(CallbackOutcome.Denied)
+  fun cancelPendingAuthorization(authorizationId: String? = null): Boolean {
+    val request = pending ?: return false
+    if (authorizationId != null && authorizationId != request.id) return false
+    request.outcome.complete(CallbackOutcome.Denied)
     pending = null
+    return true
   }
 
   /**
@@ -591,7 +625,15 @@ class TraciveOAuth(
     }
   }
 
-  private class PendingAuthorization(val state: String, val pkce: Pkce) {
+  /**
+   * One authorization attempt.
+   *
+   * [id] identifies *this* attempt so a cancellation raised for it cannot land on a later one; see
+   * [cancelPendingAuthorization]. It is not `state`: `state` travels to the authorization server
+   * and back, and an identifier a host is asked to hold on to should not be the same value an
+   * attacker would like to learn.
+   */
+  private class PendingAuthorization(val id: String, val state: String, val pkce: Pkce) {
     val outcome: CompletableDeferred<CallbackOutcome> = CompletableDeferred()
   }
 

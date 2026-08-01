@@ -19,6 +19,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertNotEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
@@ -391,6 +392,54 @@ class TraciveOAuthTest {
     oauth.signOut()
 
     assertTrue(transport.requests.isEmpty())
+  }
+
+  // ------------------------------------------------------------ cancellation ----
+
+  /**
+   * A cancel raised for an earlier authorization must not land on a newer one.
+   *
+   * The double-tap: `authorize()` runs twice, the second supersedes the first, and only then does
+   * the first browser's close event reach the Activity. Cancelling unconditionally at that point
+   * abandons the request the user is actually looking at, and the sample's `launchGuarded` busy
+   * flag does not cover it because the cancel comes from the Activity rather than the ViewModel.
+   */
+  @Test
+  fun aCancelForASupersededAuthorizationLeavesTheCurrentOneAlone() = runSdkTest {
+    val transport = FakeHttpTransport { jsonResponse(tokenJson()) }
+    val launcher = RecordingAuthorizeLauncher()
+    val oauth = oauthUnderTest(transport, launcher)
+
+    val first = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    val firstId = assertNotNull(oauth.pendingAuthorizationId)
+
+    val second = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    val secondId = assertNotNull(oauth.pendingAuthorizationId)
+    assertNotEquals(firstId, secondId)
+    // The first call is already resolved: starting a second one supersedes it.
+    assertIs<AuthResult.Failed>(first.await())
+
+    assertFalse(
+      oauth.cancelPendingAuthorization(firstId),
+      "a cancel naming the superseded request cancelled the current one",
+    )
+
+    val state = stateOf(launcher.authorizeUrls.last())
+    assertTrue(oauth.handleCallback("$REDIRECT_URI?code=abc&state=$state"))
+    assertIs<AuthResult.Authorized>(second.await())
+  }
+
+  @Test
+  fun cancellingReportsWhetherThereWasAnythingToCancel() = runSdkTest {
+    val launcher = RecordingAuthorizeLauncher()
+    val oauth = oauthUnderTest(FakeHttpTransport { fail("no request") }, launcher)
+
+    assertFalse(oauth.cancelPendingAuthorization(), "nothing is pending yet")
+
+    val outcome = async(start = CoroutineStart.UNDISPATCHED) { oauth.authorize() }
+    assertTrue(oauth.cancelPendingAuthorization())
+    assertEquals(AuthResult.Denied, outcome.await())
+    assertNull(oauth.pendingAuthorizationId)
   }
 
   // ----------------------------------------------------------- token storage ----
