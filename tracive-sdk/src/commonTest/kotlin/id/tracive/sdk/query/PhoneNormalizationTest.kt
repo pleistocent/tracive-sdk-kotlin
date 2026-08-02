@@ -50,6 +50,9 @@ class PhoneNormalizationTest {
       PhoneRejection("", "0857123456", "empty_country"),
       PhoneRejection("XXX", "0857123456", "unknown_country"),
       PhoneRejection("ID", "0857123456", "unknown_country"),
+      PhoneRejection("IDN", "+64857-1860-9079", "country_conflict"),
+      PhoneRejection("USA", "+44 7911 123456", "country_conflict"),
+      PhoneRejection("+62", "+64 857 1860 9079", "country_conflict"),
     )
 
   @Test
@@ -66,7 +69,7 @@ class PhoneNormalizationTest {
 
   @Test
   fun everyRejectionIsRefusedWithItsExactReason() {
-    assertEquals(5, rejections.size, "rejection count")
+    assertEquals(8, rejections.size, "rejection count")
     for (rejection in rejections) {
       val failure =
         assertFailsWith<TraciveQueryException>("accepted an unusable input") {

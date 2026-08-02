@@ -1,6 +1,6 @@
 {
   "description": "Phone-normalization contract, vendored byte-identically into the four Tracive SDK repositories. Expected values were produced by the Tracive app's PhoneUtils.normalizePhoneNumber — app and SDK must fold the same person to the same record key.",
-  "version": 1,
+  "version": 2,
   "countryCount": 245,
   "vectors": [
     {
@@ -136,6 +136,24 @@
       "input": "0857123456",
       "reason": "unknown_country",
       "note": "alpha-2 ditolak; SDK memakai alpha-3"
+    },
+    {
+      "country": "IDN",
+      "input": "+64857-1860-9079",
+      "reason": "country_conflict",
+      "note": "nomor internasional +64 bertentangan dengan negara yang disebut; menebak menghasilkan kunci yang tak akan pernah cocok dan tetap ditagih"
+    },
+    {
+      "country": "USA",
+      "input": "+44 7911 123456",
+      "reason": "country_conflict",
+      "note": "idem, lewat alpha-3 lain"
+    },
+    {
+      "country": "+62",
+      "input": "+64 857 1860 9079",
+      "reason": "country_conflict",
+      "note": "idem, lewat dial code"
     }
   ],
   "countries": [
@@ -1854,5 +1872,6 @@
       "alpha3": "ZWE",
       "countryName": "Zimbabwe"
     }
-  ]
+  ],
+  "contract": "A `+` in the input is the caller stating the number is already international. If the dial code that follows disagrees with the country named, both cannot be right, so the SDKs refuse rather than guess. This is the one rule the SDKs do NOT share with the Tracive app: every input it rejects produced an unusable key in the app too, so no number that works today folds differently between them."
 }

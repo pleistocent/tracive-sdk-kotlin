@@ -163,6 +163,7 @@ public final class id/tracive/sdk/TraciveInitProvider : android/content/ContentP
 }
 
 public final class id/tracive/sdk/TraciveQueryException : id/tracive/sdk/TraciveException {
+	public static final field COUNTRY_CONFLICT Ljava/lang/String;
 	public static final field COUNTRY_NOT_ALPHA3 Ljava/lang/String;
 	public static final field Companion Lid/tracive/sdk/TraciveQueryException$Companion;
 	public static final field EMPTY_ACCOUNT_ID Ljava/lang/String;

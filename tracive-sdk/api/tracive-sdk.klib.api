@@ -1072,6 +1072,8 @@ final class id.tracive.sdk/TraciveQueryException : id.tracive.sdk/TraciveExcepti
         final fun <get-reason>(): kotlin/String // id.tracive.sdk/TraciveQueryException.reason.<get-reason>|<get-reason>(){}[0]
 
     final object Companion { // id.tracive.sdk/TraciveQueryException.Companion|null[0]
+        final const val COUNTRY_CONFLICT // id.tracive.sdk/TraciveQueryException.Companion.COUNTRY_CONFLICT|{}COUNTRY_CONFLICT[0]
+            final fun <get-COUNTRY_CONFLICT>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.COUNTRY_CONFLICT.<get-COUNTRY_CONFLICT>|<get-COUNTRY_CONFLICT>(){}[0]
         final const val COUNTRY_NOT_ALPHA3 // id.tracive.sdk/TraciveQueryException.Companion.COUNTRY_NOT_ALPHA3|{}COUNTRY_NOT_ALPHA3[0]
             final fun <get-COUNTRY_NOT_ALPHA3>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.COUNTRY_NOT_ALPHA3.<get-COUNTRY_NOT_ALPHA3>|<get-COUNTRY_NOT_ALPHA3>(){}[0]
         final const val EMPTY_ACCOUNT_ID // id.tracive.sdk/TraciveQueryException.Companion.EMPTY_ACCOUNT_ID|{}EMPTY_ACCOUNT_ID[0]

@@ -48,13 +48,28 @@ private const val DIAL_SAN_MARINO = "378"
  * @throws TraciveQueryException [TraciveQueryException.EMPTY_COUNTRY] when the first argument has
  *   no letters and no digits, [TraciveQueryException.UNKNOWN_COUNTRY] when it looks like a country
  *   code but names no country this SDK knows, or [TraciveQueryException.EMPTY_PHONE_NUMBER] when
- *   the number contains no digits at all. It never returns an empty string: an empty key would
- *   reach `phone()` and be rejected there instead, one layer away from the mistake that caused it.
+ *   the number contains no digits at all, or [TraciveQueryException.COUNTRY_CONFLICT] when the
+ *   number carries a `+` whose dial code disagrees with the country named. It never returns an
+ *   empty string: an empty key would reach `phone()` and be rejected there instead, one layer away
+ *   from the mistake that caused it.
  */
 fun normalizePhoneNumber(countryOrDialCode: String, phoneNumber: String): String {
   val dialCode = resolveDialCode(countryOrDialCode)
   var digits = phoneNumber.filter { it in '0'..'9' }
   if (digits.isEmpty()) throw TraciveQueryException(TraciveQueryException.EMPTY_PHONE_NUMBER)
+
+  // A leading `+` is the caller stating "this is already international". If the code that follows
+  // disagrees with the country they named, the two arguments contradict each other, and guessing
+  // which one is right is exactly what costs a credit: `("IDN", "+64857…")` used to yield
+  // `+626485718609079`, a New Zealand number wearing an Indonesian dial code, which can never match
+  // a stored record and is billed as a miss anyway.
+  //
+  // This is the one place this function deliberately departs from the Tracive app's normalizer. It
+  // is safe to depart here precisely because every input it now rejects produced an unusable key in
+  // the app too — so no number that works today folds differently between app and SDK.
+  if (phoneNumber.contains('+') && !digits.startsWith(dialCode)) {
+    throw TraciveQueryException(TraciveQueryException.COUNTRY_CONFLICT)
+  }
 
   // The caller may have typed the country code into the local-number field, or pasted a number that
   // was already international. Strip it rather than emitting +6262…

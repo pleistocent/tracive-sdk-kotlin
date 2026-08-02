@@ -381,6 +381,12 @@ class TraciveQueryException(val reason: String) :
      */
     const val EMPTY_PHONE_NUMBER: String = "empty_phone_number"
 
+    /**
+     * The number carries a `+` whose dial code disagrees with the country named. Both cannot be
+     * right, and guessing which is would produce a key that can never match — billed as a miss.
+     */
+    const val COUNTRY_CONFLICT: String = "country_conflict"
+
     /** The bank account number or IBAN folded to an empty string. */
     const val EMPTY_ACCOUNT_ID: String = "empty_account_id"
 
