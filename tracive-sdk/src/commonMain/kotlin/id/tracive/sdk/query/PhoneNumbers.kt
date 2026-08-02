@@ -77,7 +77,7 @@ fun normalizePhoneNumber(countryOrDialCode: String, phoneNumber: String): String
   // malformed concatenation has no principled stopping point (`+000062`, `++62`).
   //
   // An earlier version of this comment claimed the first reason covered both. It did not.
-  if (phoneNumber.contains('+') && !digits.startsWith(dialCode)) {
+  if (phoneNumber.trimStart().startsWith('+') && !digits.startsWith(dialCode)) {
     throw TraciveQueryException(TraciveQueryException.COUNTRY_CONFLICT)
   }
 

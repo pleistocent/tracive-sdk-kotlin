@@ -344,8 +344,9 @@ sealed class TraciveException(
 /**
  * A query could not be built, so no request was made and no credit was spent.
  *
- * [reason] is a stable machine-readable token from `query-grammar-vectors.json`, or — for the three
- * `normalizePhoneNumber` tokens — from `phone-normalization-vectors.json`: [NOT_E164],
+ * [reason] is a stable machine-readable token from `query-grammar-vectors.json`, or — for
+ * [EMPTY_COUNTRY], [UNKNOWN_COUNTRY], [EMPTY_PHONE_NUMBER] and [COUNTRY_CONFLICT], which
+ * `normalizePhoneNumber` raises — from `phone-normalization-vectors.json`: [NOT_E164],
  * [NOT_AN_EMAIL], [COUNTRY_NOT_ALPHA3], [EMPTY_ACCOUNT_ID], [EMPTY_BANK_CODE], [EMPTY_VALUE],
  * [EMPTY_HANDLE], [EMPTY_CHAIN], [EMPTY_ADDRESS], [EMPTY_PLATFORM] or [INVALID_DOCUMENT_ID]. Branch
  * on it rather than on the message: the token is identical across the Kotlin, Flutter and Swift
