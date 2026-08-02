@@ -193,6 +193,11 @@ What it handles, per country:
 | `1 555 123 4567` | `USA` | `+15551234567` — NANP trunk prefix `1` dropped |
 | `8 912 345 67 89` | `RUS` | `+79123456789` — Russian trunk prefix `8` dropped |
 | `06 1234 5678` | `ITA` | `+390612345678` — Italy's leading `0` **kept**; it is part of the number |
+| `+64 857 1860 9079` | `IDN` | **throws `country_conflict`** — the `+64` contradicts `IDN` |
+
+That last row is the one rule these SDKs do *not* share with the Tracive app. A `+` says the number
+is already international; if the code that follows disagrees with the country you named, both cannot
+be right, and guessing produces a key that can never match — billed as a miss.
 
 `Country` is an enum of 245 entries with `dialCode`, `alpha2`, `alpha3` and `countryName`, and
 `Country.fromAlpha3("idn")` looks one up case-insensitively.

@@ -60,6 +60,21 @@ jobs:
           echo "f94bf48164c82bcc59fda30669d9d8c25dbc36ecc7ad93fcd7fb56ba2cdf2901  tracive-sdk/src/commonTest/resources/query-grammar-vectors.json" \
             | shasum -a 256 --check --strict
 
+      # The phone-normalization fixture, pinned the same way and for the same reason. Its expected
+      # values were produced by the Tracive app's own normalizer, so it is the contract that keeps
+      # app and SDK folding one person to one record key. It shipped without either protection on
+      # 2 August 2026 and an audit proved it: replacing the JSON with a contradictory file left
+      # `./gradlew check` green, because nothing read it.
+      - name: Verify the phone-normalization fixture is unmodified
+        run: |
+          echo "7abb705b158f7b1c25377606d8409e2deb55998906637184b7b9a61919819f46  tracive-sdk/src/commonTest/resources/phone-normalization-vectors.json" \
+            | shasum -a 256 --check --strict
+
+      - name: Check the embedded phone vectors match the JSON
+        run: |
+          python3 tools/generate_phone_vectors_kt.py
+          git diff --exit-code tracive-sdk/src/commonTest/kotlin/id/tracive/sdk/query/PhoneNormalizationTest.kt
+
       # The embedded copy of the grammar fixture must be the fixture. Kotlin Multiplatform cannot
       # read a test resource from commonTest, so `QueryGrammarVectorsJson.kt` carries the file as a
       # constant — and a constant that drifts from the JSON beside it is exactly the silent failure

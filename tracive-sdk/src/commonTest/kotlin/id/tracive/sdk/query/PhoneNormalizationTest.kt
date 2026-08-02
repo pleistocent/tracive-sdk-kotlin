@@ -41,6 +41,8 @@ class PhoneNormalizationTest {
       PhoneVector("GBR", "07911 123456", "+447911123456"),
       PhoneVector("DEU", "0151 23456789", "+4915123456789"),
       PhoneVector("+39", "06 1234 5678", "+390612345678"),
+      PhoneVector("IDN", "08571860907\uFE0F9", "+6285718609079"),
+      PhoneVector("IDN", "0857\u200B1860\u200B9079", "+6285718609079"),
     )
 
   private val rejections =
@@ -57,7 +59,7 @@ class PhoneNormalizationTest {
 
   @Test
   fun everyVectorFoldsByteForByte() {
-    assertEquals(17, vectors.size, "vector count — did the embedded copy get truncated?")
+    assertEquals(19, vectors.size, "vector count — did the embedded copy get truncated?")
     for (vector in vectors) {
       assertEquals(
         vector.expected,
