@@ -64,7 +64,7 @@ fun normalizePhoneNumber(countryOrDialCode: String, phoneNumber: String): String
   // `+626485718609079`, a New Zealand number wearing an Indonesian dial code, which can never match
   // a stored record and is billed as a miss anyway.
   //
-  // Two deliberate departures from the Tracive app's normalizer live here, and they are not the
+  // Three deliberate departures from the Tracive app's normalizer live here, and they are not the
   // same kind of thing.
   //
   // A dial code that disagrees with the country named: safe to reject, because every input it
@@ -76,7 +76,11 @@ fun normalizePhoneNumber(countryOrDialCode: String, phoneNumber: String): String
   // country code, and `00` is none. The stored key is `PHONE_+<dial><number>`; admitting one
   // malformed concatenation has no principled stopping point (`+000062`, `++62`).
   //
-  // An earlier version of this comment claimed the first reason covered both. It did not.
+  // An earlier version of this comment claimed the first reason covered both.
+  //
+  // A third, quieter one: emptiness is re-checked *after* the trunk prefix is stripped, so `000`,
+  // `62` and `1` are refused. The app folds those to `+62` and `+1`, which cannot match any record,
+  // so this belongs with the first kind — safe, not stricter. It did not.
   if (phoneNumber.trimStart().startsWith('+') && !digits.startsWith(dialCode)) {
     throw TraciveQueryException(TraciveQueryException.COUNTRY_CONFLICT)
   }
