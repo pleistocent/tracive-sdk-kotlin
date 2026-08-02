@@ -278,7 +278,14 @@ enum class Country(
   companion object {
     private val byAlpha3: Map<String, Country> = entries.associateBy { it.alpha3 }
 
-    /** The country with this ISO 3166-1 alpha-3 code, case-insensitively, or null. */
-    fun fromAlpha3(alpha3: String): Country? = byAlpha3[alpha3.trim().uppercase()]
+    /**
+     * The country with this ISO 3166-1 alpha-3 code, or null.
+     *
+     * Surrounding **ASCII** whitespace is ignored; a U+FEFF byte-order mark is not, and lands on
+     * null. Each platform's own `trim()` disagrees about U+FEFF, so relying on it made one input
+     * behave two ways across the four SDKs. See `normalizePhoneNumber`.
+     */
+    fun fromAlpha3(alpha3: String): Country? =
+      byAlpha3[alpha3.trim(' ', '\t', '\n', '\u000B', '\u000C', '\r').uppercase()]
   }
 }

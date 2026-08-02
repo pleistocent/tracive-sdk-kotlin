@@ -43,6 +43,7 @@ class PhoneNormalizationTest {
       PhoneVector("+39", "06 1234 5678", "+390612345678"),
       PhoneVector("IDN", "08571860907\uFE0F9", "+6285718609079"),
       PhoneVector("IDN", "0857\u200B1860\u200B9079", "+6285718609079"),
+      PhoneVector("  IDN  ", "0857 1860 9079", "+6285718609079"),
     )
 
   private val rejections =
@@ -60,11 +61,12 @@ class PhoneNormalizationTest {
       PhoneRejection("IDN", "000", "empty_phone_number"),
       PhoneRejection("IDN", "62", "empty_phone_number"),
       PhoneRejection("USA", "1", "empty_phone_number"),
+      PhoneRejection("\uFEFFIDN", "0857 1860 9079", "unknown_country"),
     )
 
   @Test
   fun everyVectorFoldsByteForByte() {
-    assertEquals(19, vectors.size, "vector count — did the embedded copy get truncated?")
+    assertEquals(20, vectors.size, "vector count — did the embedded copy get truncated?")
     for (vector in vectors) {
       assertEquals(
         vector.expected,
@@ -76,7 +78,7 @@ class PhoneNormalizationTest {
 
   @Test
   fun everyRejectionIsRefusedWithItsExactReason() {
-    assertEquals(13, rejections.size, "rejection count")
+    assertEquals(14, rejections.size, "rejection count")
     for (rejection in rejections) {
       val failure =
         assertFailsWith<TraciveQueryException>("accepted an unusable input") {

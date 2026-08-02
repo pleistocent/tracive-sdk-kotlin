@@ -67,7 +67,7 @@ jobs:
       # `./gradlew check` green, because nothing read it.
       - name: Verify the phone-normalization fixture is unmodified
         run: |
-          echo "4a1a52ad5d92a22ac70eb27dc546342f12507c30705fb9fd3a0d9adb2e6d0e0d  tracive-sdk/src/commonTest/resources/phone-normalization-vectors.json" \
+          echo "4e9d8015e1368451f1d5e6edd8248c15fa89f071ad3a608095978460112f19b0  tracive-sdk/src/commonTest/resources/phone-normalization-vectors.json" \
             | shasum -a 256 --check --strict
 
       - name: Check the embedded phone vectors match the JSON

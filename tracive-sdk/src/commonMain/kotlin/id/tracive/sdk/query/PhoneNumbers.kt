@@ -81,7 +81,7 @@ fun normalizePhoneNumber(countryOrDialCode: String, phoneNumber: String): String
   // A third, quieter one: emptiness is re-checked *after* the trunk prefix is stripped, so `000`,
   // `62` and `1` are refused. The app folds those to `+62` and `+1`, which cannot match any record,
   // so this belongs with the first kind — safe, not stricter. It did not.
-  if (phoneNumber.trimStart().startsWith('+') && !digits.startsWith(dialCode)) {
+  if (phoneNumber.trimStart(*TRIMMED).startsWith('+') && !digits.startsWith(dialCode)) {
     throw TraciveQueryException(TraciveQueryException.COUNTRY_CONFLICT)
   }
 
@@ -125,7 +125,7 @@ fun normalizePhoneNumber(country: Country, phoneNumber: String): String =
 
 /** Alpha-3 in, dial code out; or digits in, the same digits out. */
 private fun resolveDialCode(countryOrDialCode: String): String {
-  val trimmed = countryOrDialCode.trim()
+  val trimmed = countryOrDialCode.trimCanonically()
   if (trimmed.isEmpty()) throw TraciveQueryException(TraciveQueryException.EMPTY_COUNTRY)
 
   val digits = trimmed.filter { it in '0'..'9' }
@@ -139,3 +139,21 @@ private fun resolveDialCode(countryOrDialCode: String): String {
   return Country.fromAlpha3(trimmed)?.dialCode
     ?: throw TraciveQueryException(TraciveQueryException.UNKNOWN_COUNTRY)
 }
+
+/**
+ * The characters trimmed from a country or dial code, defined here rather than delegated.
+ *
+ * Not `String.trim()`. This repository already knows the four platforms disagree about what
+ * whitespace is — `js_string.dart` in the Flutter SDK spells it out: Kotlin's `trim()` follows the
+ * Unicode White_Space property *plus* U+FEFF, JavaScript's strips a different set. Calling each
+ * platform's own `trim()` therefore made `"\uFEFFIDN"` resolve in Flutter and React Native and
+ * throw in Kotlin and Swift: one input, two behaviours.
+ *
+ * ASCII whitespace only, and deliberately **not** U+FEFF. A byte-order mark inside a data value is
+ * an encoding fault upstream, and swallowing it here would tell a partner their pipeline is clean
+ * while the same mark waits to land in a phone number or an account id, where nothing trims it and
+ * the key comes out wrong. An `unknown_country` at the first field is the cheaper lesson.
+ */
+private val TRIMMED = charArrayOf(' ', '\t', '\n', '\u000B', '\u000C', '\r')
+
+private fun String.trimCanonically(): String = trim(*TRIMMED)
