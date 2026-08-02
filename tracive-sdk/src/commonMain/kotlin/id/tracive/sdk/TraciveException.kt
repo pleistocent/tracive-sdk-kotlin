@@ -344,7 +344,8 @@ sealed class TraciveException(
 /**
  * A query could not be built, so no request was made and no credit was spent.
  *
- * [reason] is the stable machine-readable token from `query-grammar-vectors.json`: [NOT_E164],
+ * [reason] is a stable machine-readable token from `query-grammar-vectors.json`, or — for the three
+ * `normalizePhoneNumber` tokens — from `phone-normalization-vectors.json`: [NOT_E164],
  * [NOT_AN_EMAIL], [COUNTRY_NOT_ALPHA3], [EMPTY_ACCOUNT_ID], [EMPTY_BANK_CODE], [EMPTY_VALUE],
  * [EMPTY_HANDLE], [EMPTY_CHAIN], [EMPTY_ADDRESS], [EMPTY_PLATFORM] or [INVALID_DOCUMENT_ID]. Branch
  * on it rather than on the message: the token is identical across the Kotlin, Flutter and Swift
@@ -364,6 +365,21 @@ class TraciveQueryException(val reason: String) :
 
     /** The country is not an ISO 3166-1 alpha-3 code. */
     const val COUNTRY_NOT_ALPHA3: String = "country_not_alpha3"
+
+    /** `normalizePhoneNumber` was given a country or dial code with no letters and no digits. */
+    const val EMPTY_COUNTRY: String = "empty_country"
+
+    /**
+     * `normalizePhoneNumber` was given something that looks like a country code but names no
+     * country. An alpha-2 code such as `ID` lands here: this SDK uses alpha-3 everywhere.
+     */
+    const val UNKNOWN_COUNTRY: String = "unknown_country"
+
+    /**
+     * `normalizePhoneNumber` was given a number with no digits, or one that was only a trunk
+     * prefix.
+     */
+    const val EMPTY_PHONE_NUMBER: String = "empty_phone_number"
 
     /** The bank account number or IBAN folded to an empty string. */
     const val EMPTY_ACCOUNT_ID: String = "empty_account_id"

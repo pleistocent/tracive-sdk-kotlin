@@ -159,6 +159,49 @@ and `email()` requires an `@`. Neither is validated server-side, so `EMAIL_budi`
 and charged for. The email check is `@`-presence only — a fuller address grammar would reject
 addresses the server would have matched, which is the worse mistake.
 
+### Local phone formats: `normalizePhoneNumber`
+
+`phone()` takes E.164 and nothing else, so `081234567891` is refused rather than guessed at — the
+SDK cannot know your dial code, and a wrong guess still costs a credit. `normalizePhoneNumber`
+supplies the dial code, so you can accept numbers the way people in each country actually write
+them:
+
+```kotlin
+// Indonesians share numbers starting 08. Both of these produce PHONE_+6285718609079.
+TraciveQuery.phone(normalizePhoneNumber("IDN", "0857-1860-9079"))
+TraciveQuery.phone(normalizePhoneNumber("+62", "0857 1860 9079"))
+
+// Or with the enum, when the country is known at compile time.
+TraciveQuery.phone(normalizePhoneNumber(Country.INDONESIA, "0857 1860 9079"))
+```
+
+The first argument is either an **ISO 3166-1 alpha-3** code (`IDN`, `USA` — case-insensitive) or a
+dial code with or without `+` (`+62`, `62`). They are told apart by shape: letters mean alpha-3,
+digits mean a dial code. Alpha-2 (`ID`) is refused, because this SDK speaks alpha-3 everywhere and
+accepting both would let your `US` mean one thing here and another in `bankAccount()`.
+
+It is a plain public function, not something hidden inside `phone()`, because you need the E.164
+form for your own records, logging and outbound messaging too — not only for a Tracive lookup.
+
+What it handles, per country:
+
+| Input | Country | Result |
+|---|---|---|
+| `0857-1860-9079` | `IDN` | `+6285718609079` — trunk prefix `0` dropped |
+| `0062857 1860 9079` | `IDN` | `+6285718609079` — international prefix `00` dropped |
+| `+62 857 1860 9079` | `IDN` | `+6285718609079` — already international, not doubled |
+| `1 555 123 4567` | `USA` | `+15551234567` — NANP trunk prefix `1` dropped |
+| `8 912 345 67 89` | `RUS` | `+79123456789` — Russian trunk prefix `8` dropped |
+| `06 1234 5678` | `ITA` | `+390612345678` — Italy's leading `0` **kept**; it is part of the number |
+
+`Country` is an enum of 245 entries with `dialCode`, `alpha2`, `alpha3` and `countryName`, and
+`Country.fromAlpha3("idn")` looks one up case-insensitively.
+
+These rules are a deliberate copy of the Tracive app's own normalizer, pinned by
+`phone-normalization-vectors.json` — vendored byte-identically into all four SDK repositories, like
+the grammar fixture. If the app folded a number one way and this SDK another, the same person would
+become two record keys, and a report filed in the app would be invisible to a check made here.
+
 **There is no `domain()` builder.** The Tracive API never shipped a DOMAIN type, so no record with
 a `DOMAIN_` id exists. Building such a key would guarantee a miss, and misses cost money.
 
