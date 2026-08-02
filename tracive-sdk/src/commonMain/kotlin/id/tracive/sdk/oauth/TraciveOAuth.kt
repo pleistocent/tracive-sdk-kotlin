@@ -155,13 +155,19 @@ class TraciveOAuth(
    * Defaults to [DEFAULT_PENDING_AUTHORIZATION_MAX_AGE], which is where the reasoning for the value
    * lives.
    *
-   * **Private, and staying that way.** It is a parameter so a test can exercise the boundary
-   * without waiting ten real minutes, and nothing more. The Flutter and React Native SDKs expose
-   * the same window as a public knob; this SDK and Swift do not, on Swift's reasoning — a second
-   * way for a window to enter the flow is how one of these SDKs ended up with two copies of its own
-   * value that were free to disagree. An earlier version of this comment claimed the parameter
-   * existed so a cross-platform integration could set the same number everywhere, which it cannot:
-   * no caller outside this class can reach it.
+   * A parameter rather than a bare constant because the Flutter and React Native SDKs expose the
+   * same knob, and an integration spanning more than one of them should be able to set the same
+   * number in each. `private val` privatises the generated *property*, not the constructor
+   * parameter — a caller can still pass `pendingAuthorizationMaxAge = …` by name — which is what
+   * makes that possible, and which is also why the `private` here is not the access control it
+   * looks like.
+   *
+   * A previous edit replaced this paragraph with a claim that no caller outside this class could
+   * reach it. That was wrong, and it is recorded here because of how it happened: the check was a
+   * grep of the klib API dump for the parameter's *name*, and that dump lists parameter *types*.
+   * The search could not have found what it was asked about, and a contradiction it produced was
+   * read as an error in this comment rather than in the search. Swift alone keeps its window
+   * genuinely closed, by not taking a parameter at all.
    */
   private val pendingAuthorizationMaxAge: Duration = DEFAULT_PENDING_AUTHORIZATION_MAX_AGE,
 ) {
