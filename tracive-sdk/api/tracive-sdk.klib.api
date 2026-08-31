@@ -396,8 +396,15 @@ abstract interface id.tracive.sdk.platform/AppPresenceChecker { // id.tracive.sd
     final object Companion { // id.tracive.sdk.platform/AppPresenceChecker.Companion|null[0]
         final const val ANDROID_PACKAGE // id.tracive.sdk.platform/AppPresenceChecker.Companion.ANDROID_PACKAGE|{}ANDROID_PACKAGE[0]
             final fun <get-ANDROID_PACKAGE>(): kotlin/String // id.tracive.sdk.platform/AppPresenceChecker.Companion.ANDROID_PACKAGE.<get-ANDROID_PACKAGE>|<get-ANDROID_PACKAGE>(){}[0]
+        final const val ANDROID_SANDBOX_PACKAGE // id.tracive.sdk.platform/AppPresenceChecker.Companion.ANDROID_SANDBOX_PACKAGE|{}ANDROID_SANDBOX_PACKAGE[0]
+            final fun <get-ANDROID_SANDBOX_PACKAGE>(): kotlin/String // id.tracive.sdk.platform/AppPresenceChecker.Companion.ANDROID_SANDBOX_PACKAGE.<get-ANDROID_SANDBOX_PACKAGE>|<get-ANDROID_SANDBOX_PACKAGE>(){}[0]
+        final const val IOS_SANDBOX_URL_SCHEME // id.tracive.sdk.platform/AppPresenceChecker.Companion.IOS_SANDBOX_URL_SCHEME|{}IOS_SANDBOX_URL_SCHEME[0]
+            final fun <get-IOS_SANDBOX_URL_SCHEME>(): kotlin/String // id.tracive.sdk.platform/AppPresenceChecker.Companion.IOS_SANDBOX_URL_SCHEME.<get-IOS_SANDBOX_URL_SCHEME>|<get-IOS_SANDBOX_URL_SCHEME>(){}[0]
         final const val IOS_URL_SCHEME // id.tracive.sdk.platform/AppPresenceChecker.Companion.IOS_URL_SCHEME|{}IOS_URL_SCHEME[0]
             final fun <get-IOS_URL_SCHEME>(): kotlin/String // id.tracive.sdk.platform/AppPresenceChecker.Companion.IOS_URL_SCHEME.<get-IOS_URL_SCHEME>|<get-IOS_URL_SCHEME>(){}[0]
+
+        final fun androidPackageFor(id.tracive.sdk.model/TraciveEnvironment): kotlin/String // id.tracive.sdk.platform/AppPresenceChecker.Companion.androidPackageFor|androidPackageFor(id.tracive.sdk.model.TraciveEnvironment){}[0]
+        final fun iosUrlSchemeFor(id.tracive.sdk.model/TraciveEnvironment): kotlin/String // id.tracive.sdk.platform/AppPresenceChecker.Companion.iosUrlSchemeFor|iosUrlSchemeFor(id.tracive.sdk.model.TraciveEnvironment){}[0]
     }
 }
 
@@ -1391,7 +1398,7 @@ final object id.tracive.sdk.platform/CryptoProvider { // id.tracive.sdk.platform
 }
 
 final fun id.tracive.sdk.platform/SecureTokenStore(): id.tracive.sdk.oauth/TokenStore // id.tracive.sdk.platform/SecureTokenStore|SecureTokenStore(){}[0]
-final fun id.tracive.sdk.platform/defaultAppPresenceChecker(): id.tracive.sdk.platform/AppPresenceChecker // id.tracive.sdk.platform/defaultAppPresenceChecker|defaultAppPresenceChecker(){}[0]
+final fun id.tracive.sdk.platform/defaultAppPresenceChecker(id.tracive.sdk.model/TraciveEnvironment): id.tracive.sdk.platform/AppPresenceChecker // id.tracive.sdk.platform/defaultAppPresenceChecker|defaultAppPresenceChecker(id.tracive.sdk.model.TraciveEnvironment){}[0]
 final fun id.tracive.sdk.platform/defaultAuthorizeLauncher(): id.tracive.sdk.platform/AuthorizeLauncher // id.tracive.sdk.platform/defaultAuthorizeLauncher|defaultAuthorizeLauncher(){}[0]
 final fun id.tracive.sdk.query/normalizePhoneNumber(id.tracive.sdk.query/Country, kotlin/String): kotlin/String // id.tracive.sdk.query/normalizePhoneNumber|normalizePhoneNumber(id.tracive.sdk.query.Country;kotlin.String){}[0]
 final fun id.tracive.sdk.query/normalizePhoneNumber(kotlin/String, kotlin/String): kotlin/String // id.tracive.sdk.query/normalizePhoneNumber|normalizePhoneNumber(kotlin.String;kotlin.String){}[0]

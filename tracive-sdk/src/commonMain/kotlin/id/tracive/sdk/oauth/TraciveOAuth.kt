@@ -179,7 +179,9 @@ class TraciveOAuth(
    */
   private val transportProvider = lazy { transport ?: KtorTransport() }
   private val tokenStoreProvider = lazy { tokenStore ?: SecureTokenStore() }
-  private val presenceProvider = lazy { appPresenceChecker ?: defaultAppPresenceChecker() }
+  private val presenceProvider = lazy {
+    appPresenceChecker ?: defaultAppPresenceChecker(environment)
+  }
   private val launcherProvider = lazy { authorizeLauncher ?: defaultAuthorizeLauncher() }
 
   private val ownsTransport: Boolean = transport == null

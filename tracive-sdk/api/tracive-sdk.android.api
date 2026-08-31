@@ -941,7 +941,7 @@ public final class id/tracive/sdk/platform/AndroidAppPresenceChecker : id/traciv
 }
 
 public final class id/tracive/sdk/platform/AndroidAppPresenceCheckerKt {
-	public static final fun defaultAppPresenceChecker ()Lid/tracive/sdk/platform/AppPresenceChecker;
+	public static final fun defaultAppPresenceChecker (Lid/tracive/sdk/model/TraciveEnvironment;)Lid/tracive/sdk/platform/AppPresenceChecker;
 }
 
 public final class id/tracive/sdk/platform/AndroidAuthorizeLauncher : id/tracive/sdk/platform/AuthorizeLauncher {
@@ -961,14 +961,20 @@ public final class id/tracive/sdk/platform/AndroidSecureTokenStoreKt {
 
 public abstract interface class id/tracive/sdk/platform/AppPresenceChecker {
 	public static final field ANDROID_PACKAGE Ljava/lang/String;
+	public static final field ANDROID_SANDBOX_PACKAGE Ljava/lang/String;
 	public static final field Companion Lid/tracive/sdk/platform/AppPresenceChecker$Companion;
+	public static final field IOS_SANDBOX_URL_SCHEME Ljava/lang/String;
 	public static final field IOS_URL_SCHEME Ljava/lang/String;
 	public abstract fun isTraciveAppInstalled (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
 
 public final class id/tracive/sdk/platform/AppPresenceChecker$Companion {
 	public static final field ANDROID_PACKAGE Ljava/lang/String;
+	public static final field ANDROID_SANDBOX_PACKAGE Ljava/lang/String;
+	public static final field IOS_SANDBOX_URL_SCHEME Ljava/lang/String;
 	public static final field IOS_URL_SCHEME Ljava/lang/String;
+	public final fun androidPackageFor (Lid/tracive/sdk/model/TraciveEnvironment;)Ljava/lang/String;
+	public final fun iosUrlSchemeFor (Lid/tracive/sdk/model/TraciveEnvironment;)Ljava/lang/String;
 }
 
 public abstract interface class id/tracive/sdk/platform/AuthorizeLauncher {

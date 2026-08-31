@@ -49,10 +49,6 @@ const SELF = 'tools/check-hygiene.js';
 // private list: it is untracked, it holds the real internal names, and scanning it would report
 // every one of them as a violation of itself.
 const SCANNER_OWN_FILES = new Set([
-  // Its whole job is to assert what a published application id may look like, so it necessarily
-  // spells the shape out. Exempting the file is narrower than teaching the rule to ignore a
-  // regex literal everywhere.
-  'tracive-sdk/src/androidHostTest/kotlin/id/tracive/sdk/platform/PublishedApplicationIdTest.kt',
   'tools/hygiene-terms.txt',
   'tools/hygiene-selftest.txt',
   '.hygiene-forbidden',
@@ -67,13 +63,17 @@ const SKIP_DIRECTORIES = new Set(['build', '.git', '.gradle', '.kotlin', 'gradle
 // this script used to walk straight past.
 const TEXT_EXTENSIONS = new Set(['.kt', '.kts', '.java', '.md', '.yml', '.yaml', '.json', '.xml', '.pro', '.sh', '.properties']);
 
-// The one allowed exception, and the only permitted matches for the org token.
+// The allowed exceptions, and the only permitted matches for the org token.
 //
-// Matched as patterns with a trailing lookahead rather than as plain substrings, because a
-// substring allowance is also a PREFIX allowance: allowing `com.pleistocent.tracive` as a
-// substring silently allowed every id built on top of it, including non-production variants that
-// appear nowhere in shipping code and whose only effect here would be to disclose that they
-// exist. The repository path carries an optional `.git`, which package.json's clone URL has.
+// The application id pattern takes dotted build-variant suffixes on purpose. Withholding the
+// sandbox id protected nothing: every authorize host publishes its own application id and signing
+// fingerprints at /.well-known/assetlinks.json, because that is what an App Link association is.
+// What replaced that rule is the manifest-merger rule in CONTRIBUTING.md, which is about not
+// writing entries into partners' shipped manifests and is enforced by PublishedApplicationIdTest.
+//
+// The trailing lookahead stays, and still does work: it allows a dotted suffix and nothing else,
+// so `com.pleistocent.tracivex` and any id whose second segment differs are still caught. The
+// repository path carries an optional `.git`, which package.json's clone URL has.
 const ALLOWED_PLEISTOCENT_PATTERNS = [
   // A deliberately fake AAD in a crypto test. It is 40 hex characters, so `backend_commit_sha`
   // reads it as a commit id. Allowed by exact value rather than by weakening the rule: a rule that
@@ -83,7 +83,7 @@ const ALLOWED_PLEISTOCENT_PATTERNS = [
   // The copyright holder in a licence header. Legitimate, and the reason widening this scan to
   // extension-less files surfaced LICENSE on the first run.
   /Copyright \d{4} (?:PT )?Pleistocent(?:[A-Za-z ]*)?(?![A-Za-z0-9._-])/g,
-  /com\.pleistocent\.tracive(?![A-Za-z0-9._-])/g,
+  /com\.pleistocent\.tracive(?:\.[A-Za-z0-9_]+)*(?![A-Za-z0-9._-])/g,
   /github\.com\/pleistocent\/tracive-sdk-kotlin(\.git)?(?![A-Za-z0-9._-])/g,
   /pleistocent\/tracive-sdk-kotlin(?![A-Za-z0-9._-])/g,
 ];
@@ -283,8 +283,8 @@ for (const path of walk(ROOT)) {
         line: index + 1,
         code: 'organisation_token',
         detail:
-          'the organisation token appears outside its allowed forms: the Android application id, ' +
-          "and this repository's own GitHub path",
+          'the organisation token appears outside its allowed forms: an Android application id in ' +
+          "the Tracive app's family, and this repository's own GitHub path",
       });
     }
   });

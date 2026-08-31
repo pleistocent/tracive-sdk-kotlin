@@ -46,6 +46,11 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Breaking
 
+- **`defaultAppPresenceChecker()` takes a `TraciveEnvironment`.** It is the platform seam behind the
+  probe above, and it cannot pick the right build without knowing the environment. Callers that pass
+  their own `appPresenceChecker` to `TraciveClient` or `TraciveOAuth` are unaffected; only code
+  calling this function directly needs the argument.
+
 - **`partnerUserId` is now required, and a blank one is refused.** `TraciveMode.OAuth.partnerUserId`
   is a non-null `String`. It was optional in all four SDKs, and the documentation here told you to
   omit it when your integration has no user accounts. Following that reached a consent screen that
@@ -72,11 +77,25 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   a scheme-only intent-filter added for the purpose. Verified on a device — `tracivedev://` went
   from "unable to resolve Intent" to starting the app.
 
-- **The presence probe now follows the environment.** It was hardcoded to production, so testing
-  against sandbox on a device carrying only the sandbox build reported the app as absent. This SDK
-  is the exception, deliberately: its Android half checks package visibility, which needs an
-  application id it may not name in a published repository, so both of its platform checkers take
-  the target as a parameter instead.
+- **The presence probe now follows the environment, with nothing for you to declare.** It was
+  hardcoded to production, so testing against sandbox on a device carrying only the sandbox build
+  reported the app as absent and sent every partner engineer to the store. `environment` now picks
+  the build on both platforms.
+
+  This SDK used to be the exception, because its Android half checks package visibility and the
+  sandbox application id was banned from a published repository. That ban rested on the id being
+  undisclosed, which it never was: each authorize host publishes its own application id and signing
+  fingerprints at `/.well-known/assetlinks.json`, because that is what an App Link association is.
+
+  What replaced it is narrower and load-bearing — nothing may add a Tracive application id to *your*
+  shipped manifest. So the AAR's `<queries>` block no longer carries a `<package>` entry at all.
+  Visibility comes from an `<intent>` matching each environment's authorize App Link, which reaches
+  whichever build claims that host. Verified end to end on an emulator carrying only the sandbox
+  build: with no declaration in the sample's own manifest, the probe went from opening Play Store to
+  opening the Tracive app's consent screen.
+
+  **On iOS, add `tracivedev` to `LSApplicationQueriesSchemes`** if you run against sandbox. An
+  `Info.plist` is not merged, so no library can ship that one for you.
 
 ### Added
 

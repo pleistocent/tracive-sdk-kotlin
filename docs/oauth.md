@@ -106,9 +106,14 @@ Handle it by showing "install Tracive, then try again" — the SDK has already o
 Two platform requirements make this pre-check actually work, and both fail *silently* in the same
 direction — reporting "not installed" for users who do have it, and sending all of them to the store:
 
-- **Android:** the `<queries>` entry ships in the SDK's AAR manifest and merges into your app
-  automatically. Nothing to declare, but do not strip it.
-- **iOS:** you must add `LSApplicationQueriesSchemes` = `tracive` to `Info.plist` yourself.
+- **Android:** the `<queries>` block ships in the SDK's AAR manifest and merges into your app
+  automatically, for sandbox as well as production. Nothing to declare, but do not strip it.
+- **iOS:** you must add `LSApplicationQueriesSchemes` to `Info.plist` yourself — `tracive`, plus
+  `tracivedev` if you run against sandbox. An `Info.plist` is not merged, so no library can ship it.
+
+The probe follows `environment`: production and sandbox are separate builds claiming separate
+authorize hosts, and neither can see the other. Testing against sandbox therefore needs the sandbox
+build of the Tracive app on the device, not the store one.
 
 ### 2. PKCE, S256 only
 

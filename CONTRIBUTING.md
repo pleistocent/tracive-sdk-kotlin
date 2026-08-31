@@ -192,12 +192,15 @@ third does not spend its budget re-deriving them. Anything that differs across t
   the cache write inside the flight, so a collapsed check is stored once; Flutter and React Native
   latch the network call alone and let each caller write. The request count — the thing that is
   billed — is identical, and so is what a caller observes.
-- **Kotlin's app-presence probe does not follow the environment; the other three do.** Its Android
-  half checks package visibility, and the sandbox build's application id may not be named in a
-  published repository (see the hygiene rule below). Both of its platform checkers take the target
-  as a parameter with the sandbox case documented, so a host testing against sandbox supplies it and
-  declares the matching `<queries>` entry in its own manifest. Auto-selecting on iOS but not Android
-  would be worse than not auto-selecting at all.
+- **All four app-presence probes follow the environment, but Kotlin's asks a different question.**
+  Flutter, React Native and Swift probe the app's URL scheme, which is all a pure-Dart or pure-TS
+  package can reach. Kotlin has real Android code, so it checks the exact application id through
+  `PackageManager` and takes its package visibility from a `<queries><intent>` on the authorize App
+  Link — a scheme any app may declare, an App Link only the build named in the host's assetlinks
+  can. Kotlin is therefore the strictest of the four, and the others cannot be brought up to it
+  without the native module they deliberately do not ship. This used to read "Kotlin's probe does
+  not follow the environment", which was true, and was caused by a hygiene rule that has since been
+  corrected.
 
 - **The pending-authorization window is configurable everywhere except Swift.** Kotlin, Flutter and
   React Native all take it as a parameter, so an integration spanning more than one can set the same
@@ -233,16 +236,35 @@ strings or commit messages — may name any of the following:
 
 Say **"the Tracive API"** or **"the server"**. Say **"record key"**. Say **"phase 1" / "phase 2"**.
 
-The single allowed exception is the Android application id `com.pleistocent.tracive`, which the
-app-presence check genuinely needs, plus this repository's own GitHub path. No other application id
-belongs here — a non-production variant appears nowhere in shipping code, so naming one only
-discloses that it exists.
+Two things are exempt, and one of them was justified wrongly for a while.
 
-The GitHub path is not a loophole, it is the install instruction: a published package names the
-repository it is published from, in its POM metadata and in the changelog's release links, and a
-reader who cannot find the source cannot audit the SDK they are being asked to embed. The rule as
-written forbade what the build file necessarily ships, which makes the rule wrong rather than the
-repository.
+**Android application ids**, production and sandbox alike. The app-presence check needs them, and
+withholding them protects nothing: Tracive publishes both itself, unauthenticated, at a path whose
+location is fixed by specification. `/.well-known/assetlinks.json` on each authorize host carries
+the application id *and* the signing-certificate fingerprints, because that is what an App Link
+association is, and Google's Digital Asset Links API serves the same statements to anyone who asks.
+The rule used to forbid the sandbox id on the grounds that naming one "only discloses that it
+exists". That reason was void from the day the sandbox App Link went live, and the rule outlived it
+by pointing at a real concern that is *not* secrecy — see the manifest-merger rule below.
+
+**This repository's own GitHub path.** Not a loophole, the install instruction: a published package
+names the repository it is published from, in its POM metadata and in the changelog's release
+links, and a reader who cannot find the source cannot audit the SDK they are being asked to embed.
+
+## The manifest-merger rule
+
+Separate from hygiene, and it is what actually shapes the Android code.
+
+`tracive-sdk/src/androidMain/AndroidManifest.xml` is merged into **every partner's shipped app**, so
+an entry added here is an entry published in someone else's manifest — and a bank auditing its
+merged manifest has to be able to account for every line of it.
+
+This manifest therefore declares **no `<queries><package>` entry at all**. Package visibility comes
+from a `<queries><intent>` matching the authorize App Link: it names hosts this SDK already names in
+its own source, and it grants visibility to whichever build claims that host, production or sandbox,
+without either application id appearing in a partner's manifest. `PublishedApplicationIdTest`
+asserts that absence, because this went wrong once — a non-production `<package>` entry shipped
+inside every partner's manifest before anyone noticed.
 
 `node tools/check-hygiene.js` scans for all of this, and CI runs it. It proves every one of its rules can still
 fire — against its own self-test corpus — before it scans anything, and refuses to run if one

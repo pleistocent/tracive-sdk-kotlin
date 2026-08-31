@@ -3,22 +3,27 @@ package id.tracive.sdk.platform
 import android.content.Context
 import android.content.pm.PackageManager
 import id.tracive.sdk.TraciveAndroid
+import id.tracive.sdk.model.TraciveEnvironment
 
 /**
  * Package-visibility check for the Tracive app.
  *
  * On API 30 and above an app cannot see another package unless it declares it. The SDK's own
- * `AndroidManifest.xml` carries `<queries><package
- * android:name="com.pleistocent.tracive"/></queries>`, and the manifest merger folds that into the
- * host app's manifest — so an integrator gets the declaration by depending on the AAR, with nothing
- * to remember. Without it `getPackageInfo` throws `NameNotFoundException` even when the app is
- * installed, and the SDK would send every user to the install page.
+ * `AndroidManifest.xml` carries a `<queries><intent>` for each environment's authorize App Link,
+ * and the manifest merger folds those into the host app's manifest — so an integrator gets the
+ * declaration by depending on the AAR, with nothing to remember, for sandbox as well as production.
+ * Without it `getPackageInfo` throws `NameNotFoundException` even when the app is installed, and
+ * the SDK would send every user to the install page.
  *
- * @param packageName which build to look for. The default, and the only one the SDK's own manifest
- *   declares, is the production app. A host that tests against a different build of the Tracive app
- *   passes that application id here, declares it in its **own** manifest's `<queries>` — package
- *   visibility is per-app, and this library will not declare it — and hands the result to
- *   `TraciveOAuth`.
+ * **Visibility is granted by App Link, not by application id.** An `<intent>` query matches the
+ * intent filters of other apps, so declaring the authorize URL reaches whichever build claims that
+ * host and nothing else. That is what keeps a Tracive application id out of every partner's shipped
+ * manifest — see CONTRIBUTING.md — while still letting this class name the exact package it wants.
+ *
+ * @param packageName which build to look for. Normally
+ *   [AppPresenceChecker.androidPackageFor], i.e. selected by environment. Pass an explicit id only
+ *   for a build the SDK does not know about; that one needs a `<queries>` entry in the host's own
+ *   manifest, because the App Link queries above will not reach it.
  */
 class AndroidAppPresenceChecker(
   private val context: Context,
@@ -49,6 +54,9 @@ class AndroidAppPresenceChecker(
   override fun toString(): String = "AndroidAppPresenceChecker($packageName)"
 }
 
-/** The production Tracive app, looked up through the host app's package manager. */
-actual fun defaultAppPresenceChecker(): AppPresenceChecker =
-  AndroidAppPresenceChecker(TraciveAndroid.requireContext())
+/** The build claiming [environment]'s authorize App Link, via the host app's package manager. */
+actual fun defaultAppPresenceChecker(environment: TraciveEnvironment): AppPresenceChecker =
+  AndroidAppPresenceChecker(
+    TraciveAndroid.requireContext(),
+    AppPresenceChecker.androidPackageFor(environment),
+  )

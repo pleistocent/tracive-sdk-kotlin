@@ -1,24 +1,28 @@
 package id.tracive.sdk.platform
 
+import id.tracive.sdk.model.TraciveEnvironment
+import id.tracive.sdk.oauth.AuthorizeUrlBuilder
 import java.io.File
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 
 /**
- * The only application id this repository may name is the production Tracive app's.
+ * The library manifest is merged into every partner's shipped app, so what it declares is published
+ * inside someone else's manifest. Two things are asserted about it, and neither is about secrecy —
+ * an application id is not a secret, and each authorize host publishes its own at
+ * `/.well-known/assetlinks.json` because that is what an App Link association is.
  *
- * Both halves of that rule have already been broken once, which is why they are asserted rather
- * than trusted. `androidMain/AndroidManifest.xml` declared a second, non-production package, and
- * because the manifest merger folds this library's manifest into the host app, that entry shipped
- * inside every partner's own manifest. A doc comment named the same id in prose. `CONTRIBUTING.md`
- * forbade both, and gave a reason that was not true while it was being read: "a non-production
- * variant appears nowhere in shipping code".
+ * **No `<queries><package>` entry.** A bank auditing its merged manifest has to account for every
+ * line, and a visibility declaration naming a Tracive build is a line it cannot. This went wrong
+ * once: a non-production `<package>` entry shipped inside every partner's manifest before anyone
+ * noticed.
  *
- * The scan matters as much as the assertion. A sweep for the *allowed* string finds the forbidden
- * one and reports it as a match, because the forbidden id has the allowed one as a prefix — so the
- * obvious check is structurally incapable of failing. [APPLICATION_ID] therefore matches the whole
- * dotted id, greedily, and every match is compared for equality against the one that is permitted.
+ * **A `<queries><intent>` for each environment's authorize App Link.** This is what replaced the
+ * `<package>` entry, so the first assertion alone is a check that cannot fail — a manifest that
+ * lost its `<queries>` block entirely would satisfy it while reporting "not installed" for every
+ * user on API 30+. The hosts and paths are compared against the constants the SDK actually builds
+ * its authorize URL from, so the manifest and that URL cannot drift apart.
  *
  * This is a JVM-only test because the manifest is Android's. It reads files from the working tree,
  * which no other test here does; the alternative is a rule enforced only by whoever reviews the
@@ -27,85 +31,66 @@ import kotlin.test.assertTrue
 class PublishedApplicationIdTest {
 
   @Test
-  fun theLibraryManifestDeclaresOnlyTheProductionApplicationId() {
-    val manifest = repositoryFile(MANIFEST_PATH).readText()
+  fun theLibraryManifestDeclaresNoPackageVisibilityEntry() {
+    val declared = QUERIED_PACKAGE.findAll(manifest()).map { it.groupValues[1] }.toList()
 
-    val declared = QUERIED_PACKAGE.findAll(manifest).map { it.groupValues[1] }.toList()
-
-    assertTrue(
-      declared.isNotEmpty(),
-      "No <queries><package> entry left in $MANIFEST_PATH. Without one the SDK reports " +
-        "\"not installed\" for every user on API 30+, and this test would have nothing to check.",
-    )
     assertEquals(
-      listOf(AppPresenceChecker.ANDROID_PACKAGE),
+      emptyList(),
       declared,
-      "This manifest merges into every partner's app, so each package named here is published in " +
-        "someone else's shipped manifest. Only the production application id belongs in it.",
+      "This manifest merges into every partner's app, so each package named here is a visibility " +
+        "declaration published in someone else's shipped manifest. Visibility comes from the " +
+        "authorize App Link <intent> queries instead — see CONTRIBUTING.md.",
     )
   }
 
   @Test
-  fun noSourceFileNamesAnyOtherApplicationId() {
-    val sources = repositoryFile(SOURCE_ROOT)
-    var scanned = 0
-    val offenders = mutableListOf<String>()
+  fun theLibraryManifestQueriesEveryEnvironmentAuthorizeLink() {
+    val queried = QUERIED_DATA.findAll(manifest()).map { it.groupValues[1] }.toList()
 
-    val scannable = sources.walkTopDown().filter { it.isFile && it.extension in SCANNED_EXTENSIONS }
-    for (file in scannable) {
-      scanned += 1
-      for (match in APPLICATION_ID.findAll(file.readText())) {
-        if (match.value != AppPresenceChecker.ANDROID_PACKAGE) {
-          offenders += "${file.name}: ${match.value}"
-        }
+    val expected =
+      listOf(TraciveEnvironment.Production, TraciveEnvironment.Sandbox).map { environment ->
+        val endpoint = AuthorizeUrlBuilder.endpointFor(environment)
+        val afterScheme = endpoint.removePrefix("https://")
+        afterScheme.substringBefore('/') to "/" + afterScheme.substringAfter('/')
       }
-    }
 
-    // Without this the test would pass on a mistyped path, having read nothing at all.
-    assertTrue(scanned > 50, "Only $scanned files under $SOURCE_ROOT were read; the path is wrong.")
-    assertEquals(
-      emptyList(),
-      offenders,
-      "An application id other than the production one appears in published source. Naming a " +
-        "non-production build discloses that it exists and nothing else — see CONTRIBUTING.md.",
-    )
+    for ((host, path) in expected) {
+      assertTrue(
+        queried.any { it.contains("android:host=\"$host\"") && it.contains("android:path=\"$path\"") },
+        "No <queries><intent> matches $host$path, so the SDK cannot see the build that claims it " +
+          "and reports \"not installed\" for every user on API 30+. Found: $queried",
+      )
+    }
   }
 
   /**
-   * [path] resolved against the repository root, found by walking up from the test's working
-   * directory.
-   *
-   * Which directory that is depends on how the tests are launched, so it is searched for rather
-   * than assumed — and a search that finds nothing fails here instead of leaving both tests above
-   * quietly reading an empty tree.
+   * The manifest, read from the repository root — found by walking up from the test's working
+   * directory, because which directory that is depends on how the tests are launched. A search that
+   * finds nothing fails here rather than leaving both assertions quietly reading an empty string.
    */
-  private fun repositoryFile(path: String): File {
-    var directory: File? = File(System.getProperty("user.dir")).absoluteFile
+  private fun manifest(): String {
+    var directory: File? = File(System.getProperty("user.dir")!!).absoluteFile
     while (directory != null) {
-      val candidate = File(directory, path)
-      if (candidate.exists()) return candidate
+      val candidate = File(directory, MANIFEST_PATH)
+      if (candidate.exists()) return candidate.readText()
       directory = directory.parentFile
     }
     throw AssertionError(
-      "Could not find $path above ${System.getProperty("user.dir")}, so nothing was checked."
+      "Could not find $MANIFEST_PATH above ${System.getProperty("user.dir")}, so nothing was checked."
     )
   }
 
   private companion object {
     const val MANIFEST_PATH = "tracive-sdk/src/androidMain/AndroidManifest.xml"
-    const val SOURCE_ROOT = "tracive-sdk/src"
-
-    val SCANNED_EXTENSIONS = setOf("kt", "kts", "xml")
 
     /** The `android:name` of a `<queries><package>` entry. */
     val QUERIED_PACKAGE = Regex("""<package\s+android:name="([^"]+)"""")
 
     /**
-     * A whole dotted application id in this organisation's namespace.
-     *
-     * Greedy past the first dot on purpose: a pattern that stopped at the permitted id would match
-     * the prefix of a forbidden one and report success.
+     * A whole `<data>` element, so host and path are read as the pair they have to be. `[^>]` and
+     * not `[^/]`: a path attribute contains slashes, and the narrower class stopped inside it and
+     * matched nothing.
      */
-    val APPLICATION_ID = Regex("""com\.pleistocent(?:\.[A-Za-z0-9_]+)+""")
+    val QUERIED_DATA = Regex("""<data\s+([^>]*?)\s*/>""")
   }
 }

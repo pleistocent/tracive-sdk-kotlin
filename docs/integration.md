@@ -73,8 +73,12 @@ It does **not** close a SQL driver you passed in; that one is yours.
 
 ### Nothing to declare for package visibility
 
-The `<queries>` entry for `com.pleistocent.tracive` ships inside the SDK's own AAR manifest and
-merges into your app automatically. Do not add it yourself, and do not remove it.
+The `<queries>` block ships inside the SDK's own AAR manifest and merges into your app
+automatically. Do not add it yourself, and do not remove it. This covers **sandbox as well as
+production** — switching `environment` needs no manifest change from you.
+
+It declares an `<intent>` matching each environment's authorize App Link rather than a `<package>`
+entry, which is why no Tracive application id appears in your shipped manifest.
 
 This matters more than it looks. Without package visibility on Android 11+, the SDK's "is the Tracive
 app installed?" pre-check silently answers "no" for every user who *does* have it — and every one of
@@ -162,11 +166,15 @@ before `Application.onCreate` returns. Only call it yourself if you strip that p
 
 ```xml
 <key>LSApplicationQueriesSchemes</key>
-<array><string>tracive</string></array>
+<array>
+  <string>tracive</string>
+  <string>tracivedev</string>
+</array>
 ```
 
 Without it, `canOpenURL` returns `false` and every user with the Tracive app installed is sent to the
-App Store instead.
+App Store instead. The second entry is the sandbox build; list both, because the probe follows
+`environment` and a missing entry fails the same silent way when you switch.
 
 Then route the callback into the same client instance your shared Kotlin code exposes to Swift.
 `handleCallback` suspends, so Kotlin/Native exposes it to Swift as an `async` function — and its

@@ -1,5 +1,6 @@
 package id.tracive.sdk.platform
 
+import id.tracive.sdk.model.TraciveEnvironment
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSURL
@@ -14,8 +15,13 @@ import platform.UIKit.UIApplication
  * <key>LSApplicationQueriesSchemes</key>
  * <array>
  *   <string>tracive</string>
+ *   <string>tracivedev</string>
  * </array>
  * ```
+ *
+ * The second entry is only needed by a host that runs against
+ * [id.tracive.sdk.model.TraciveEnvironment.Sandbox]; listing both costs nothing and removes the
+ * failure where switching environment silently starts answering `false`.
  *
  * Unlike Android's `<queries>`, this cannot ship from a library — `Info.plist` files are not merged
  * — so it belongs in the integration guide. Without it iOS answers `false` for every device,
@@ -28,8 +34,9 @@ import platform.UIKit.UIApplication
  * an answer that cannot be relied on otherwise. A wrong `false` tells every user to install an app
  * they already have.
  *
- * @param urlScheme which build to look for. The default is the production app; the sandbox build
- *   answers `tracivedev`.
+ * @param urlScheme which build to look for. Normally [AppPresenceChecker.iosUrlSchemeFor], i.e.
+ *   selected by environment. Every scheme the host may probe needs its own
+ *   `LSApplicationQueriesSchemes` entry, so a partner testing against sandbox lists both.
  */
 class IosAppPresenceChecker(private val urlScheme: String = AppPresenceChecker.IOS_URL_SCHEME) :
   AppPresenceChecker {
@@ -50,5 +57,6 @@ class IosAppPresenceChecker(private val urlScheme: String = AppPresenceChecker.I
   override fun toString(): String = "IosAppPresenceChecker($urlScheme)"
 }
 
-/** The production Tracive app, via `canOpenURL`. */
-actual fun defaultAppPresenceChecker(): AppPresenceChecker = IosAppPresenceChecker()
+/** The build claiming [environment]'s Universal Link, via `canOpenURL`. */
+actual fun defaultAppPresenceChecker(environment: TraciveEnvironment): AppPresenceChecker =
+  IosAppPresenceChecker(AppPresenceChecker.iosUrlSchemeFor(environment))

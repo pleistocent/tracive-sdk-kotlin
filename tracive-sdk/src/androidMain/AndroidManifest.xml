@@ -7,18 +7,18 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
   <!--
-    Package visibility (API 30+). Without this entry, PackageManager.getPackageInfo throws
+    Package visibility (API 30+). Without a declaration here, PackageManager.getPackageInfo throws
     NameNotFoundException for the Tracive app even when it is installed — so the SDK's pre-check
     would report "not installed" for every user and send all of them to the install page.
 
-    The production application id and nothing else. This file is merged into every partner's app by
-    the manifest merger, so an entry added here is an entry published in someone else's shipped
-    manifest — see CONTRIBUTING.md. A host that needs to probe a different build declares that
-    package in its own manifest and passes the id to AndroidAppPresenceChecker.
+    NO <package> ENTRY, deliberately. This file is merged into every partner's app, so a <package>
+    entry here is an entry published in someone else's shipped manifest, and a bank auditing its
+    merged manifest has to account for it. That went wrong once already; PublishedApplicationIdTest
+    asserts the absence. Visibility comes from the authorize App Links below instead: they name
+    hosts this SDK already names in AuthorizeUrlBuilder, and each grants visibility to whichever
+    build claims that host, so the environment picks the build rather than anything written here.
   -->
   <queries>
-    <package android:name="com.pleistocent.tracive" />
-
     <!--
       Browsers, so Custom Tabs can resolve one. The authorize page is opened in the system browser
       and never in a WebView: an App Link does not fire from a WebView, and RFC 8252 §8.12 forbids
@@ -28,6 +28,24 @@
       <action android:name="android.intent.action.VIEW" />
       <category android:name="android.intent.category.BROWSABLE" />
       <data android:scheme="https" />
+    </intent>
+
+    <!--
+      The authorize App Link of each environment, host and path exactly as AuthorizeUrlBuilder
+      spells them — a scheme-only query does not match a filter that declares a host, so these have
+      to carry both. PublishedApplicationIdTest pins them against those constants so the manifest
+      and the URL the SDK actually opens cannot drift apart.
+    -->
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="https" android:host="tracive.id" android:path="/oauth/authorize" />
+    </intent>
+
+    <intent>
+      <action android:name="android.intent.action.VIEW" />
+      <category android:name="android.intent.category.BROWSABLE" />
+      <data android:scheme="https" android:host="sandbox.tracive.id" android:path="/oauth/authorize" />
     </intent>
   </queries>
 
