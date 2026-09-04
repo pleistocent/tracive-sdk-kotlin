@@ -7,6 +7,12 @@
 That runs formatting, the public-API check, and the tests for both targets. It is what CI runs, in
 the same order.
 
+> **CI is off.** The workflow is set to manual dispatch only, to stop metered Actions minutes on a
+> private repository — see the note at the top of `.github/workflows/ci.yml`, and re-enable it when
+> there is budget. Everything below still describes real gates; the only change is that **nothing
+> runs them for you**. Run `./gradlew check` before you push, and read the rest of this file as instructions
+> for a human rather than a description of a robot.
+
 ## Make sure the run was real
 
 Gradle answers `BUILD SUCCESSFUL in 1s` when its cache is warm and nothing has changed. That is a
