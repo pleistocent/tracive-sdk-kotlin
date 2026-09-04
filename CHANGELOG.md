@@ -63,6 +63,22 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Fixed
 
+- **The Compose sample drew itself under the status bar.** `samples/android-compose` targets the
+  compile SDK, which is past 35, so Android lays the window out edge to edge and ignores the theme's
+  `statusBarColor` — and from 36 the opt-out flag is gone, so this is not something a partner can
+  defer. The sample handled no insets at all, so its header sat behind the clock and the theme's
+  white status-bar icons landed on a white `Surface`, invisible. It now declares
+  `enableEdgeToEdge` with a light bar style, because the `MaterialTheme` here is the light scheme in
+  every configuration and the default `auto` would follow the system into dark mode and put the
+  white icons back, and pads the scrolling column by `safeDrawing` — system bars, display cutout and
+  the IME, the last of which an edge-to-edge window no longer resizes for. Verified on an API 36
+  emulator, before and after.
+
+  Only the sample was affected. The SDK ships no UI: its AAR carries a `<queries>` block and a
+  startup provider, no activity, theme or layout, so it cannot impose this on a host app and cannot
+  fix it for one either. The Swift SDK's example is a SwiftUI view that opts out of nothing, so it
+  is already correct.
+
 - **The authorize URL pointed at a host no Tracive build claims.** Kotlin was already correct here;
   the fix landed in the Flutter and React Native SDKs. The Tracive app claims
   `https://tracive.id/oauth/authorize`, and `sandbox.tracive.id` for its sandbox build, as an App

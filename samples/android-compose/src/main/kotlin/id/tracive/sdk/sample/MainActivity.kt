@@ -1,9 +1,12 @@
 package id.tracive.sdk.sample
 
 import android.content.Intent
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
@@ -37,6 +41,13 @@ import id.tracive.sdk.model.RiskTier
 import androidx.compose.foundation.text.KeyboardOptions
 
 /**
+ * Background for the navigation bar on API 24-25, which cannot darken that bar's icons — they are
+ * always white, so a transparent bar there would put white buttons on a white Surface. This is the
+ * platform's own scrim. API 26 and above darken the icons and ignore this.
+ */
+private val NAVIGATION_BAR_SCRIM = Color.argb(0x80, 0x1B, 0x1B, 0x1B)
+
+/**
  * The sample's single screen.
  *
  * `launchMode="singleTask"` in the manifest is what makes [onNewIntent] the delivery point for the
@@ -54,6 +65,17 @@ class MainActivity : ComponentActivity() {
   private val viewModel: CheckViewModel by viewModels()
 
   override fun onCreate(savedInstanceState: Bundle?) {
+    // At targetSdk 35 and above the platform draws this window behind the system bars and ignores
+    // the theme's statusBarColor; at 36 the opt-out flag is gone too. So the only choice left is
+    // between declaring edge-to-edge and getting it undeclared, and undeclared is what leaves the
+    // header under the status bar with white icons over a white Surface. `light` rather than the
+    // default `auto` because the MaterialTheme below is the light scheme in every configuration —
+    // `auto` follows the system into dark mode and would put those white icons back. The dark
+    // navigation scrim is only reached on API 24-25, which cannot darken that bar's icons.
+    enableEdgeToEdge(
+      statusBarStyle = SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+      navigationBarStyle = SystemBarStyle.light(Color.TRANSPARENT, NAVIGATION_BAR_SCRIM),
+    )
     super.onCreate(savedInstanceState)
     setContent {
       MaterialTheme { Surface(modifier = Modifier.fillMaxSize()) { SampleScreen(viewModel) } }
@@ -82,7 +104,14 @@ private fun SampleScreen(model: CheckViewModel) {
   val state by model.state.collectAsStateWithLifecycle()
 
   Column(
-    modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+    // Outside the scroll, so the viewport itself is inset rather than the content scrolling under
+    // a transparent bar. `safeDrawing` is systemBars + displayCutout + ime, which is also what
+    // keeps the keyboard off the phone field: an edge-to-edge window no longer resizes for it.
+    modifier =
+      Modifier.fillMaxSize()
+        .safeDrawingPadding()
+        .verticalScroll(rememberScrollState())
+        .padding(20.dp),
     verticalArrangement = Arrangement.spacedBy(12.dp),
   ) {
     Text("Tracive SDK sample", style = MaterialTheme.typography.headlineSmall)
