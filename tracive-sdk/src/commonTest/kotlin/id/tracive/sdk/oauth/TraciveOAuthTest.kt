@@ -396,6 +396,30 @@ class TraciveOAuthTest {
   }
 
   @Test
+  fun anUnrecognisedErrorCodeReachesTheHostAsData() = runSdkTest {
+    val launcher = RecordingAuthorizeLauncher()
+    val oauth = oauthUnderTest(FakeHttpTransport { fail("no exchange") }, launcher)
+
+    assertNull(oauth.authorize())
+    // `temporarily_unavailable` is what the server sends while the partner organisation is locked
+    // behind an unaccepted ToS revision (backend plan §9.7). It has no typed case on purpose: the
+    // raw code is the host's signal, and the attempt is spent so it can be started again later.
+    val callback =
+      "$REDIRECT_URI?error=temporarily_unavailable" +
+        "&error_description=The%20organisation%20has%20not%20accepted%20the%20current%20terms" +
+        "&state=${stateOf(launcher.authorizeUrls.single())}"
+
+    val result = assertIs<AuthResult.Failed>(oauth.handleCallback(callback))
+    val error = assertIs<TraciveException.Unknown>(result.error)
+    assertEquals("temporarily_unavailable", error.errorCode)
+    assertEquals(400, error.httpStatus)
+    assertEquals("The organisation has not accepted the current terms", error.message)
+
+    val replay = assertIs<AuthResult.Failed>(oauth.handleCallback(callback))
+    assertIs<TraciveException.InvalidRequest>(replay.error, "the attempt was not spent")
+  }
+
+  @Test
   fun aCallbackCarryingNoCodeFails() = runSdkTest {
     val launcher = RecordingAuthorizeLauncher()
     val oauth = oauthUnderTest(FakeHttpTransport { fail("no exchange") }, launcher)
