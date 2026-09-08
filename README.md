@@ -74,11 +74,19 @@ Requirements: Android `minSdk` 24, iOS 15+, Kotlin 2.3, JDK 17 to build.
 ```kotlin
 val client = TraciveClient(
   mode = TraciveMode.OAuth(
+    // TODO(partner): the client id you were issued at registration.
     clientId = "your-client-id",
+    // TODO(partner): an App Link on a host you own, registered with Tracive, and matching
+    // your manifest's intent filter exactly — scheme, host and path.
     redirectUri = "https://yourapp.example.com/oauth/callback",
-    scopes = listOf("scammer.check", "profile.read"),
-    partnerUserId = null,
+    // TODO(partner): the narrowest set you need. Constants, not strings: the server rejects
+    // the whole consent request when it does not recognise a scope name.
+    scopes = listOf(TraciveScopes.SCAMMER_CHECK, TraciveScopes.PROFILE_READ),
+    // TODO(partner): your own stable, opaque id for this user. Required and never blank —
+    // never a raw phone number or an email.
+    partnerUserId = "your-user-id",
   ),
+  // TODO(partner): TraciveEnvironment.Production before you ship.
   environment = TraciveEnvironment.Sandbox,
 )
 
@@ -95,6 +103,8 @@ when (val start = client.oauth!!.authorize()) {
 when (val auth = client.oauth!!.handleCallback(incomingUrl)) {
   null -> keepRoutingThisDeepLink()                            // not a Tracive redirect
   is AuthResult.Authorized -> proceed(auth.grantedScopes)
+  // TODO(partner): confidential clients only — your backend completes the exchange with the
+  // client secret. Send these over TLS to your backend and nowhere else.
   is AuthResult.CodeReceived -> sendToOwnBackend(auth.code, auth.codeVerifier, auth.redirectUri)
   is AuthResult.Denied -> respectThat()
   is AuthResult.Failed -> report(auth.error)
