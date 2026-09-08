@@ -37,7 +37,7 @@ version = providers.gradleProperty("tracive.version").get()
  */
 apiValidation {
   // The sample app is an application, not a published artifact. It has no ABI to keep stable.
-  ignoredProjects += listOf("samples", "android-compose")
+  ignoredProjects += listOf("samples", "composeApp", "androidApp")
 
   // SQLDelight's generated database code. It is public because the generator has no way to make it
   // anything else, but it is not surface this SDK offers anyone: `SqlDelightCheckCache.Schema`

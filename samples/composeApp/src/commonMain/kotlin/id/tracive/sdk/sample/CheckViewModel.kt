@@ -1,14 +1,15 @@
 package id.tracive.sdk.sample
 
-import android.app.Application
-import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.viewModelScope
 import id.tracive.sdk.TraciveException
 import id.tracive.sdk.TraciveQueryException
+import id.tracive.sdk.client.TraciveClient
 import id.tracive.sdk.model.AuthResult
 import id.tracive.sdk.model.CheckResult
 import id.tracive.sdk.query.TraciveQuery
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -16,7 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** Everything the one screen in this sample renders. */
-data class SampleUiState(
+internal data class SampleUiState(
   val phone: String = "+62",
   val busy: Boolean = false,
   val authorized: Boolean = false,
@@ -28,22 +29,32 @@ data class SampleUiState(
 /**
  * Drives the sample screen: authorize, check, sign out, clear cache.
  *
+ * Common code, so Android and iOS run this exact state machine. It owns a scope rather than
+ * inheriting AndroidX's `viewModelScope`, which has no Compose Multiplatform equivalent;
+ * `Dispatchers.Main` because every update it makes lands in Compose state, and the suspending SDK
+ * calls move themselves off it.
+ *
+ * The client is a constructor parameter rather than something this class reaches for, because only
+ * the platform can build one — the cache underneath it needs Keystore and `AndroidSqliteDriver` on
+ * one side, Keychain and `NativeSqliteDriver` on the other.
+ *
  * Worth reading for three things a partner integration has to get right, all of which are easier to
  * see here than in prose:
- *  - the query is **built before** anything is sent, so bad input costs nothing (see [check]);
- *  - errors are handled by *type*, not by string matching (see [describe]); and
- *  - the disclaimer travels with the result and is rendered next to it, which the SDK requires of
- *    any UI built on it.
+ * - the query is **built before** anything is sent, so bad input costs nothing (see [check]);
+ * - errors are handled by *type*, not by string matching (see [describe]); and
+ * - the disclaimer travels with the result and is rendered next to it, which the SDK requires of
+ *   any UI built on it.
  */
-class CheckViewModel(application: Application) : AndroidViewModel(application) {
-
-  private val client = TraciveSample.client(application)
+internal class CheckViewModel(
+  private val client: TraciveClient,
+  private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main),
+) {
 
   private val _state = MutableStateFlow(SampleUiState())
   val state: StateFlow<SampleUiState> = _state.asStateFlow()
 
   init {
-    viewModelScope.launch {
+    scope.launch {
       _state.update {
         it.copy(
           authorized = client.oauth?.isAuthorized() == true,
@@ -101,15 +112,14 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
   /**
    * Hands a redirect to the SDK and renders whatever it says.
    *
-   * This is where an authorization actually succeeds, including one begun by a process Android has
-   * since killed — so the result is never discarded. A null means the link was not a Tracive
-   * redirect, and a real app would go on routing it to whatever else handles deep links.
+   * Called from `iOSApp.swift`'s `onOpenURL`. This is where an authorization actually succeeds,
+   * including one begun by a process iOS has since killed — so the result is never discarded.
    *
    * Deliberately not [launchGuarded]: that drops the work when something else is already running,
    * and a redirect is the one thing here that must never be dropped.
    */
   fun handleRedirect(url: String) {
-    viewModelScope.launch {
+    scope.launch {
       when (val result = client.oauth?.handleCallback(url)) {
         // TODO(partner): not a Tracive redirect. Route it to whatever else in your app handles
         // deep links, instead of dropping it as this sample does.
@@ -124,8 +134,8 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
           }
 
         // Only reachable for a CONFIDENTIAL client. This sample is PUBLIC, so it never gets here.
-        // TODO(partner): CONFIDENTIAL clients POST result.code, result.codeVerifier and
-        // result.redirectUri to your own backend over TLS, and it completes the exchange with the
+        // TODO(partner): CONFIDENTIAL clients send result.code, result.codeVerifier and
+        // result.redirectUri over TLS to your own backend, which completes the exchange with the
         // client secret. The code is single-use but is a bearer credential until redeemed, and the
         // verifier is what stops whoever intercepted the code from redeeming it.
         is AuthResult.CodeReceived ->
@@ -161,9 +171,9 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
       // Deliberately no `credits()` call before this. Pre-flighting the balance doubles the request
       // count on every transaction and still races with concurrent spending; handling the 402 below
       // is both cheaper and correct.
-      // TODO(partner): pass an idempotencyKey — one UUID per logical check, reused only to retry
-      // that same check. Without one the SDK will not retry a 5xx or a timeout at all, because a
-      // blind retry is a request to be charged twice.
+      // TODO(partner): pass an idempotencyKey — one per logical check, reused only to retry that
+      // same check. Without one the SDK will not retry a 5xx or a timeout at all, because a blind
+      // retry is a request to be charged twice.
       val result = client.checkScammer(query)
       _state.update {
         it.copy(result = result, message = null, cachedEntries = client.cache.size())
@@ -190,16 +200,10 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
     }
   }
 
-  override fun onCleared() {
-    // The client owns an HTTP engine. This sample shares one instance for the whole process, so it
-    // is not closed here; an app that builds a client per screen must close it.
-    super.onCleared()
-  }
-
   private fun launchGuarded(block: suspend () -> Unit) {
     if (_state.value.busy) return
     _state.update { it.copy(busy = true, message = null) }
-    viewModelScope.launch {
+    scope.launch {
       try {
         block()
       } catch (cancellation: CancellationException) {
@@ -225,8 +229,7 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
       is TraciveException.InsufficientCredits -> "Out of credits (${error.which})."
       is TraciveException.RateLimited ->
         "Rate limited." +
-          (error.retryAfter?.let { " Try again in $it." }
-            ?: " Back off before retrying.") +
+          (error.retryAfter?.let { " Try again in $it." } ?: " Back off before retrying.") +
           " Pass an Idempotency-Key when you retry a check, or you may be charged twice."
       is TraciveException.GrantRevoked -> "Access was revoked. Authorize again."
       is TraciveException.ExpiredToken,

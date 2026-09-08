@@ -76,7 +76,8 @@ encryption because it *looks* like encryption.
 
 #### Android
 
-`samples/android-compose/.../KeystoreCacheDataKeyStore.kt` is the reference implementation, meant to
+`samples/composeApp/src/androidMain/.../KeystoreCacheDataKeyStore.kt` is the Android reference
+implementation, and `src/iosMain/.../KeychainCacheDataKeyStore.kt` the iOS one — meant to
 be copied. It uses the wrapping pattern, which is the only shape that works with a software cipher:
 
 ```

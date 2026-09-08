@@ -5,6 +5,11 @@ plugins {
   // No `org.jetbrains.kotlin.android` here. From AGP 9 the Android plugin brings its own Kotlin
   // support, and applying the standalone one on top of it fails the build outright rather than
   // being merely redundant. The `kotlin { }` block below is AGP's.
+  //
+  // The Compose compiler *is* needed, even though this module declares no `@Composable` of its
+  // own. `setContent { host.Content() }` passes a `@Composable` lambda, and without the plugin
+  // that lambda is compiled as an ordinary one — no `$composer` parameter — which builds cleanly
+  // and then dies at launch with `NoSuchMethodError: setContent$default`.
   alias(libs.plugins.composeCompiler)
 }
 
@@ -20,9 +25,10 @@ android {
     versionName = "0.1.0"
 
     // The redirect this sample registers in its manifest. Kept in one place so the manifest
-    // placeholder and the `TraciveMode.OAuth(redirectUri = ...)` value cannot drift apart — a
-    // mismatch there fails at the very end of the OAuth round trip, which is the most annoying
-    // possible time to discover it.
+    // placeholder and `TraciveSample.REDIRECT_URI` cannot drift apart — a mismatch there fails at
+    // the very end of the OAuth round trip, which is the most annoying possible time to discover
+    // it. The iOS shell's `Info.plist` carries the same pair.
+    //
     // TODO(partner): your own scheme and host, and keep TraciveSample.REDIRECT_URI in step. Any
     // app on the device may declare a custom scheme, so prefer an https App Link if you control a
     // domain — see docs/oauth.md.
@@ -37,8 +43,6 @@ android {
     }
   }
 
-  buildFeatures { compose = true }
-
   compileOptions {
     sourceCompatibility = JavaVersion.VERSION_17
     targetCompatibility = JavaVersion.VERSION_17
@@ -48,21 +52,15 @@ android {
 kotlin { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
 
 dependencies {
-  implementation(project(":tracive-sdk"))
-
-  // The SQLite driver is the host app's to choose, so the SDK does not force one on it. This is the
-  // Android one; `SqlDelightCheckCache.Schema` is what it is created with.
-  implementation(libs.sqldelight.driver.android)
+  // The whole sample. This module is only a launcher: an Activity, a manifest and the redirect
+  // plumbing that has to live in an Android component.
+  implementation(project(":samples:composeApp"))
 
   implementation(libs.androidx.core.ktx)
   implementation(libs.androidx.activity.compose)
-  implementation(libs.androidx.lifecycle.runtime.ktx)
-  implementation(libs.androidx.lifecycle.runtime.compose)
-  implementation(libs.androidx.lifecycle.viewmodel.compose)
 
+  // The runtime the `setContent` lambda above compiles against. `:samples:composeApp` brings
+  // Compose Multiplatform's own artifacts, which on Android resolve to these same androidx ones.
   implementation(platform(libs.androidx.compose.bom))
-  implementation(libs.androidx.compose.ui)
-  implementation(libs.androidx.compose.material3)
-  implementation(libs.androidx.compose.ui.tooling.preview)
-  debugImplementation(libs.androidx.compose.ui.tooling)
+  implementation(libs.androidx.compose.runtime)
 }

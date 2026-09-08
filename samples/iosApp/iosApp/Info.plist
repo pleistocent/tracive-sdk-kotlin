@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en</string>
+  <key>CFBundleExecutable</key>
+  <string>$(EXECUTABLE_NAME)</string>
+  <key>CFBundleIdentifier</key>
+  <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleName</key>
+  <string>$(PRODUCT_NAME)</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleShortVersionString</key>
+  <string>0.1.0</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>UILaunchScreen</key>
+  <dict/>
+
+  <!--
+    Required by Compose Multiplatform, and not optional in the "nice to have" sense: without it
+    ComposeUIViewController throws on the first frame and the app never draws. It opts the app out
+    of the 60fps cap on 120Hz iPhones — CADisplayLink otherwise refuses the higher rate, and Compose
+    treats shipping an animation loop it knows will judder as an error rather than a warning.
+  -->
+  <key>CADisableMinimumFrameDurationOnPhone</key>
+  <true/>
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+  </array>
+
+  <!--
+    Package visibility for the SDK's "is the Tracive app installed?" pre-check.
+
+    Info.plist files are not merged, so unlike Android's <queries> this cannot ship inside the SDK
+    — it has to be here. Without it, canOpenURL answers false on every device, installed or not,
+    and every user is sent to the install page instead of the consent screen.
+
+    Both entries: `tracive` is the production app, `tracivedev` the sandbox build, and the probe
+    follows `environment`. Listing both costs nothing and removes the failure where switching
+    environment silently starts answering false.
+  -->
+  <key>LSApplicationQueriesSchemes</key>
+  <array>
+    <string>tracive</string>
+    <string>tracivedev</string>
+  </array>
+
+  <!--
+    The OAuth redirect target, and it must match TraciveSample.REDIRECT_URI exactly.
+
+    A private-use URI scheme, which RFC 8252 permits for a native app that controls no web domain.
+    Any app on the device may declare the same scheme, so a partner who controls a domain should
+    use a Universal Link instead — an `applinks:` entitlement plus an apple-app-site-association
+    file on that host, which cannot be claimed by anyone else.
+
+    TODO(partner): your own scheme, or delete this block entirely and add the `applinks:`
+    entitlement for a host you own. Keep TraciveSample.REDIRECT_URI in step either way.
+  -->
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleTypeRole</key>
+      <string>Editor</string>
+      <key>CFBundleURLName</key>
+      <string>id.tracive.sdk.sample.oauth</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>tracive-sample</string>
+      </array>
+    </dict>
+  </array>
+</dict>
+</plist>

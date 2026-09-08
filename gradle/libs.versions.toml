@@ -8,6 +8,9 @@ androidx-core = "1.18.0"
 androidx-lifecycle = "2.10.0"
 binaryCompatibilityValidator = "0.18.1"
 compose-bom = "2025.11.00"
+# Compose Multiplatform, for the iOS sample only. The Android sample uses AGP's Jetpack Compose
+# instead, which is a different artifact set with a different version line.
+compose-multiplatform = "1.12.0"
 coroutines = "1.11.0"
 # kotlinx-datetime is pinned to 0.6.x on purpose. From 0.7.0 `kotlinx.datetime.Instant` becomes a
 # deprecated typealias for `kotlin.time.Instant`, and its kotlinx-serialization support moves with
@@ -51,6 +54,7 @@ androidx-lifecycle-runtime-compose = { module = "androidx.lifecycle:lifecycle-ru
 androidx-lifecycle-viewmodel-compose = { module = "androidx.lifecycle:lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
 androidx-compose-bom = { module = "androidx.compose:compose-bom", version.ref = "compose-bom" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
+androidx-compose-runtime = { module = "androidx.compose.runtime:runtime" }
 androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-ui-tooling = { module = "androidx.compose.ui:ui-tooling" }
 androidx-compose-ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
@@ -60,6 +64,7 @@ androidApplication = { id = "com.android.application", version.ref = "agp" }
 androidKotlinMultiplatformLibrary = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
 binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }
 # No `org.jetbrains.kotlin.android` entry on purpose: from AGP 9 the Android plugin supplies Kotlin
 # itself, and applying the standalone plugin alongside it is a hard build failure. The KMP plugin
 # below is unaffected — it is a different plugin with a different job.

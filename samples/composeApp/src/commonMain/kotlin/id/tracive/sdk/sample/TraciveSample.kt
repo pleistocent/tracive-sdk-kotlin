@@ -1,8 +1,6 @@
 package id.tracive.sdk.sample
 
-import android.content.Context
-import app.cash.sqldelight.driver.android.AndroidSqliteDriver
-import id.tracive.sdk.cache.SqlDelightCheckCache
+import id.tracive.sdk.cache.CheckCache
 import id.tracive.sdk.client.TraciveClient
 import id.tracive.sdk.model.CachePolicy
 import id.tracive.sdk.model.ClientType
@@ -10,23 +8,27 @@ import id.tracive.sdk.model.Source
 import id.tracive.sdk.model.TraciveEnvironment
 import id.tracive.sdk.model.TraciveMode
 import id.tracive.sdk.model.TraciveScopes
-import kotlinx.coroutines.Dispatchers
 
 /**
- * The one place this sample builds a [TraciveClient].
+ * Everything about the client that is the same on both platforms — which is all of it except the
+ * cache.
  *
  * A [TraciveClient] owns an HTTP client, a token store and a database handle, so it is built once
- * per process and shared — not once per screen. A real app would hand it to whatever dependency
- * injection it already uses; this sample keeps it in an object so the wiring is readable in one
- * screenful.
+ * per process and shared, not once per screen. Each platform's `traciveClient(...)` calls this once
+ * and holds the result.
+ *
+ * The split is the point of the sample. Key storage and the SQLite driver are genuinely
+ * platform-specific — Keystore and `AndroidSqliteDriver` on one side, Keychain and
+ * `NativeSqliteDriver` on the other — and everything else, including the whole OAuth configuration
+ * and the entire UI, is written once.
  *
  * **The backend Open API is not live yet.** Every network call this sample makes will fail until it
  * is, and that is expected. What is real today is the local half: query folding, the encrypted
  * cache, TTL policy, and the OAuth flow up to the point where it needs a server.
  *
  * Using this sample as your own experiment ground? Everything you have to supply is marked
- * `TODO(partner)`. `grep -rn "TODO(partner)" samples` lists all of them — here, in this module's
- * `build.gradle.kts`, in `AndroidManifest.xml` and in `CheckViewModel`.
+ * `TODO(partner)`. `grep -rn "TODO(partner)" samples` lists all of them — here, in each app shell's
+ * manifest and `Info.plist`, and in [CheckViewModel].
  */
 object TraciveSample {
 
@@ -36,59 +38,28 @@ object TraciveSample {
    *
    * Note what is *not* on this object, in any mode: an API key. The SDK has no API-key parameter
    * anywhere in its public surface, which is a deliberate design invariant rather than an omission.
-   * A key shipped inside an APK is a key that has been published.
+   * A key shipped inside an app is a key that has been published.
    */
   // TODO(partner): the client id you were issued at registration.
   private const val CLIENT_ID = "REPLACE_WITH_YOUR_CLIENT_ID"
 
-  /** Must match the `<data>` element in `AndroidManifest.xml` exactly, scheme and host included. */
-  // TODO(partner): your own redirect, registered with Tracive. Change traciveRedirectScheme and
-  // traciveRedirectHost in build.gradle.kts to match. Prefer an https App Link if you control a
-  // domain — docs/oauth.md covers why.
+  /**
+   * One redirect for both platforms, which is why it is here rather than in either app shell. It
+   * must match the Android manifest's `<data>` element and the iOS `CFBundleURLSchemes` entry
+   * exactly.
+   *
+   * A private-use URI scheme, which RFC 8252 permits for a native app that controls no web domain.
+   * A partner who does control one should register an https App Link / Universal Link instead: it
+   * is bound to the host by `assetlinks.json` or an apple-app-site-association file, so no other
+   * app on the device can claim it, whereas any app may declare this scheme.
+   */
+  // TODO(partner): your own redirect, registered with Tracive, and matching both app shells.
+  // Prefer an App Link / Universal Link if you control a domain — docs/oauth.md covers why.
   private const val REDIRECT_URI = "tracive-sample://oauth/callback"
 
-  /**
-   * `@Volatile` is load-bearing, not decoration.
-   *
-   * [client] reads this field once outside the lock, which is the whole point of double-checked
-   * locking — but without `@Volatile` there is no happens-before edge between the write inside the
-   * lock and that unsynchronised read. A second thread can then see a non-null reference to a
-   * `TraciveClient` whose fields it does not yet see initialised. This is the textbook broken
-   * double-checked lock, and it was in this file, which partners are told to copy.
-   */
-  @Volatile private var instance: TraciveClient? = null
-
-  /** The shared client, built on first use. */
-  fun client(context: Context): TraciveClient =
-    instance
-      ?: synchronized(this) { instance ?: create(context.applicationContext).also { instance = it } }
-
-  private fun create(context: Context): TraciveClient {
-    // The SQLite driver is the host app's choice, so the SDK asks for one rather than picking. The
-    // schema is re-exported by the cache so this file never has to import the SDK's generated code.
-    val driver =
-      AndroidSqliteDriver(
-        schema = SqlDelightCheckCache.Schema,
-        context = context,
-        name = "tracive-check-cache.db",
-      )
-
-    val cache =
-      SqlDelightCheckCache(
-        driver = driver,
-        // Android Keystore-backed. See KeystoreCacheDataKeyStore for why the app supplies this and
-        // what the wrapping pattern buys.
-        // TODO(partner): copy KeystoreCacheDataKeyStore into your app as it stands. The SDK ships
-        // no default because producing and protecting key material is the platform's job.
-        dataKeyStore = KeystoreCacheDataKeyStore(context),
-        policy = CachePolicy.Default,
-        // The SDK cannot name `Dispatchers.IO` in common code, so its default is
-        // `Dispatchers.Default`. On Android, pass IO: a SQLite read blocking a CPU-pool thread is
-        // avoidable, and this is where it is avoided.
-        ioContext = Dispatchers.IO,
-      )
-
-    return TraciveClient(
+  /** Builds the client around a cache the platform supplied. */
+  internal fun client(cache: CheckCache): TraciveClient =
+    TraciveClient(
       mode =
         TraciveMode.OAuth(
           clientId = CLIENT_ID,
@@ -120,5 +91,4 @@ object TraciveSample {
       defaultSource = Source.CACHE_FIRST,
       cache = cache,
     )
-  }
 }

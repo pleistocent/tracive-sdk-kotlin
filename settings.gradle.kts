@@ -33,4 +33,12 @@ dependencyResolutionManagement {
 // partner's build.
 include(":tracive-sdk")
 
-include(":samples:android-compose")
+// One Compose Multiplatform sample, in three parts. `composeApp` is the sample: the screen, the
+// view model and the client wiring, with only key storage and the SQLite driver written per
+// platform. `androidApp` is a launcher Activity; `iosApp` is an Xcode project holding the SwiftUI
+// shell. The Android and iOS halves cannot be one module — from AGP 9 `com.android.application`
+// registers its own `kotlin` extension, so `org.jetbrains.kotlin.multiplatform` cannot be applied
+// beside it.
+include(":samples:composeApp")
+
+include(":samples:androidApp")

@@ -354,12 +354,29 @@ suite runs with no network, and yours should too.
 
 ## Runnable sample
 
-`samples/android-compose/` is a small but complete Compose app: client construction, an Android
-Keystore-backed cache key store, the OAuth round trip, and result rendering.
+`samples/` is one small but complete **Compose Multiplatform** app, in three parts:
+
+| Directory | What it is |
+| --- | --- |
+| `samples/composeApp` | The sample. Screen, view model and client wiring, shared; only the cache key store and the SQLite driver are written per platform. |
+| `samples/androidApp` | A launcher Activity, the manifest, and the redirect plumbing that has to live in an Android component. |
+| `samples/iosApp` | An Xcode project holding the SwiftUI shell and its `Info.plist`. |
 
 ```bash
-./gradlew :samples:android-compose:assembleDebug
+./gradlew :samples:androidApp:assembleDebug          # Android
+./gradlew :samples:composeApp:linkDebugFrameworkIosSimulatorArm64   # the iOS framework
 ```
+
+For iOS, open `samples/iosApp/iosApp.xcodeproj` and run — a build phase invokes Gradle for you, so
+there is no separate step. `xcodebuild` works too:
+
+```bash
+cd samples/iosApp && xcodebuild -scheme iosApp \
+  -destination 'platform=iOS Simulator,name=iPhone 16' build
+```
+
+The two halves cannot be one Gradle module: from AGP 9 `com.android.application` registers its own
+`kotlin` extension, so `org.jetbrains.kotlin.multiplatform` cannot be applied beside it.
 
 Its network calls will fail until the API ships. What it demonstrates today is the wiring and the
 local half.
