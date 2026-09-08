@@ -111,7 +111,9 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
   fun handleRedirect(url: String) {
     viewModelScope.launch {
       when (val result = client.oauth?.handleCallback(url)) {
-        null -> Unit // Not ours. Let the rest of the app have it.
+        // TODO(partner): not a Tracive redirect. Route it to whatever else in your app handles
+        // deep links, instead of dropping it as this sample does.
+        null -> Unit
 
         is AuthResult.Authorized ->
           _state.update {
@@ -122,6 +124,10 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
           }
 
         // Only reachable for a CONFIDENTIAL client. This sample is PUBLIC, so it never gets here.
+        // TODO(partner): CONFIDENTIAL clients POST result.code, result.codeVerifier and
+        // result.redirectUri to your own backend over TLS, and it completes the exchange with the
+        // client secret. The code is single-use but is a bearer credential until redeemed, and the
+        // verifier is what stops whoever intercepted the code from redeeming it.
         is AuthResult.CodeReceived ->
           _state.update {
             it.copy(message = "Authorization code received. Forward it to your own backend.")
@@ -155,6 +161,9 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
       // Deliberately no `credits()` call before this. Pre-flighting the balance doubles the request
       // count on every transaction and still races with concurrent spending; handling the 402 below
       // is both cheaper and correct.
+      // TODO(partner): pass an idempotencyKey — one UUID per logical check, reused only to retry
+      // that same check. Without one the SDK will not retry a 5xx or a timeout at all, because a
+      // blind retry is a request to be charged twice.
       val result = client.checkScammer(query)
       _state.update {
         it.copy(result = result, message = null, cachedEntries = client.cache.size())
@@ -211,8 +220,9 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
    */
   private fun describe(error: TraciveException): String =
     when (error) {
-      is TraciveException.InsufficientCredits ->
-        "Out of credits (${error.which}). Offer a top-up or a subscription here."
+      // TODO(partner): send the user into your own top-up or subscription flow here, rather than
+      // leaving them on a dead end.
+      is TraciveException.InsufficientCredits -> "Out of credits (${error.which})."
       is TraciveException.RateLimited ->
         "Rate limited." +
           (error.retryAfter?.let { " Try again in $it." }

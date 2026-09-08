@@ -38,6 +38,9 @@
         not control a web domain. A partner who does control one should register an https App Link
         instead: a verified App Link cannot be claimed by another app on the device, whereas any app
         may declare this scheme. docs/oauth.md covers the trade-off.
+
+        TODO(partner): change the scheme and host in build.gradle.kts, not here. The placeholders
+        are what keep this filter and TraciveSample.REDIRECT_URI from drifting apart.
       -->
       <intent-filter>
         <action android:name="android.intent.action.VIEW" />

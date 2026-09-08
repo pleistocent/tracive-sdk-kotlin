@@ -23,6 +23,9 @@ android {
     // placeholder and the `TraciveMode.OAuth(redirectUri = ...)` value cannot drift apart — a
     // mismatch there fails at the very end of the OAuth round trip, which is the most annoying
     // possible time to discover it.
+    // TODO(partner): your own scheme and host, and keep TraciveSample.REDIRECT_URI in step. Any
+    // app on the device may declare a custom scheme, so prefer an https App Link if you control a
+    // domain — see docs/oauth.md.
     manifestPlaceholders["traciveRedirectScheme"] = "tracive-sample"
     manifestPlaceholders["traciveRedirectHost"] = "oauth"
   }

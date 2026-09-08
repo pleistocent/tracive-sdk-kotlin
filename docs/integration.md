@@ -363,3 +363,10 @@ Keystore-backed cache key store, the OAuth round trip, and result rendering.
 
 Its network calls will fail until the API ships. What it demonstrates today is the wiring and the
 local half.
+
+Using it as your own experiment ground? Everything you have to supply — client id, redirect,
+scopes, `partnerUserId`, environment — is marked `TODO(partner)`:
+
+```bash
+grep -rn "TODO(partner)" samples
+```
