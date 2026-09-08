@@ -46,6 +46,7 @@ handleCallback(url)
   │     └─ older than 10 minutes ──> AuthResult.Failed(InvalidRequest)
   │
   ├─ error=access_denied      ──> AuthResult.Denied
+  ├─ error=<anything else>    ──> AuthResult.Failed(Unknown)   [errorCode carries the raw code]
   ├─ ClientType.PUBLIC        ──> POST /oauth/token with code + verifier ──> Authorized(scopes)
   └─ ClientType.CONFIDENTIAL  ──> CodeReceived(code, codeVerifier, redirectUri)
         │
@@ -224,6 +225,43 @@ A `TokenStore` that cannot write the record does not fail the authorization. Onl
 recovery is lost: a callback that reaches the process that started the flow is still completed from
 memory. A store that cannot be *read* answers "nothing pending" rather than throwing —
 `handleCallback` is called from a deep-link handler, which is no place to raise from.
+
+## `access_denied` is not the only refusal
+
+`error=access_denied` is the user saying no, and it is the only code with a typed outcome. Every
+other code reaches you as `AuthResult.Failed`, and the raw code is on the exception:
+
+```kotlin
+is AuthResult.Failed -> {
+  val error = auth.error
+  if (error is TraciveException.Unknown && error.errorCode == "temporarily_unavailable") {
+    // Not a refusal by this user. Say "try again later", never "you declined".
+    showRetryLater(error.message)   // the server's own description, including any reset time
+  } else {
+    report(error)
+  }
+}
+```
+
+**Branch on the code, not on the exception type.** The type is deliberately `Unknown` — an
+unrecognised code is data to pass through, not a case for this SDK to grow a class for — and it is
+not the same type in every Tracive SDK. Kotlin and Swift surface these as their "unknown" error,
+Flutter and React Native as their invalid-request one. The code string is identical in all four, and
+it is the contract.
+
+`temporarily_unavailable` is the one you will actually see. The server sends it for two situations
+that are the same to your app and different to the user:
+
+- **The partner organisation has not accepted the current terms.** Existing grants keep working;
+  only new ones are refused, so this appears to new users and not to the ones you already have.
+- **This device has reached its daily connection limit to your app.** A cap on successful
+  authorizations per device per partner per UTC day, which exists because a free Tracive account
+  gets a monthly credit allowance and one phone could otherwise cycle accounts to farm it.
+
+`error_description` carries the server's own wording, including the reset time where there is one,
+which is why the snippet above shows it rather than a string of its own. Both cases resolve without
+you doing anything; the user retries later. The attempt is spent either way, so `authorize()` starts
+a fresh one rather than resuming.
 
 ## Redirect URI: App Link over custom scheme
 

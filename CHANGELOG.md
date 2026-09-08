@@ -11,6 +11,20 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Added
 
+- **`access_denied` is not the only refusal, and now the OAuth guide says so.** The authorization
+  server can end a consent with other codes, and the one it actually sends is
+  `temporarily_unavailable` — for two situations that look identical to your app and are not the
+  same to the user: the partner organisation has not accepted the current terms, or the device has
+  reached its daily limit on new connections to your app. Neither is a refusal by *this* user, and
+  both resolve on their own if the user retries later.
+
+  This SDK has always passed the raw code through — `AuthResult.Failed` carrying
+  `TraciveException.Unknown`, with the code on `errorCode` — but nothing told a partner to read it,
+  so the natural handling was a generic failure or, worse, "you declined", which is the one thing it
+  is not. The guide now shows how to branch, and says to branch on the **code** rather than the
+  exception type: the type differs between the Tracive SDKs, the code string does not.
+  `error_description` carries the server's own wording, including any reset time, so show that.
+
 - **`normalizePhoneNumber`, so a locally-formatted number can reach `phone()`.** `phone()` takes
   E.164 and refuses `081234567891`, for a reason it states: the SDK cannot know your dial code, and a
   wrong guess still costs a credit. This supplies the missing dial code, so the strictness downstream
@@ -43,6 +57,27 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   `+00<dial>` is refused, which the app accepts and folds correctly: `+` and `00` are alternative
   spellings of the same thing rather than stackable ones, what follows `+` must be a country code,
   and `00` is none.
+
+### Changed
+
+- **The sample is now one Compose Multiplatform app covering Android and iOS.** It was Android-only
+  and written against Jetpack Compose. `samples/composeApp` now holds the screen, the view model and
+  the whole OAuth configuration as common code; only the two things that are genuinely per-platform
+  are written twice — key storage (`KeystoreCacheDataKeyStore` wraps the data key because an Android
+  Keystore key will not hand back its bytes, `KeychainCacheDataKeyStore` simply stores it) and the
+  SQLite driver. `samples/androidApp` is a launcher Activity, `samples/iosApp` an Xcode project.
+
+  Three modules rather than one because from AGP 9 `com.android.application` registers its own
+  `kotlin` extension, so `org.jetbrains.kotlin.multiplatform` cannot be applied beside it.
+
+  Two traps are recorded in the build files rather than left to be rediscovered. `samples/androidApp`
+  applies the Compose compiler although it declares no `@Composable` of its own, because
+  `setContent { }` takes a composable lambda and without the plugin it builds and then dies with
+  `NoSuchMethodError: setContent$default`. And kotlinx-datetime is forced back to the SDK's 0.6.2:
+  Compose Multiplatform's material3 wants 0.7.1, where `kotlinx.datetime.Instant` became a typealias,
+  and klib partial linkage answers the vanished symbol with a throw at run time rather than an error
+  at build time — the app linked cleanly and died on `CheckResult.fetchedAt`. Forcing 0.6.2 moves the
+  unresolved symbols into material3's DatePicker calendar, which this sample does not use.
 
 ### Breaking
 
