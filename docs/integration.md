@@ -33,7 +33,7 @@ val client = TraciveClient(
     clientId = "your-client-id",
     redirectUri = "https://yourapp.example.com/oauth/callback",
     scopes = listOf("scammer.check", "profile.read"),
-    partnerUserId = yourInternalUserId,   // or null
+    partnerUserId = yourInternalUserId,   // required, opaque
     clientType = ClientType.PUBLIC,
   ),
   environment = TraciveEnvironment.Sandbox,
@@ -60,7 +60,11 @@ Notes on the arguments that are easy to get wrong:
   | `TraciveScopes.CREDITS_READ`  | `credits.read`  | reading the user's remaining credits     |
   | `TraciveScopes.PROFILE_READ`  | `profile.read`  | reading the minimal user profile         |
 - **`partnerUserId`** is *your* identifier for the user, so a grant survives a reinstall. **Never
-  pass a raw phone number or email here.** Pass `null` if you have no accounts.
+  pass a raw phone number or email here** — an account id or a UUID you store. It is **required**
+  and cannot be blank: `TraciveMode.OAuth` rejects a blank one at construction, and the Tracive app
+  refuses a consent that arrives without one client-side, with no redirect back, so the failure
+  would otherwise reach you as silence rather than as an error. If you have no accounts, generate a
+  UUID on first run and persist it.
 - **There is no API key parameter.** Not here, not anywhere. See the README for why.
 
 `environment` is `Production` by default; use `Sandbox` while building, and
