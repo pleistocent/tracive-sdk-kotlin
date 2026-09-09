@@ -33,8 +33,20 @@ CREATE TABLE checkCacheMeta (
   nonceCounter INTEGER NOT NULL
 );
 
+-- Two kinds of row live here, told apart by the shape of the key and by nothing else:
+--
+--   <64 hex digits>        a cached answer, keyed on `SHA-256(searchQueryIndex)`
+--   txn:<64 hex digits>    a transaction record, keyed on `SHA-256(transactionId)`
+--
+-- They differ in lifetime — a cached answer expires when its verdict stops being trustworthy, a
+-- transaction record when the host's retention runs out — and in nothing else, so they share the
+-- table rather than growing a second one. `:` is not a hex digit, so the key spaces cannot collide,
+-- and the whole key is authenticated into each record's associated data, so neither kind can be
+-- moved onto the other's row. Adding a `kind` column would be the obvious alternative and is exactly
+-- the plaintext discriminator the note above rules out: it would sort a stolen database file into
+-- "answers this device holds" and "transfers this device made" before anyone had to decrypt a byte.
 CREATE TABLE checkCacheEntry (
-  -- `SHA-256(searchQueryIndex)`, lower-case hex.
+  -- `SHA-256(searchQueryIndex)`, or `txn:` + `SHA-256(transactionId)`. Lower-case hex either way.
   cacheKey TEXT NOT NULL PRIMARY KEY,
   -- Envelope version byte, 96-bit nonce, then ciphertext and the 128-bit GCM tag.
   envelope BLOB NOT NULL,
@@ -89,7 +101,10 @@ WHERE expiresAtEpochMs <= ?;
 -- Evicts down to a row count. The rows that survive are the ones with the most life left, because a
 -- row about to expire is the one worth least: a `NONE` answer lives an hour and a `HIGH` verdict
 -- thirty days, so this drops the cheap ones and keeps the ones a user is most likely to ask about
--- again. `LIMIT -1 OFFSET ?` is SQLite's "everything after the first N". The `cacheKey` tie-break is
+-- again. Transaction records outlive every tier by default, so they are evicted last — which is the
+-- right way round, since an evicted answer costs one credit to fetch again and an evicted record of
+-- what a user was shown cannot be recovered at all. `LIMIT -1 OFFSET ?` is SQLite's "everything
+-- after the first N". The `cacheKey` tie-break is
 -- arbitrary and only there so two rows with the same expiry are ordered the same way here as in
 -- `InMemoryCacheRecordStore`.
 deleteEntriesOverCap:

@@ -266,6 +266,19 @@ fleet-wide invalidation lever — leave `honorServerTtlOverride` on.
 Privacy: the row key is `SHA-256(searchQueryIndex)` and the payload is AES-256-GCM. **The identifier
 itself is never written to disk in any form**, and neither is the risk tier or the report count.
 
+The same store also records **what a given transaction was shown**, so a transaction-detail screen can
+still display the check weeks later:
+
+```kotlin
+client.cache.putTransactionCheck("TRF26090814320771", result)   // once the transfer has a reference
+client.cache.getTransactionCheck("TRF26090814320771")           // null = no check on file
+```
+
+Each one is a snapshot on its own 90-day retention, so a later check of the same account cannot
+rewrite an older transaction's card, and one check can be recorded against several transactions —
+the second transfer to an account you already checked costs nothing and still gets a card. See
+[docs/caching.md](docs/caching.md#recording-what-a-transaction-was-shown).
+
 ## Errors
 
 Everything throws a subclass of `TraciveException`, mapped from the server's `error.code`:

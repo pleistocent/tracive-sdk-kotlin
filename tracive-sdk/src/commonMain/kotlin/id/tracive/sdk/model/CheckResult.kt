@@ -139,4 +139,22 @@ data class CheckResult(
    */
   fun toCacheable(): CheckResult =
     copy(checkId = null, topChronologies = null, comments = null, billing = null)
+
+  /**
+   * This result reduced to the fields that are safe to keep against a transaction.
+   *
+   * A transaction record is read back under the transaction it was filed for and never under
+   * another request, so almost everything survives — including the three fields [toCacheable] drops
+   * for reasons that do not apply here. [checkId] and [billing] describe one call, which is exactly
+   * what this record is; keeping them is what lets a support agent reconcile the charge and a UI
+   * say whether that transaction spent a credit. [tags] and [disclaimer] are locale-specific, and
+   * that is fine for the same reason: there is no second request they could be served to.
+   *
+   * [topChronologies] and [comments] go, and this is the one deliberate loss. They are other
+   * people's accounts of being defrauded, written in prose; a transaction record lives for months
+   * rather than hours, and nothing on a transaction-detail screen shows them. Keeping them would
+   * mean an encrypted archive of third-party report narratives on the device, for a screen that
+   * displays a tier and four numbers.
+   */
+  fun toTransactionRecord(): CheckResult = copy(topChronologies = null, comments = null)
 }

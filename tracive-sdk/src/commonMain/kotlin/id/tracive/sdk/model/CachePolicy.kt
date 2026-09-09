@@ -62,6 +62,26 @@ data class CachePolicy(
    * likely to ask about twice.
    */
   val maxEntries: Int = 5000,
+
+  /**
+   * How long a transaction record — the answer that was shown for one of your transactions — is
+   * kept. Zero or less stores none at all.
+   *
+   * A separate knob from the TTLs above because it answers a different question. A TTL asks "is
+   * this verdict still worth trusting?", and an hour is right for a `NONE`. A retention asks "can
+   * the user still see what they were told before they sent the money?", and the answer to that
+   * does not decay: the record is a fact about the past, so the only thing that should end it is
+   * the host's own data-minimisation policy.
+   *
+   * 90 days matches how far back a transaction list is usually browsed. Raise it if your history
+   * screen goes back further — and raise [maxEntries] with it, since records are counted by the
+   * same cap as cache entries.
+   *
+   * The server's `cacheTtlSeconds` override is not applied to these. That field retracts a verdict
+   * the backend no longer stands behind, which is the right lever for a cached answer and the wrong
+   * one for a record of what a user was already shown.
+   */
+  val transactionCheckRetention: Duration = 90.days,
 ) {
 
   /** The default lifetime for [riskTier], ignoring any server override. */

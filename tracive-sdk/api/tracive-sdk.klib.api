@@ -371,9 +371,12 @@ abstract interface id.tracive.sdk.cache/CacheDataKeyStore { // id.tracive.sdk.ca
 abstract interface id.tracive.sdk.cache/CheckCache { // id.tracive.sdk.cache/CheckCache|null[0]
     abstract suspend fun clear() // id.tracive.sdk.cache/CheckCache.clear|clear(){}[0]
     abstract suspend fun get(id.tracive.sdk.query/TraciveQuery): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/CheckCache.get|get(id.tracive.sdk.query.TraciveQuery){}[0]
+    abstract suspend fun getTransactionCheck(kotlin/String): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/CheckCache.getTransactionCheck|getTransactionCheck(kotlin.String){}[0]
     abstract suspend fun prune(): kotlin/Int // id.tracive.sdk.cache/CheckCache.prune|prune(){}[0]
     abstract suspend fun put(id.tracive.sdk.query/TraciveQuery, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/CheckCache.put|put(id.tracive.sdk.query.TraciveQuery;id.tracive.sdk.model.CheckResult){}[0]
+    abstract suspend fun putTransactionCheck(kotlin/String, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/CheckCache.putTransactionCheck|putTransactionCheck(kotlin.String;id.tracive.sdk.model.CheckResult){}[0]
     abstract suspend fun remove(id.tracive.sdk.query/TraciveQuery) // id.tracive.sdk.cache/CheckCache.remove|remove(id.tracive.sdk.query.TraciveQuery){}[0]
+    abstract suspend fun removeTransactionCheck(kotlin/String) // id.tracive.sdk.cache/CheckCache.removeTransactionCheck|removeTransactionCheck(kotlin.String){}[0]
     abstract suspend fun size(): kotlin/Int // id.tracive.sdk.cache/CheckCache.size|size(){}[0]
 }
 
@@ -456,9 +459,12 @@ final class id.tracive.sdk.cache/InMemoryCheckCache : id.tracive.sdk.cache/Check
     final fun toString(): kotlin/String // id.tracive.sdk.cache/InMemoryCheckCache.toString|toString(){}[0]
     final suspend fun clear() // id.tracive.sdk.cache/InMemoryCheckCache.clear|clear(){}[0]
     final suspend fun get(id.tracive.sdk.query/TraciveQuery): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/InMemoryCheckCache.get|get(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun getTransactionCheck(kotlin/String): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/InMemoryCheckCache.getTransactionCheck|getTransactionCheck(kotlin.String){}[0]
     final suspend fun prune(): kotlin/Int // id.tracive.sdk.cache/InMemoryCheckCache.prune|prune(){}[0]
     final suspend fun put(id.tracive.sdk.query/TraciveQuery, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/InMemoryCheckCache.put|put(id.tracive.sdk.query.TraciveQuery;id.tracive.sdk.model.CheckResult){}[0]
+    final suspend fun putTransactionCheck(kotlin/String, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/InMemoryCheckCache.putTransactionCheck|putTransactionCheck(kotlin.String;id.tracive.sdk.model.CheckResult){}[0]
     final suspend fun remove(id.tracive.sdk.query/TraciveQuery) // id.tracive.sdk.cache/InMemoryCheckCache.remove|remove(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun removeTransactionCheck(kotlin/String) // id.tracive.sdk.cache/InMemoryCheckCache.removeTransactionCheck|removeTransactionCheck(kotlin.String){}[0]
     final suspend fun size(): kotlin/Int // id.tracive.sdk.cache/InMemoryCheckCache.size|size(){}[0]
 }
 
@@ -468,9 +474,12 @@ final class id.tracive.sdk.cache/SqlDelightCheckCache : id.tracive.sdk.cache/Che
     final fun toString(): kotlin/String // id.tracive.sdk.cache/SqlDelightCheckCache.toString|toString(){}[0]
     final suspend fun clear() // id.tracive.sdk.cache/SqlDelightCheckCache.clear|clear(){}[0]
     final suspend fun get(id.tracive.sdk.query/TraciveQuery): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/SqlDelightCheckCache.get|get(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun getTransactionCheck(kotlin/String): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/SqlDelightCheckCache.getTransactionCheck|getTransactionCheck(kotlin.String){}[0]
     final suspend fun prune(): kotlin/Int // id.tracive.sdk.cache/SqlDelightCheckCache.prune|prune(){}[0]
     final suspend fun put(id.tracive.sdk.query/TraciveQuery, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/SqlDelightCheckCache.put|put(id.tracive.sdk.query.TraciveQuery;id.tracive.sdk.model.CheckResult){}[0]
+    final suspend fun putTransactionCheck(kotlin/String, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/SqlDelightCheckCache.putTransactionCheck|putTransactionCheck(kotlin.String;id.tracive.sdk.model.CheckResult){}[0]
     final suspend fun remove(id.tracive.sdk.query/TraciveQuery) // id.tracive.sdk.cache/SqlDelightCheckCache.remove|remove(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun removeTransactionCheck(kotlin/String) // id.tracive.sdk.cache/SqlDelightCheckCache.removeTransactionCheck|removeTransactionCheck(kotlin.String){}[0]
     final suspend fun size(): kotlin/Int // id.tracive.sdk.cache/SqlDelightCheckCache.size|size(){}[0]
 
     final object Companion { // id.tracive.sdk.cache/SqlDelightCheckCache.Companion|null[0]
@@ -643,7 +652,7 @@ final class id.tracive.sdk.model/Billing { // id.tracive.sdk.model/Billing|null[
 }
 
 final class id.tracive.sdk.model/CachePolicy { // id.tracive.sdk.model/CachePolicy|null[0]
-    constructor <init>(kotlin/Boolean = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Boolean = ..., kotlin/Int = ...) // id.tracive.sdk.model/CachePolicy.<init>|<init>(kotlin.Boolean;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.Boolean;kotlin.Int){}[0]
+    constructor <init>(kotlin/Boolean = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.time/Duration = ...) // id.tracive.sdk.model/CachePolicy.<init>|<init>(kotlin.Boolean;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.Boolean;kotlin.Int;kotlin.time.Duration){}[0]
 
     final val cautionTtl // id.tracive.sdk.model/CachePolicy.cautionTtl|{}cautionTtl[0]
         final fun <get-cautionTtl>(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.cautionTtl.<get-cautionTtl>|<get-cautionTtl>(){}[0]
@@ -659,6 +668,8 @@ final class id.tracive.sdk.model/CachePolicy { // id.tracive.sdk.model/CachePoli
         final fun <get-maxEntries>(): kotlin/Int // id.tracive.sdk.model/CachePolicy.maxEntries.<get-maxEntries>|<get-maxEntries>(){}[0]
     final val noneTtl // id.tracive.sdk.model/CachePolicy.noneTtl|{}noneTtl[0]
         final fun <get-noneTtl>(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.noneTtl.<get-noneTtl>|<get-noneTtl>(){}[0]
+    final val transactionCheckRetention // id.tracive.sdk.model/CachePolicy.transactionCheckRetention|{}transactionCheckRetention[0]
+        final fun <get-transactionCheckRetention>(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.transactionCheckRetention.<get-transactionCheckRetention>|<get-transactionCheckRetention>(){}[0]
 
     final fun component1(): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.component1|component1(){}[0]
     final fun component2(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.component2|component2(){}[0]
@@ -667,7 +678,8 @@ final class id.tracive.sdk.model/CachePolicy { // id.tracive.sdk.model/CachePoli
     final fun component5(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.component5|component5(){}[0]
     final fun component6(): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.component6|component6(){}[0]
     final fun component7(): kotlin/Int // id.tracive.sdk.model/CachePolicy.component7|component7(){}[0]
-    final fun copy(kotlin/Boolean = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Boolean = ..., kotlin/Int = ...): id.tracive.sdk.model/CachePolicy // id.tracive.sdk.model/CachePolicy.copy|copy(kotlin.Boolean;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.Boolean;kotlin.Int){}[0]
+    final fun component8(): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.component8|component8(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin.time/Duration = ..., kotlin/Boolean = ..., kotlin/Int = ..., kotlin.time/Duration = ...): id.tracive.sdk.model/CachePolicy // id.tracive.sdk.model/CachePolicy.copy|copy(kotlin.Boolean;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.time.Duration;kotlin.Boolean;kotlin.Int;kotlin.time.Duration){}[0]
     final fun effectiveTtl(id.tracive.sdk.model/RiskTier, kotlin/Long?): kotlin.time/Duration // id.tracive.sdk.model/CachePolicy.effectiveTtl|effectiveTtl(id.tracive.sdk.model.RiskTier;kotlin.Long?){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/CachePolicy.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // id.tracive.sdk.model/CachePolicy.hashCode|hashCode(){}[0]
@@ -746,6 +758,7 @@ final class id.tracive.sdk.model/CheckResult { // id.tracive.sdk.model/CheckResu
     final fun hashCode(): kotlin/Int // id.tracive.sdk.model/CheckResult.hashCode|hashCode(){}[0]
     final fun toCacheable(): id.tracive.sdk.model/CheckResult // id.tracive.sdk.model/CheckResult.toCacheable|toCacheable(){}[0]
     final fun toString(): kotlin/String // id.tracive.sdk.model/CheckResult.toString|toString(){}[0]
+    final fun toTransactionRecord(): id.tracive.sdk.model/CheckResult // id.tracive.sdk.model/CheckResult.toTransactionRecord|toTransactionRecord(){}[0]
 
     final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.model/CheckResult> { // id.tracive.sdk.model/CheckResult.$serializer|null[0]
         final val descriptor // id.tracive.sdk.model/CheckResult.$serializer.descriptor|{}descriptor[0]
@@ -1360,9 +1373,12 @@ final object id.tracive.sdk.cache/DisabledCheckCache : id.tracive.sdk.cache/Chec
     final fun toString(): kotlin/String // id.tracive.sdk.cache/DisabledCheckCache.toString|toString(){}[0]
     final suspend fun clear() // id.tracive.sdk.cache/DisabledCheckCache.clear|clear(){}[0]
     final suspend fun get(id.tracive.sdk.query/TraciveQuery): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/DisabledCheckCache.get|get(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun getTransactionCheck(kotlin/String): id.tracive.sdk.model/CheckResult? // id.tracive.sdk.cache/DisabledCheckCache.getTransactionCheck|getTransactionCheck(kotlin.String){}[0]
     final suspend fun prune(): kotlin/Int // id.tracive.sdk.cache/DisabledCheckCache.prune|prune(){}[0]
     final suspend fun put(id.tracive.sdk.query/TraciveQuery, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/DisabledCheckCache.put|put(id.tracive.sdk.query.TraciveQuery;id.tracive.sdk.model.CheckResult){}[0]
+    final suspend fun putTransactionCheck(kotlin/String, id.tracive.sdk.model/CheckResult) // id.tracive.sdk.cache/DisabledCheckCache.putTransactionCheck|putTransactionCheck(kotlin.String;id.tracive.sdk.model.CheckResult){}[0]
     final suspend fun remove(id.tracive.sdk.query/TraciveQuery) // id.tracive.sdk.cache/DisabledCheckCache.remove|remove(id.tracive.sdk.query.TraciveQuery){}[0]
+    final suspend fun removeTransactionCheck(kotlin/String) // id.tracive.sdk.cache/DisabledCheckCache.removeTransactionCheck|removeTransactionCheck(kotlin.String){}[0]
     final suspend fun size(): kotlin/Int // id.tracive.sdk.cache/DisabledCheckCache.size|size(){}[0]
 }
 

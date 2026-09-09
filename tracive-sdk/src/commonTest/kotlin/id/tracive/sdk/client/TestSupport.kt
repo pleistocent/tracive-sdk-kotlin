@@ -152,6 +152,9 @@ internal class FakeCheckCache(
   private val entries: MutableMap<String, CheckResult> = mutableMapOf()
 ) : CheckCache {
 
+  /** Transaction records, keyed by the host's own id. Separate from [entries], as on disk. */
+  private val records: MutableMap<String, CheckResult> = mutableMapOf()
+
   var reads: Int = 0
     private set
 
@@ -172,13 +175,29 @@ internal class FakeCheckCache(
     entries.remove(query.searchQueryIndex)
   }
 
+  override suspend fun putTransactionCheck(transactionId: String, result: CheckResult) {
+    require(transactionId.isNotBlank())
+    records[transactionId.trim()] = result.toTransactionRecord()
+  }
+
+  override suspend fun getTransactionCheck(transactionId: String): CheckResult? {
+    require(transactionId.isNotBlank())
+    return records[transactionId.trim()]
+  }
+
+  override suspend fun removeTransactionCheck(transactionId: String) {
+    require(transactionId.isNotBlank())
+    records.remove(transactionId.trim())
+  }
+
   override suspend fun clear() {
     entries.clear()
+    records.clear()
   }
 
   override suspend fun prune(): Int = 0
 
-  override suspend fun size(): Int = entries.size
+  override suspend fun size(): Int = entries.size + records.size
 
   /** Seeds an entry directly, as though a previous check had stored it. */
   fun seed(query: TraciveQuery, result: CheckResult) {

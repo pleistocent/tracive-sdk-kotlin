@@ -30,6 +30,38 @@ internal fun cacheKeyFor(query: TraciveQuery): String =
   Sha256.digest(query.searchQueryIndex.encodeToByteArray()).toHex()
 
 /**
+ * The prefix that separates a transaction record's key from an entry's.
+ *
+ * An entry key is 64 lower-case hex digits, and `:` is not a hex digit, so the two key spaces
+ * cannot collide. That is what lets both kinds of row live in one table without a discriminator
+ * column — and a discriminator column is exactly what `TraciveCache.sq` refuses to grow. The prefix
+ * is part of the key, so it is bound into the record's associated data too: a transaction record
+ * copied onto an entry's row fails to open rather than answering a check.
+ */
+internal const val TRANSACTION_KEY_PREFIX: String = "txn:"
+
+/**
+ * The store key for a transaction record: `"txn:" + SHA-256(transactionId)`, lower-case hex.
+ *
+ * The id is hashed for the same reason the identifier is. A transaction reference is the host's own
+ * string rather than a person's phone number, but written in cleartext beside an encrypted verdict
+ * it would say *which* transfers a device holds a fraud answer for — and that is enough to pick the
+ * interesting rows out of a stolen database file. Hashing costs nothing here: the only lookup this
+ * store ever does is an exact one.
+ *
+ * The id is trimmed and otherwise used verbatim, so `"TRF-1"` and `"trf-1"` are two records. A host
+ * whose own reference varies in case has to normalise it before it gets here; the SDK cannot, since
+ * a reference format it has never seen is not one it can fold safely.
+ */
+internal fun transactionCacheKeyFor(transactionId: String): String {
+  require(transactionId.isNotBlank()) {
+    "A transaction record needs a non-blank transaction id: the record is looked up by it, and a " +
+      "blank one would file every unlabelled transaction under a single shared row."
+  }
+  return TRANSACTION_KEY_PREFIX + Sha256.digest(transactionId.trim().encodeToByteArray()).toHex()
+}
+
+/**
  * How a cached record is serialised before it is sealed.
  *
  * Separate from the SDK's wire `Json` on purpose: this is a storage format the SDK controls on both
@@ -79,69 +111,60 @@ internal class DefaultCheckCache(
   private var cipher: CacheCipher? = null
 
   override suspend fun get(query: TraciveQuery): CheckResult? = mutex.withLock {
-    if (!policy.enabled) return@withLock null
-    val cipher = openedCipher()
-    val key = cacheKeyFor(query)
-    val row = store.select(key) ?: return@withLock null
-
-    // Lazy expiry. Deleting on the way past keeps the cache honest without a background sweeper:
-    // an entry the caller can no longer use is gone before the caller is told it is a miss.
-    if (row.expiresAtEpochMs <= nowEpochMs()) {
-      store.delete(key)
-      return@withLock null
-    }
-
-    val plaintext = cipher.open(row.envelope, cacheAssociatedData(key, schemaVersion))
-    if (plaintext == null) {
-      // Wrong key, tampered row, a record moved from another key, or an envelope version this
-      // build does not know. All four are unreadable and all four are treated the same way: drop
-      // the row and miss. The caller pays for one server check and gets a correct answer, which
-      // is strictly better than any attempt to salvage bytes that failed authentication.
-      store.delete(key)
-      return@withLock null
-    }
-
-    val decoded = decode(plaintext)
-    if (decoded == null) {
-      store.delete(key)
-      return@withLock null
-    }
-
     // Forced rather than trusted: a record whose stored `origin` said SERVER would make a cache
     // hit indistinguishable from a live answer, and the caller uses this to decide whether to
     // show "checked just now" or "last checked <date>".
-    decoded.copy(origin = Origin.CACHE)
+    readRecord(cacheKeyFor(query))?.copy(origin = Origin.CACHE)
   }
 
   override suspend fun put(query: TraciveQuery, result: CheckResult) {
     mutex.withLock {
-      if (!policy.enabled) return@withLock
-      val cipher = openedCipher()
-      val key = cacheKeyFor(query)
-
-      val ttl = policy.effectiveTtl(result.riskTier, result.cacheTtlSeconds)
-      if (ttl <= Duration.ZERO) {
-        // The server said "do not keep this answer". Removing the existing entry as well is the
-        // point: a zero TTL is how the backend retracts something already on the device.
-        store.delete(key)
-        return@withLock
-      }
-
       // `toCacheable()` is what enforces "never cache full detail" — it drops `topChronologies`,
       // `comments`, `billing` and `checkId`. The cache is keyed on the query alone, so anything
       // that varies with `detail` or `locale` would be served back under the wrong request. If a
       // later version ever needs to cache full-detail content, the key must become the triple of
       // (query, detail, locale); changing only this line would ship an Indonesian narrative to an
       // English request.
-      val cacheable = result.toCacheable().copy(origin = Origin.CACHE)
-      val payload = CachePayloadJson.encodeToString(CheckResult.serializer(), cacheable)
-
-      val nonce = cacheNonce(store.reserveNonceCounter())
-      val envelope =
-        cipher.seal(payload.encodeToByteArray(), nonce, cacheAssociatedData(key, schemaVersion))
-
-      store.upsert(CacheRow(key, envelope, expiryEpochMs(clock.now(), ttl)))
+      //
+      // A TTL of zero stores nothing and drops what is there: a zero `cacheTtlSeconds` is how the
+      // backend retracts an answer that is already on the device.
+      writeRecord(
+        key = cacheKeyFor(query),
+        record = result.toCacheable().copy(origin = Origin.CACHE),
+        lifetime = policy.effectiveTtl(result.riskTier, result.cacheTtlSeconds),
+      )
     }
+  }
+
+  override suspend fun putTransactionCheck(transactionId: String, result: CheckResult) {
+    // Outside the lock: an argument that cannot produce a key is the caller's mistake, and raising
+    // it should not depend on opening a cipher or waiting behind another writer.
+    val key = transactionCacheKeyFor(transactionId)
+    mutex.withLock {
+      // `policy.transactionCheckRetention`, never `effectiveTtl`. The tier TTL asks how long a
+      // verdict stays trustworthy; this row answers "what was this user shown before they sent the
+      // money", and that does not decay. Feeding the server's `cacheTtlSeconds` in here would let
+      // the backend retract a record of the past, which is the one thing it must not be able to do.
+      writeRecord(
+        key = key,
+        record = result.toTransactionRecord(),
+        lifetime = policy.transactionCheckRetention,
+      )
+    }
+  }
+
+  override suspend fun getTransactionCheck(transactionId: String): CheckResult? {
+    val key = transactionCacheKeyFor(transactionId)
+    // No `origin` rewrite, deliberately. `get` forces CACHE because it is offering a stored answer
+    // as the answer to a question asked now; this is offering a record of an answer given then, and
+    // the origin it was given under is part of what happened — a second transfer to the same
+    // account, served from the cache, spent no credit and the record should still say so.
+    return mutex.withLock { readRecord(key) }
+  }
+
+  override suspend fun removeTransactionCheck(transactionId: String) {
+    val key = transactionCacheKeyFor(transactionId)
+    mutex.withLock { store.delete(key) }
   }
 
   // The four maintenance methods below deliberately do not open the cache. Opening generates a
@@ -168,6 +191,72 @@ internal class DefaultCheckCache(
   }
 
   override suspend fun size(): Int = mutex.withLock { store.count() }
+
+  /**
+   * Opens the record under [key], or null when there is nothing usable there.
+   *
+   * Shared by the cache read and the transaction-record read, because the failure handling is the
+   * same for both and writing it twice is how the two would drift. Expiry is lazy: deleting the row
+   * on the way past keeps the store honest without a background sweeper, so a row the caller can no
+   * longer use is gone before the caller is told it is a miss.
+   *
+   * Caller holds [mutex].
+   */
+  private suspend fun readRecord(key: String): CheckResult? {
+    if (!policy.enabled) return null
+    val cipher = openedCipher()
+    val row = store.select(key) ?: return null
+
+    if (row.expiresAtEpochMs <= nowEpochMs()) {
+      store.delete(key)
+      return null
+    }
+
+    val plaintext = cipher.open(row.envelope, cacheAssociatedData(key, schemaVersion))
+    if (plaintext == null) {
+      // Wrong key, tampered row, a record moved from another key, or an envelope version this
+      // build does not know. All four are unreadable and all four are treated the same way: drop
+      // the row and miss. The caller pays for one server check and gets a correct answer, which
+      // is strictly better than any attempt to salvage bytes that failed authentication.
+      store.delete(key)
+      return null
+    }
+
+    val decoded = decode(plaintext)
+    if (decoded == null) {
+      store.delete(key)
+      return null
+    }
+    return decoded
+  }
+
+  /**
+   * Seals [record] under [key] for [lifetime], or removes whatever is there when the lifetime is
+   * not positive.
+   *
+   * The removal on a non-positive lifetime is the point rather than a guard: for a cache entry it
+   * is how the backend retracts an answer it has already put on a device, and for a transaction
+   * record it is how a host that sets `transactionCheckRetention` to zero opts out and takes the
+   * records it already wrote with it.
+   *
+   * Caller holds [mutex], which is what makes the nonce reservation below safe: two writers that
+   * obtained the same counter value would seal two records under one nonce.
+   */
+  private suspend fun writeRecord(key: String, record: CheckResult, lifetime: Duration) {
+    if (!policy.enabled) return
+    val cipher = openedCipher()
+    if (lifetime <= Duration.ZERO) {
+      store.delete(key)
+      return
+    }
+
+    val payload = CachePayloadJson.encodeToString(CheckResult.serializer(), record)
+    val nonce = cacheNonce(store.reserveNonceCounter())
+    val envelope =
+      cipher.seal(payload.encodeToByteArray(), nonce, cacheAssociatedData(key, schemaVersion))
+
+    store.upsert(CacheRow(key, envelope, expiryEpochMs(clock.now(), lifetime)))
+  }
 
   /**
    * Resolves the cipher, invalidating the stored generation when it cannot be reused.

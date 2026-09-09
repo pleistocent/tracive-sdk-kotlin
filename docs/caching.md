@@ -288,6 +288,10 @@ client.cache.remove(query)
 client.cache.clear()        // call this on sign-out
 client.cache.prune()
 client.cache.size()
+
+client.cache.putTransactionCheck(transactionId, r)   // see "Recording what a transaction was shown"
+client.cache.getTransactionCheck(transactionId)
+client.cache.removeTransactionCheck(transactionId)
 ```
 
 **Call `clear()` on sign-out.** The entries belong to the user who was authorised when they were
@@ -313,21 +317,103 @@ is clean", which is the most dangerous wrong answer this SDK can give.
 
 ---
 
+## Recording what a transaction was shown
+
+`get(query)` answers "what does Tracive say about this account **now**". A transaction-detail screen
+asks something else: "what was this user shown **before they sent the money**". Those two answers
+diverge, and the cache cannot give you the second one — it holds the latest answer per identifier and
+expires it as soon as it stops being trustworthy, so by the next morning a `NONE` result is gone and
+the card on yesterday's transfer would be blank.
+
+So record it against your own transaction id:
+
+```kotlin
+// 1. On the confirmation screen, before the PIN.
+val result = client.checkScammer(TraciveQuery.bankAccount("IDN", "BCA", accountNumber))
+showCheckResult(result)          // tier, counts, and result.disclaimer
+
+// 2. Once the transfer exists and has a reference number.
+client.cache.putTransactionCheck(transactionId = "TRF26090814320771", result = result)
+
+// 3. Weeks later, on the transaction detail.
+val shown = client.cache.getTransactionCheck("TRF26090814320771")
+if (shown != null) renderSecurityCheckCard(shown)   // never "no reports found" when it is null
+```
+
+It is a separate call rather than a parameter on `checkScammer` because of the order those two things
+happen in: the check runs on the confirmation screen, and the reference number is minted after the
+PIN. There is no transaction id to pass when the check is made.
+
+**Each record is a snapshot, not a pointer into the cache.** That is the whole design decision, and
+it is what makes the card truthful. A user transfers to the same account in September, when it is
+clean, and again in October, after it has been reported. A pointer would rewrite September's card to
+show October's verdict — an audit trail saying the user was warned before a transfer where they were
+shown nothing of the kind. Two records, two answers, neither one editing the other.
+
+**One check can serve several transactions.** The second transfer to an account you already checked
+is a cache hit: no request, no credit, and `putTransactionCheck` called a second time with the id of
+that transfer. Both details get a card, and the second one's `origin` is `Origin.CACHE`, which is how
+your UI knows that transfer spent nothing.
+
+| | `put` / `get` | `putTransactionCheck` / `getTransactionCheck` |
+|---|---|---|
+| Keyed on | the identifier | your transaction id, hashed |
+| Lifetime | `CachePolicy` tier TTL, 1 hour to 30 days | `transactionCheckRetention`, 90 days by default |
+| Server `cacheTtlSeconds` | applied, including retraction | **not applied** — a record of the past cannot be retracted |
+| Overwritten by a later check | yes | no |
+| `origin` on read | forced to `CACHE` | kept as recorded |
+| `checkId`, `billing` | dropped | kept — this record *is* that one call |
+| `topChronologies`, `comments` | dropped | dropped |
+
+Four things to know before you build a screen on it:
+
+- **`null` means "no check is on file", never "nothing was found".** A transfer where the user chose
+  to skip the check has no record, and rendering that as a clean result invents a reassurance nobody
+  gave. Show nothing.
+- **The id is hashed, and it is matched verbatim** apart from a trim. `TRF-1` and `trf-1` are two
+  records; normalise your own reference before it gets here if its case can vary.
+- **`clear()` takes the records with it**, so a Tracive sign-out empties the cards on transactions
+  that are still in your history. That follows from whose data it is: the verdict was read under a
+  grant that no longer exists.
+- **Records are counted by `maxEntries`** and, with the defaults, evicted last: eviction drops
+  whatever is closest to expiry, and 90 days outlives every tier TTL. That ordering is a consequence
+  of the numbers, not a rule — raise a tier TTL above `transactionCheckRetention`, or lower the
+  retention below one, and records start going first. If you record more transactions than
+  `maxEntries`, raise it: an evicted cache entry costs a credit to replace and an evicted record
+  cannot be replaced at all.
+
+And the reason this lives in the SDK rather than in your backend: the partner terms forbid uploading
+Tracive results, derived values included — a risk tier and a report count are as much our database as
+the rows behind them. Local storage on the user's own device is the permitted place for them, which
+is exactly what these rows are. What may go to your server is the user's *decision*: `riskAccepted`,
+`riskAcceptedAt`. That is the audit trail you can defend, and it contains no result at all.
+
+---
+
 ## Invalidation on upgrade
 
 `CachePolicy.SCHEMA_VERSION` is the kill switch. Bump it whenever the cached payload's shape **or the
 folding grammar** changes, and every stored row is dropped on next open, under a fresh data key.
 
 The grammar half matters more than it looks. Entries written under old folding rules are keyed on
-strings the new rules would never produce, so without the bump they linger uselessly until their TTL
-expires — up to 30 days of answers nobody can look up.
+strings the new rules would never produce, so without the bump they linger uselessly until they
+expire — up to 30 days for a `HIGH` answer, and up to `transactionCheckRetention` for a record.
 
-There are no migrations and there will not be any. These rows are answers that can be re-fetched, so
-losing them costs credits and nothing else, whereas migrating them would mean decrypting under an old
-key and re-sealing under a new one: real risk in exchange for saving something disposable.
+There are no migrations and there will not be any. Cache entries are answers that can be re-fetched,
+so losing them costs credits and nothing else, whereas migrating them would mean decrypting under an
+old key and re-sealing under a new one: real risk in exchange for saving something disposable.
 
-The same discard path handles a lost data key, and for the same reason — the rows cannot be read, so
-there is nothing to preserve.
+The same discard path handles a lost data key — an OS keystore reset, a device restore, a biometric
+enrolment change — and for the same reason: the rows cannot be read, so there is nothing to preserve.
+
+**Transaction records go with them, and that half is not disposable.** The discard is one
+`deleteAll()` over the table, and by design there is no column that could tell the two kinds of row
+apart, so a schema bump or a lost data key empties the check card on every transaction in the user's
+history as well. A cache entry that goes costs one credit; a record that goes cannot be recovered at
+all. Two consequences worth planning around: bump `SCHEMA_VERSION` only when the payload shape or the
+folding grammar genuinely changed, and do not build a flow that *depends* on a record still being
+there — treat the card as something a transaction detail shows when it can, not as the audit trail.
+The audit trail is the `riskAccepted` / `riskAcceptedAt` pair on your own server.
 
 ---
 
