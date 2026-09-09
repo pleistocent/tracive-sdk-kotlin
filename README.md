@@ -53,7 +53,9 @@ If you find yourself wanting a place to put a key, you want Proxy mode, and it i
 
 ## Install
 
-Not published to Maven Central yet. Until it is, build it locally:
+Not published to Maven Central yet — the namespace still has to be verified with Sonatype, and
+[docs/RELEASING.md](docs/RELEASING.md) has that and the rest of the procedure. Until then, build
+it locally:
 
 ```bash
 ./gradlew :tracive-sdk:publishToMavenLocal
@@ -334,6 +336,7 @@ the point.
 - [docs/oauth.md](docs/oauth.md) — the PKCE flow, redirect handling, token storage, refresh
 - [docs/caching.md](docs/caching.md) — TTLs, encryption, invalidation, what is and is not stored
 - [docs/proxy-contract.md](docs/proxy-contract.md) — the phase 2 contract, written down early
+- [docs/RELEASING.md](docs/RELEASING.md) — cutting a release, and the Sonatype setup it still needs
 - [SECURITY.md](SECURITY.md) — reporting a vulnerability
 - [CHANGELOG.md](CHANGELOG.md)
 

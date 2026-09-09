@@ -20,6 +20,11 @@ on:
   # Manual only, so a run costs something only when someone asks for it. See the note above.
   workflow_dispatch:
 
+  # release.yml runs these same gates before it publishes anything. With automatic CI off, a
+  # release is otherwise cut from code nothing has checked — and the one moment the macOS minutes
+  # are worth spending is the moment the result goes to partners.
+  workflow_call:
+
 # A force-push or a quick second commit should not leave two runs racing for the same cache.
 # The in-progress run for a PR is cancelled; runs on main are not, so main keeps a full history.
 concurrency:

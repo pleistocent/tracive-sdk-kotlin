@@ -1,0 +1,243 @@
+name: Release
+
+# ---------------------------------------------------------------------------------------------
+# One dispatch cuts a whole release: gates, Maven Central, the tag, the GitHub release.
+#
+# The alternative — and what this repository had — is a README that tells partners to build the
+# SDK themselves. There was no publishing pipeline at all: `maven-publish` could reach
+# `mavenLocal()` and nothing else, no version was ever tagged, and `id.tracive` has never
+# existed on Maven Central.
+#
+# Read docs/RELEASING.md before the first run. Publishing needs four repository secrets and a
+# verified Sonatype namespace, and none of them exists yet — `dry_run` is the mode that works
+# today and it is worth using before the real one.
+# ---------------------------------------------------------------------------------------------
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, e.g. 0.1.0 — no "v" prefix'
+        required: true
+        type: string
+      dry_run:
+        description: 'Run every check and assemble the artifacts, but publish nothing and tag nothing'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  # Maven Central is immutable, so two runs of the same version must never overlap. Keyed on the
+  # version rather than the ref: two dispatches of 0.1.0 from different branches are still the
+  # same release.
+  group: release-${{ inputs.version }}
+  cancel-in-progress: false
+
+jobs:
+  # Everything that can be known in the first minute is checked in the first minute. The gates
+  # below this job take the better part of an hour on a macOS runner, and a version typo should
+  # not cost that.
+  preflight:
+    name: Preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Tags, so the "already released" check below can see them. Set explicitly rather than
+          # left to fall out of fetch-depth: without it the check silently passes on every run.
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Validate the version
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+          VERSION="${VERSION#v}"
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Invalid version '$VERSION' — expected x.y.z with no 'v' prefix"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Releasing $VERSION"
+
+      - name: The build agrees this is the version
+        run: |
+          # `tracive.version` is what ends up in the coordinates. A dispatch that disagrees with it
+          # would publish a different version from the one being asked for, under the tag that was
+          # asked for — the two would then disagree forever, because Central cannot be rewritten.
+          DECLARED="$(sed -n 's/^tracive\.version=//p' gradle.properties)"
+          if [ "$DECLARED" != "${{ steps.version.outputs.version }}" ]; then
+            echo "::error::gradle.properties says tracive.version=$DECLARED but this run asked for ${{ steps.version.outputs.version }} — bump one of them"
+            exit 1
+          fi
+
+      - name: The changelog has a section for this version
+        run: |
+          # The GitHub release body comes out of CHANGELOG.md, so a missing section is a release
+          # with no notes. It is also the check that catches the commonest mistake in this
+          # procedure: publishing with the changes still sitting under `## [Unreleased]`.
+          VERSION="${{ steps.version.outputs.version }}"
+          awk -v head="## [$VERSION]" '
+            index($0, head) == 1 { inside = 1; next }
+            inside && index($0, "## ") == 1 { exit }
+            inside { print }
+          ' CHANGELOG.md > release-notes.md
+          if [ ! -s release-notes.md ]; then
+            echo "::error::CHANGELOG.md has no '## [$VERSION]' section, or it is empty — move the entries out of [Unreleased] first"
+            exit 1
+          fi
+          echo "Release notes ($(wc -l < release-notes.md) lines):"
+          cat release-notes.md
+
+      - name: This version has not been released already
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if git rev-parse -q --verify "refs/tags/v$VERSION" >/dev/null; then
+            echo "::error::Tag v$VERSION already exists — bump the version"
+            exit 1
+          fi
+          url="https://repo1.maven.org/maven2/id/tracive/tracive-sdk/$VERSION/tracive-sdk-$VERSION.pom"
+          code="$(curl -sS -o /dev/null -w '%{http_code}' "$url" || echo 000)"
+          case "$code" in
+            200)
+              echo "::error::id.tracive:tracive-sdk:$VERSION is already on Maven Central. Central is immutable — bump the version"
+              exit 1
+              ;;
+            404) echo "Not on Maven Central yet, which is what we want" ;;
+            *) echo "::warning::Could not tell whether $VERSION is on Central (HTTP $code) — continuing; Central rejects a duplicate itself" ;;
+          esac
+
+      - name: Publishing credentials are present
+        if: ${{ !inputs.dry_run }}
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          SIGNING_IN_MEMORY_KEY: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
+          SIGNING_IN_MEMORY_KEY_PASSWORD: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
+        run: |
+          # A missing secret otherwise surfaces as a Gradle signing or auth failure at the very end
+          # of an hour-long build, where it reads like a code problem rather than repository setup.
+          missing=""
+          for name in MAVEN_CENTRAL_USERNAME MAVEN_CENTRAL_PASSWORD \
+                      SIGNING_IN_MEMORY_KEY SIGNING_IN_MEMORY_KEY_PASSWORD; do
+            [ -n "${!name}" ] || missing="$missing $name"
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::Missing repository secret(s):$missing — see docs/RELEASING.md"
+            exit 1
+          fi
+
+      - name: Keep the release notes for the publish job
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-notes
+          path: release-notes.md
+          retention-days: 1
+
+  # The same gates CI runs. They are not automatic in this repository — ci.yml is dispatch-only to
+  # keep metered macOS minutes down — so without this a release could be cut from code nothing has
+  # ever checked. This is the one run where the minutes are unarguable.
+  verify:
+    name: Verify
+    needs: preflight
+    uses: ./.github/workflows/ci.yml
+
+  publish:
+    name: Publish
+    needs: [preflight, verify]
+    runs-on: macos-15
+    timeout-minutes: 90
+    permissions:
+      # The tag and the GitHub release. Everything else in this workflow reads.
+      contents: write
+    env:
+      # vanniktech's plugin reads its credentials from Gradle properties, and ORG_GRADLE_PROJECT_*
+      # is how you supply one from the environment. Deliberately not a generated gradle.properties:
+      # a file cannot be masked in the log and outlives the step that wrote it.
+      ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+      ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+      ORG_GRADLE_PROJECT_signingInMemoryKey: ${{ secrets.SIGNING_IN_MEMORY_KEY }}
+      ORG_GRADLE_PROJECT_signingInMemoryKeyPassword: ${{ secrets.SIGNING_IN_MEMORY_KEY_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The exact commit this dispatch started from, not whatever main has become since. The
+          # tag created at the end of this job points at this same SHA, so the artifact on Central
+          # and the tag can never describe different trees.
+          ref: ${{ github.sha }}
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: true
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: release-notes
+
+      - name: Assemble the artifacts without publishing
+        if: ${{ inputs.dry_run }}
+        run: ./gradlew :tracive-sdk:publishToMavenLocal --no-daemon --stacktrace
+
+      - name: Publish to Maven Central
+        if: ${{ !inputs.dry_run }}
+        # `publishAndReleaseToMavenCentral`, not `publishToMavenCentral`: the plain task uploads the
+        # deployment as USER_MANAGED, and it then sits in the Central Portal until whoever owns the
+        # Sonatype account presses Publish — the one step in this pipeline a maintainer cannot
+        # perform. This task does the same upload and releases it. Central's validation still runs,
+        # so a deployment Central rejects fails this job rather than shipping.
+        #
+        # The same switch exists as `mavenCentralAutomaticPublishing=true`. The task is used instead
+        # so that what this run does is legible here, rather than in a property somebody has to go
+        # and look up.
+        run: ./gradlew :tracive-sdk:publishAndReleaseToMavenCentral --no-daemon --stacktrace
+
+      - name: Tag and create the GitHub release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.preflight.outputs.version }}
+        run: |
+          # After the publish, not before. Central is immutable and a tag is not: if this step fails
+          # the artifact is still out and the tag can be pushed by hand, which is the cheaper of the
+          # two half-states. The reverse order leaves a tag and a release announcing an artifact
+          # that does not exist.
+          git tag -a "v$VERSION" -m "v$VERSION" "${{ github.sha }}"
+          git push origin "v$VERSION"
+          gh release create "v$VERSION" \
+            --title "v$VERSION" \
+            --notes-file release-notes.md \
+            --verify-tag
+
+      - name: Summary
+        if: always()
+        env:
+          VERSION: ${{ needs.preflight.outputs.version }}
+        run: |
+          {
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              echo "### Dry run of $VERSION"
+              echo ""
+              echo "Every gate passed and the artifacts assembled. Nothing was published and nothing was tagged."
+            else
+              echo "### Released $VERSION"
+              echo ""
+              echo "\`id.tracive:tracive-sdk:$VERSION\` — Central accepted and released the deployment; there is no manual step left."
+              echo "Allow 15-30 minutes before Gradle can resolve it."
+              echo ""
+              echo "- [Central Portal](https://central.sonatype.com/artifact/id.tracive/tracive-sdk/$VERSION)"
+              echo "- [repo1](https://repo1.maven.org/maven2/id/tracive/tracive-sdk/$VERSION/)"
+              echo "- [GitHub release](https://github.com/pleistocent/tracive-sdk-kotlin/releases/tag/v$VERSION)"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
