@@ -1,0 +1,22 @@
+# Line endings, so a checkout on Windows builds the same as one on macOS.
+#
+# Git's own heuristic already treats these files as binary — the sample keystore holds a NUL byte
+# at offset 159, well inside the block Git inspects — but the heuristic is not the only thing in
+# play. A developer with `* text=auto eol=crlf` in a global config, or a tool that rewrites the
+# working tree, converts the 14 lone LF bytes inside that keystore into CRLF and the file grows by
+# 14 bytes. Gradle then fails with `Invalid keystore format` on that machine only, from a file the
+# diff says nobody touched. Naming them here removes the dependency on per-developer config.
+*.keystore binary
+*.jks binary
+*.p12 binary
+gradle-wrapper.jar binary
+
+# `gradlew` is run by a Unix shell, including Git Bash and WSL on Windows. Checked out with CRLF —
+# which `core.autocrlf=true` does by default there — it dies with `bad interpreter: /bin/sh^M`.
+gradlew text eol=lf
+
+# `gradlew.bat` is the mirror case: cmd.exe mis-parses a batch file that has no CRLF. This must be
+# `eol=crlf` and not `-text`: the committed blob is LF-only — it was normalised on the way in by a
+# `core.autocrlf=input` machine — so "leave the bytes as they are" would hand Windows precisely the
+# file that breaks there. `eol=crlf` restores the line endings at checkout whatever the blob holds.
+*.bat text eol=crlf

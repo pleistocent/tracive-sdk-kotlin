@@ -36,6 +36,31 @@ android {
     manifestPlaceholders["traciveRedirectHost"] = "oauth"
   }
 
+  // Checked in rather than left to the debug keystore AGP generates per machine in
+  // `~/.android/debug.keystore` (`%USERPROFILE%\.android` on Windows). That one differs for every
+  // developer, so an APK built on the Mac will not install over one built on the Windows box —
+  // `INSTALL_FAILED_UPDATE_INCOMPATIBLE`, which reads as a broken build rather than a different
+  // signer. Committed, the sample has one certificate everywhere, and one SHA-256 to hand to
+  // Tracive if you ever move the redirect from a private-use scheme to an App Link:
+  // F1:54:F3:D6:80:9E:B1:79:00:91:6A:33:DF:78:39:4A:A8:AD:C5:67:04:44:ED:C0:D8:61:37:9E:9D:BA:F9:F1
+  //
+  // Committable only because it is the well-known Android debug identity — alias
+  // `androiddebugkey`, password `android` — which Play rejects on upload. `.gitignore` still blocks
+  // every other keystore in the tree; this file is its single negation.
+  //
+  // TODO(partner): a release keystore of your own, kept outside version control and read from
+  // `local.properties` or an environment variable.
+  signingConfigs {
+    getByName("debug") {
+      // Resolved against this module rather than the working directory, so the path is the same
+      // whether Gradle was invoked from the repo root or from here, on either OS.
+      storeFile = layout.projectDirectory.file("debug.keystore").asFile
+      storePassword = "android"
+      keyAlias = "androiddebugkey"
+      keyPassword = "android"
+    }
+  }
+
   buildTypes {
     release {
       isMinifyEnabled = false

@@ -44,8 +44,8 @@ Pods/
 *.swp
 *~
 
-# Secrets. Nothing in this repo should need any of these — the SDK has no API key, and there is
-# nothing to sign or publish yet — but a keystore or a service-account JSON that lands here by
+# Secrets. The SDK has no API key, and the GPG key that signs a release lives in GitHub Actions
+# secrets rather than here — but a keystore or a service-account JSON that lands in the tree by
 # accident must not be committable.
 *.jks
 *.keystore
@@ -53,3 +53,10 @@ google-services.json
 *.p12
 *.p8
 secrets.properties
+
+# One exception, and it is not a secret: the sample's debug identity. Alias `androiddebugkey`,
+# password `android` — the well-known pair every Android SDK installation generates, and one Play
+# rejects on upload. It is committed so the sample is signed by the same certificate on macOS,
+# Windows and CI; see samples/androidApp/build.gradle.kts for why that matters. A negation, so
+# every other keystore stays blocked.
+!samples/androidApp/debug.keystore
