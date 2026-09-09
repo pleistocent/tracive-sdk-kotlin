@@ -1,8 +1,10 @@
 # Releasing the Kotlin SDK
 
-Anyone with **write** access to this repository can cut a complete release: the gates, Maven
-Central, the tag and the GitHub release all come out of one workflow dispatch. Nothing in the
-procedure needs the repository owner or a Sonatype login.
+A **maintainer** of this repository can cut a complete release: the gates, Maven Central, the tag
+and the GitHub release all come out of one workflow dispatch. Nothing in the procedure needs the
+repository owner or a Sonatype login.
+
+Maintainer means `admin` or `maintain` — see [Who can release](#who-can-release).
 
 Two things have to be set up once before the first real release, and neither is done yet. Read
 [Before the first release](#before-the-first-release) before you try.
@@ -75,10 +77,25 @@ perform, and the reason a release could previously be started but not finished. 
 validation still runs either way, so a deployment Central rejects fails the job rather than
 shipping.
 
-If you want a checkpoint back, a GitHub
+That removes the second pair of eyes, and the only thing standing in for it is who is allowed to
+start the run — see below.
+
+## Who can release
+
+The `authorize` job runs first and fails the workflow unless the person who dispatched it is
+`admin` or `maintain` on this repository. `workflow_dispatch` already requires write access, so
+what this adds is the gap between "anyone who can push" and "someone who owns this package".
+
+The native way to express this would be a GitHub
 [environment](https://docs.github.com/en/actions/how-tos/deploy/configure-and-manage-deployments/manage-environments)
-with a required reviewer on the `publish` job gives you an approve button without putting the
-Sonatype login back in the loop.
+with required reviewers on the `publish` job, which would also give an approve button. It is not
+available: environments on a **private** repository need GitHub Pro or Team, and the organisation
+that owns this one is on Free. If the plan changes, an environment is the better mechanism — it is
+enforced by GitHub rather than by a step, and it survives someone editing the workflow.
+
+Granting a collaborator `maintain` rather than `write` is what makes them a releaser. Both current
+collaborators are `admin`, so the rule changes nothing today; it is there for the first person
+added with `write`.
 
 ## When something goes half-wrong
 
