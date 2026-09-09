@@ -11,6 +11,8 @@ compose-bom = "2025.11.00"
 # Compose Multiplatform, for the iOS sample only. The Android sample uses AGP's Jetpack Compose
 # instead, which is a different artifact set with a different version line.
 compose-multiplatform = "1.12.0"
+# material3 moved to its own version line, so it does not track the rest of Compose Multiplatform.
+compose-multiplatform-material3 = "1.9.0"
 coroutines = "1.11.0"
 # kotlinx-datetime is pinned to 0.6.x on purpose. From 0.7.0 `kotlinx.datetime.Instant` becomes a
 # deprecated typealias for `kotlin.time.Instant`, and its kotlinx-serialization support moves with
@@ -45,6 +47,10 @@ sqldelight-runtime = { module = "app.cash.sqldelight:runtime", version.ref = "sq
 sqldelight-coroutines = { module = "app.cash.sqldelight:coroutines-extensions", version.ref = "sqldelight" }
 sqldelight-driver-android = { module = "app.cash.sqldelight:android-driver", version.ref = "sqldelight" }
 sqldelight-driver-native = { module = "app.cash.sqldelight:native-driver", version.ref = "sqldelight" }
+
+compose-foundation = { module = "org.jetbrains.compose.foundation:foundation", version.ref = "compose-multiplatform" }
+compose-material3 = { module = "org.jetbrains.compose.material3:material3", version.ref = "compose-multiplatform-material3" }
+compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }

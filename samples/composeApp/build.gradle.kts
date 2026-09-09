@@ -55,9 +55,9 @@ kotlin {
       // resolves sits next to the `force` above rather than only in a dependency report.
       implementation(libs.kotlinx.datetime)
 
-      implementation(compose.runtime)
-      implementation(compose.foundation)
-      implementation(compose.material3)
+      implementation(libs.compose.runtime)
+      implementation(libs.compose.foundation)
+      implementation(libs.compose.material3)
     }
 
     // The SQLite driver is the host app's to choose, so the SDK does not force one. Each platform
