@@ -134,7 +134,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "# Compiles the Kotlin/Compose sources for whichever SDK and architecture Xcode is\n# building, and drops TraciveSample.framework into BUILT_PRODUCTS_DIR. It has to run\n# before Compile Sources, because Swift imports that framework.\ncd \"$SRCROOT/../..\"\n./gradlew :samples:composeApp:embedAndSignAppleFrameworkForXcode\n";
+			shellScript = "if [ \"YES\" = \"$OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED\" ]; then\n  echo \"Skipping Gradle build task invocation due to OVERRIDE_KOTLIN_BUILD_IDE_SUPPORTED environment variable set to \\\"YES\\\"\"\n  exit 0\nfi\n# Compiles the Kotlin/Compose sources for whichever SDK and architecture Xcode is\n# building, and drops TraciveSample.framework into BUILT_PRODUCTS_DIR. It has to run\n# before Compile Sources, because Swift imports that framework.\ncd \"$SRCROOT/../..\"\n./gradlew :samples:composeApp:embedAndSignAppleFrameworkForXcode";
 		};
 /* End PBXShellScriptBuildPhase section */
 

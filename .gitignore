@@ -60,3 +60,7 @@ secrets.properties
 # Windows and CI; see samples/androidApp/build.gradle.kts for why that matters. A negation, so
 # every other keystore stays blocked.
 !samples/androidApp/debug.keystore
+
+# Python bytecode. `tools/__pycache__` was committed once; it is build output, not source.
+__pycache__/
+*.pyc

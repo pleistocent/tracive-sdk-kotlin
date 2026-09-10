@@ -10,6 +10,22 @@
   <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
+  <!--
+    The home-screen label, and it has to be spelled out here. `CFBundleName` below resolves to
+    PRODUCT_NAME, which this project leaves at `$(TARGET_NAME)` — so without this key the sample
+    installs as "iosApp". A partner evaluating the SDK sees that name before anything else.
+
+    Kept short on purpose. iOS tightens the tracking on a home-screen label that does not fit
+    and then truncates it, and it tightens far enough that the spaces disappear: "Tracive SDK
+    Sample" at 18 characters rendered as "TraciveSDKSa…", which reads like a typo rather than a
+    long name. 15 characters still renders in full, so the ceiling is somewhere between the two.
+
+    The name says the platform rather than repeating "SDK", which the icon's ribbon already
+    carries — and "Tracive Flutter SDK", the matching name for the Flutter example, would be 19
+    characters and land back in the broken range.
+  -->
+  <key>CFBundleDisplayName</key>
+  <string>Tracive KMP</string>
   <key>CFBundleName</key>
   <string>$(PRODUCT_NAME)</string>
   <key>CFBundlePackageType</key>

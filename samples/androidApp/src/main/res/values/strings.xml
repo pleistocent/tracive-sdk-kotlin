@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <string name="app_name">Tracive SDK Sample</string>
+  <!--
+    The launcher label, and it matches the iOS sample's CFBundleDisplayName on purpose. Names
+    the platform rather than repeating "SDK", which the icon's ribbon already carries, so this
+    sample and the Flutter SDK's example are told apart on a device holding both.
+  -->
+  <string name="app_name">Tracive KMP</string>
 </resources>
