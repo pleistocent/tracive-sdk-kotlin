@@ -58,11 +58,18 @@ data class CheckResult(
    *
    * Multi-currency by construction: sums across currencies are meaningless, so the server never
    * collapses them and neither should a UI.
+   *
+   * Empty when nothing was reported — including when the server says so by sending `null`, which it
+   * does on every miss (see [NullTolerantCurrencyMap]).
    */
-  @SerialName("fraudAmount") val fraudAmount: Map<String, Double> = emptyMap(),
+  @SerialName("fraudAmount")
+  @Serializable(with = NullTolerantCurrencyMap::class)
+  val fraudAmount: Map<String, Double> = emptyMap(),
 
-  /** Server-assigned labels for the kind of fraud reported. */
-  @SerialName("tags") val tags: List<String> = emptyList(),
+  /** Server-assigned labels for the kind of fraud reported. Empty when the server sends `null`. */
+  @SerialName("tags")
+  @Serializable(with = NullTolerantStringList::class)
+  val tags: List<String> = emptyList(),
 
   /**
    * How many other flagged identifiers the server has linked to this one.
