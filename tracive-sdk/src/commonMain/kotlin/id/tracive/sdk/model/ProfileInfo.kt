@@ -30,6 +30,8 @@ data class ProfileInfo(
   /** Subscription tier. A `String` for the same reason as [CreditsInfo.tier]. */
   @SerialName("tier") val tier: String? = null,
 
-  /** When the account was created, when shared. */
-  @SerialName("memberSince") val memberSince: Instant? = null,
+  /** When the account was created, when shared. Sent as a date; see [DateOrInstantSerializer]. */
+  @SerialName("memberSince")
+  @Serializable(with = DateOrInstantSerializer::class)
+  val memberSince: Instant? = null,
 )
