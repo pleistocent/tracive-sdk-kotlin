@@ -83,6 +83,12 @@ const ALLOWED_PLEISTOCENT_PATTERNS = [
   // The copyright holder in a licence header. Legitimate, and the reason widening this scan to
   // extension-less files surfaced LICENSE on the first run.
   /Copyright \d{4} (?:PT )?Pleistocent(?:[A-Za-z ]*)?(?![A-Za-z0-9._-])/g,
+
+  // The registered company's full legal name, which the published POM names as the developer's
+  // organisation. Exact, so the token in any other shape — an internal project or repository name —
+  // still fails. A full stop may end a sentence after it; a dot that continues into a host or an id
+  // may not.
+  /PT Pleistocent Teknologi Nusantara(?![A-Za-z0-9_-]|\.[A-Za-z0-9])/g,
   /com\.pleistocent\.tracive(?:\.[A-Za-z0-9_]+)*(?![A-Za-z0-9._-])/g,
   /github\.com\/pleistocent\/tracive-sdk-kotlin(\.git)?(?![A-Za-z0-9._-])/g,
   /pleistocent\/tracive-sdk-kotlin(?![A-Za-z0-9._-])/g,
