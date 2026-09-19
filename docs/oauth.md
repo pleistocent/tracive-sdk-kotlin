@@ -357,10 +357,10 @@ retry.** Send the user through `authorize()` again.
 
 ```kotlin
 client.signOut()
-client.cache.clear()
 ```
 
-`signOut()` POSTs to `/oauth/revoke` best-effort, then clears local tokens **regardless of outcome**.
+`signOut()` POSTs to `/oauth/revoke` best-effort, then clears local tokens **regardless of outcome**,
+and empties the result cache.
 The unconditional local clear is deliberate: a revoke that fails because the device is offline must
 still leave the user signed out here. Leaving a live refresh token behind because a network call
 failed is the wrong side to err on.

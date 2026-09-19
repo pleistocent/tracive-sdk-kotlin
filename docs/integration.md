@@ -366,11 +366,12 @@ retries only when you passed a key; one key per logical check, reused only to re
 ## 8. Sign-out
 
 ```kotlin
-client.signOut()        // best-effort revoke, then clears local tokens regardless of outcome
-client.cache.clear()    // the entries belong to the user who was authorised when they were fetched
+client.signOut()   // best-effort revoke, then clears local tokens and the cache regardless of outcome
 ```
 
-Clear the cache. The next user of the device must not inherit the previous one's answers.
+`signOut()` empties the cache as well: its entries belong to the user who was authorised when they
+were fetched, and the next user of the device must not inherit them. `client.clearCache()` does the
+same on its own, for a user who stays signed in but wants their history gone.
 
 ## 9. Testing your integration
 

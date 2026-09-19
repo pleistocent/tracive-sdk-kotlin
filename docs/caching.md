@@ -285,7 +285,7 @@ If a future version needs to cache full-detail content, **the key must become th
 client.cache.get(query)     // null on miss/expired/unreadable — all three are the same to a caller
 client.cache.put(query, r)
 client.cache.remove(query)
-client.cache.clear()        // call this on sign-out
+client.cache.clear()        // signOut() already does this
 client.cache.prune()
 client.cache.size()
 
