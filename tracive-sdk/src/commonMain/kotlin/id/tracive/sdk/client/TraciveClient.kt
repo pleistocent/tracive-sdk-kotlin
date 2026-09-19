@@ -73,13 +73,13 @@ import kotlinx.serialization.DeserializationStrategy
  *
  * ### phase 1 scope
  *
- * The backend Open API is not live yet, and only [TraciveMode.OAuth] is implemented. Every call in
- * [TraciveMode.Proxy] throws [TraciveException.NotImplemented]; the mode exists in the surface now
- * so that adding it in phase 2 breaks no one.
+ * Only [TraciveMode.OAuth] is implemented. Every call in [TraciveMode.Proxy] throws
+ * [TraciveException.NotImplemented]; the mode is in the surface already, so adding it in phase 2
+ * breaks no one.
  *
- * @param transport the HTTP seam. Injecting one is how the whole SDK is tested without a server —
- *   which matters more than usual here, because there is no server to test against yet. The default
- *   builds a [KtorTransport] lazily, on first use.
+ * @param transport the HTTP seam. Injecting one is how the whole SDK is tested without a server, so
+ *   no test depends on either environment being up. The default builds a [KtorTransport] lazily, on
+ *   first use.
  * @param clock test seam for TTL and token-expiry arithmetic.
  * @param cache where results are kept between calls. Defaults to [DisabledCheckCache]: the
  *   persistent cache needs a platform database and a platform key store, which a host wires up and

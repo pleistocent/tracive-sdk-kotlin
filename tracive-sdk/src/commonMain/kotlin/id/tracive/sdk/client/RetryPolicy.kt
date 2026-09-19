@@ -25,11 +25,11 @@ import kotlin.time.Duration.Companion.seconds
  *
  * ### The numbers, and why they are these numbers
  *
- * Every Tracive SDK ships this same set. None of them was derived from production data — there is
- * no production yet — so what follows is the reasoning, written down so the next person can
- * disagree with an argument rather than quietly pick different values. Four SDKs drifting into four
- * sets of these numbers is what actually happened, and it happened because nobody wrote this
- * section.
+ * Every Tracive SDK ships this same set. None of them was derived from production traffic — they
+ * were chosen before there was any — so what follows is the reasoning, written down so the next
+ * person can disagree with an argument rather than quietly pick different values. Four SDKs
+ * drifting into four sets of these numbers is what actually happened, and it happened because
+ * nobody wrote this section.
  *
  * - **3 attempts.** One try plus two retries rides out a single unhealthy instance or a rolling
  *   redeploy, which is what a retry can fix. A fourth does not fix an outage; it only makes the app

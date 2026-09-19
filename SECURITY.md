@@ -96,7 +96,7 @@ Pre-1.0. Fixes land on the latest `0.x` and there is no backport branch yet.
 
 ## A note on what "secure" means here
 
-The backend Open API is not live. Nothing in this SDK has yet been exercised against a real server, a
-real token endpoint, or real adversarial traffic. The local half — the cache, the folding grammar, the
-error mapping — is tested and reviewed; the integrated whole is not, because there is nothing to
-integrate with. Weigh a deployment decision accordingly.
+Both environments of the Open API are live, but this SDK has seen little of them: it has not been
+through a review against the real token endpoint or against real adversarial traffic. The local half
+— the cache, the folding grammar, the error mapping — is tested and reviewed; the integrated whole
+has had far less exposure. Weigh a deployment decision accordingly.

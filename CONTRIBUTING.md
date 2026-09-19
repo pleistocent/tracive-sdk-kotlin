@@ -61,7 +61,8 @@ the suite did not run and the build was green anyway.
   breaks on the other is exactly what a multiplatform SDK exists to catch early.
 - **`./gradlew build` for every target**, including the ones no test runs on.
 
-Nothing needs network access. The Tracive API is not live, and every test injects a fake transport.
+Nothing needs network access. Every test injects a fake transport, so the suite never depends on
+either Tracive environment being up.
 
 ---
 

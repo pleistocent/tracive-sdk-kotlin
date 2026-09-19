@@ -132,5 +132,4 @@ with far broader access than a phone.
 ## Until then
 
 `TraciveMode.Proxy` is safe to reference, construct and pass around. It is not safe to call. If you
-are choosing a mode today, the answer is OAuth — and the backend for that is not live yet either. See
-the [README](../README.md) status section.
+are choosing a mode today, the answer is OAuth. See the [README](../README.md) status section.

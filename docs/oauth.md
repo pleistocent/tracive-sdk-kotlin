@@ -3,8 +3,9 @@
 The only authentication mode phase 1 implements. OAuth 2.0 authorization code with PKCE, against the
 Tracive app on the same device.
 
-> **The authorization endpoint is not live yet.** The flow below is implemented and unit-tested
-> against an injected transport; it will not complete against a real server until the backend ships.
+> **Consent happens in the build of the Tracive app that matches your environment** — the sandbox
+> build for `TraciveEnvironment.Sandbox` — and the redirect must be registered on the client id
+> issued in that environment.
 
 ---
 
@@ -397,7 +398,7 @@ val oauth = TraciveOAuth(
 
 Every seam the flow needs is a constructor parameter — presence check, launcher, transport, token
 store, clock — so the whole thing runs with no browser, no device and no network. That is how the
-suite in this repo tests it, and there is no server to test against anyway.
+suite in this repo tests it, without depending on either environment being up.
 
 **Call `oauth.close()` on any `TraciveOAuth` you built yourself without passing a `transport`.**
 Without one it lazily builds its own HTTP client and owns it — on Android that is an OkHttp

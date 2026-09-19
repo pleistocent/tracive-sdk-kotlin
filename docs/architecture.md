@@ -8,9 +8,9 @@ Two things to keep in mind while reading, because they explain most of the shape
 
 - **A request that reaches the server is billed, a miss included.** That is why validation happens
   before the network, why folding happens on the device, and why the cache exists at all.
-- **The backend Open API is not live yet.** The paths in these diagrams are the ones the SDK builds
-  and the ones its tests drive against an injected transport; see the status section in the
-  [README](../README.md).
+- **The tests never reach a server.** The paths in these diagrams are the ones the SDK builds and
+  the ones its tests drive against an injected transport, in either environment; see the status
+  section in the [README](../README.md).
 
 ---
 

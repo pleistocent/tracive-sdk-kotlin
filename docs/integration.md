@@ -2,9 +2,9 @@
 
 Wiring the Tracive SDK into an Android or iOS app, end to end.
 
-> **The backend Open API is not live yet.** Everything below is correct against the frozen contract,
-> and the local half of it — query folding, the cache, error mapping — works today. Calls that need
-> the network will fail until the API ships. See the [README](../README.md) status section.
+> **Build against sandbox first.** Sandbox and production are separate registrations: each needs a
+> client id issued for it, with your redirect registered on that client, and a sandbox client id is
+> unknown to production. See the [README](../README.md) status section.
 
 ---
 
@@ -374,7 +374,8 @@ Clear the cache. The next user of the device must not inherit the previous one's
 
 ## 9. Testing your integration
 
-There is no server, so test against the seam:
+Test against the seam rather than a server: a suite that reaches either environment fails whenever
+that environment is down or mid-deploy.
 
 ```kotlin
 class FakeTransport(private val response: HttpResponse) : HttpTransport {
