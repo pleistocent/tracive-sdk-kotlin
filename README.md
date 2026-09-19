@@ -13,21 +13,21 @@ if (result.riskTier == RiskTier.HIGH) {
 
 ## Status — read this before you plan around it
 
-**phase 1 is OAuth mode only, and the backend Open API is not live yet.**
+**phase 1 is OAuth mode only.**
 
 Three separate facts, none of which this README will pretend otherwise about:
 
-1. **There is no server.** No `/v1/*` routes are live, and the consent endpoint this SDK opens does
-   not exist in the Tracive backend yet. `https://api.tracive.id/v1` does not answer. Every method
-   on this SDK that needs the network will fail until it does. That is expected, not a bug to
-   report.
+1. **Sandbox and production are separate registrations.** Both environments answer —
+   `https://api-sandbox.tracive.id/v1` and `https://api.tracive.id/v1`, with consent in the matching
+   build of the Tracive app — and each needs a client id issued for it, with your redirect registered
+   on that client. A sandbox client id is unknown to production. Build against
+   `TraciveEnvironment.Sandbox`; `Production` is the default.
 2. **Proxy mode is phase 2.** `TraciveMode.Proxy` exists in the public surface today so that adding
    the behaviour later is not a breaking change for anyone. Any call made in Proxy mode throws
    `TraciveException.NotImplemented` right now. See [docs/proxy-contract.md](docs/proxy-contract.md).
-3. **What *is* finished and useful today** is everything that does not need a server: query folding
-   and validation, the encrypted on-device cache with its TTL policy, error mapping, and the OAuth
-   flow up to the point where it hands off to a live authorization endpoint. All of it is covered by
-   tests that run with no network at all.
+3. **The test suite never touches the network.** Query folding and validation, the encrypted
+   on-device cache with its TTL policy, error mapping and the OAuth flow are all covered against an
+   injected fake transport, so the suite needs no server and no credentials.
 
 Version `0.1.0`. SemVer, and `0.x` means the surface can still move — it is frozen against the
 cross-language contract shared with the Flutter and Swift SDKs, not against you, until `1.0.0`.
