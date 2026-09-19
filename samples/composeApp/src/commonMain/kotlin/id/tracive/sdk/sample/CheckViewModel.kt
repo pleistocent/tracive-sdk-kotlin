@@ -242,8 +242,7 @@ internal class CheckViewModel(
       is TraciveException.DetailNotPermitted -> "This client may not request full detail."
       is TraciveException.CacheMiss -> "Nothing cached for that identifier yet."
       is TraciveException.NotImplemented -> error.message ?: "Not available in this release."
-      is TraciveException.Network ->
-        "Could not reach Tracive. Note that the Open API is not live yet, so this is expected today."
+      is TraciveException.Network -> "Could not reach Tracive. Check the connection and try again."
       is TraciveException.Server -> "Tracive had a server error (${error.httpStatus})."
       else -> error.message ?: "The check failed."
     }

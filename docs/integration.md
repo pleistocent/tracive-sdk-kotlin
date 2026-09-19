@@ -428,6 +428,14 @@ leave the OS to pick which receives the authorization code.
 Each environment is a separate registration with Tracive: a sandbox client id is unknown to
 production. Register each flavor's redirect on the client id for that environment.
 
+Ran the sample before it had flavors? Uninstall `id.tracive.sdk.sample` once. That build talked to
+sandbox, so it holds a sandbox grant and sandbox verdicts, and the production build installs over
+it under the same id.
+
+Debug builds trust user-installed CAs (`res/xml/network_security_config.xml`), so an HTTPS proxy
+such as Proxyman or Charles can read and mock either environment's traffic once its CA is
+installed on the device. Release builds trust the system store only.
+
 ```bash
 ./gradlew :samples:androidApp:installSandboxDebug      # or installProductionDebug
 ./gradlew :samples:composeApp:linkDebugFrameworkIosSimulatorArm64   # the iOS framework
