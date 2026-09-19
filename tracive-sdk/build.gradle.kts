@@ -1,3 +1,5 @@
+import com.vanniktech.maven.publish.JavadocJar
+import com.vanniktech.maven.publish.KotlinMultiplatform
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -5,7 +7,7 @@ plugins {
   alias(libs.plugins.androidKotlinMultiplatformLibrary)
   alias(libs.plugins.kotlinSerialization)
   alias(libs.plugins.sqldelight)
-  `maven-publish`
+  alias(libs.plugins.mavenPublish)
 }
 
 group = providers.gradleProperty("tracive.group").get()
@@ -139,34 +141,62 @@ sqldelight {
   }
 }
 
-publishing {
-  publications.withType<MavenPublication>().configureEach {
-    pom {
-      name.set("Tracive SDK")
-      description.set(
-        "Kotlin Multiplatform client for the Tracive scammer-check Open API (phase 1, OAuth mode)."
-      )
+/*
+ * Publishing to Maven Central.
+ *
+ * The plain `maven-publish` plugin that used to be here could reach `mavenLocal()` and nothing
+ * else: no signing, no sources or javadoc jar, no Central upload. Partners were told to build the
+ * SDK themselves, which is not an install instruction.
+ *
+ * `publishToMavenCentral()` uploads a Central Portal deployment. `mavenCentralAutomaticPublishing`
+ * — set by the release workflow, see docs/RELEASING.md — decides whether Central releases it or
+ * parks it in the Portal waiting for whoever owns the Sonatype account to press Publish. It is
+ * deliberately not set here: a `publishToMavenCentral` run from a laptop should not be able to put
+ * an artifact in front of partners without a second look.
+ *
+ * The POM is not decoration. Central validates it and rejects a deployment missing any of name,
+ * description, url, licence, developers or scm — `developers` is the one this block did not have.
+ */
+mavenPublishing {
+  // JavadocJar.Empty(), not Dokka: Central requires a javadoc artifact to exist, not to contain
+  // anything, and the documentation partners actually read is docs/ and the KDoc in the sources
+  // jar. Adding Dokka would put a second documentation engine on the release critical path.
+  configure(KotlinMultiplatform(javadocJar = JavadocJar.Empty()))
+
+  coordinates(group.toString(), "tracive-sdk", version.toString())
+
+  publishToMavenCentral()
+
+  // Central rejects an unsigned deployment outright, so this is not optional for a release. The
+  // release workflow supplies the key in memory; a local `publishToMavenLocal` signs with whatever
+  // key gpg-agent offers.
+  signAllPublications()
+
+  pom {
+    name.set("Tracive SDK")
+    description.set(
+      "Kotlin Multiplatform client for the Tracive scammer-check Open API (phase 1, OAuth mode)."
+    )
+    url.set("https://github.com/pleistocent/tracive-sdk-kotlin")
+    licenses {
+      license {
+        name.set("The Apache License, Version 2.0")
+        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+      }
+    }
+    developers {
+      developer {
+        id.set("tracive")
+        name.set("Tracive")
+        email.set("developer@pleistocent.com")
+        organization.set("PT Pleistocent Teknologi Nusantara")
+        organizationUrl.set("https://tracive.id")
+      }
+    }
+    scm {
       url.set("https://github.com/pleistocent/tracive-sdk-kotlin")
-      licenses {
-        license {
-          name.set("The Apache License, Version 2.0")
-          url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-        }
-      }
-      // Maven Central rejects a POM without at least one developer.
-      developers {
-        developer {
-          id.set("tracive")
-          name.set("Tracive")
-          email.set("developer@pleistocent.com")
-          organization.set("PT Pleistocent Teknologi Nusantara")
-          organizationUrl.set("https://tracive.id")
-        }
-      }
-      scm {
-        url.set("https://github.com/pleistocent/tracive-sdk-kotlin")
-        connection.set("scm:git:https://github.com/pleistocent/tracive-sdk-kotlin.git")
-      }
+      connection.set("scm:git:https://github.com/pleistocent/tracive-sdk-kotlin.git")
+      developerConnection.set("scm:git:ssh://git@github.com/pleistocent/tracive-sdk-kotlin.git")
     }
   }
 }

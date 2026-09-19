@@ -22,6 +22,7 @@ datetime = "0.6.2"
 kotlin = "2.3.21"
 ktfmt = "0.26.0"
 ktor = "3.5.0"
+mavenPublish = "0.37.0"
 serialization = "1.11.0"
 sqldelight = "2.3.2"
 
@@ -77,4 +78,5 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-mu
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 ktfmt = { id = "com.ncorti.ktfmt.gradle", version.ref = "ktfmt" }
+mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "mavenPublish" }
 sqldelight = { id = "app.cash.sqldelight", version.ref = "sqldelight" }
