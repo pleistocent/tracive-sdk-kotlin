@@ -33,7 +33,9 @@ class MainActivity : ComponentActivity() {
    *
    * [SampleHost] is the shared sample's Android entry point; the screen itself is common code.
    */
-  private val host by lazy { SampleHost(this) }
+  private val host by lazy {
+    SampleHost(this, flavor = BuildConfig.FLAVOR, redirectUri = BuildConfig.TRACIVE_REDIRECT_URI)
+  }
 
   override fun onCreate(savedInstanceState: Bundle?) {
     // At targetSdk 35 and above the platform draws this window behind the system bars and ignores

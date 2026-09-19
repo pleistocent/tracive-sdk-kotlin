@@ -23,9 +23,11 @@
     The name says the platform rather than repeating "SDK", which the icon's ribbon already
     carries — and "Tracive Flutter SDK", the matching name for the Flutter example, would be 19
     characters and land back in the broken range.
+
+    Per flavor, from Config/*.xcconfig: "Tracive KMP" for Production, "KMP Sandbox" for Sandbox.
   -->
   <key>CFBundleDisplayName</key>
-  <string>Tracive KMP</string>
+  <string>$(TRACIVE_DISPLAY_NAME)</string>
   <key>CFBundleName</key>
   <string>$(PRODUCT_NAME)</string>
   <key>CFBundlePackageType</key>
@@ -68,15 +70,25 @@
   </array>
 
   <!--
-    The OAuth redirect target, and it must match TraciveSample.REDIRECT_URI exactly.
+    Which Tracive environment this build talks to, and the redirect the SDK is configured with.
+    TraciveSample.ios.kt reads both. The redirect is assembled here from the same scheme that
+    CFBundleURLTypes below registers, so the two cannot drift apart.
+  -->
+  <key>TraciveEnvironment</key>
+  <string>$(TRACIVE_ENVIRONMENT)</string>
+  <key>TraciveRedirectURI</key>
+  <string>$(TRACIVE_REDIRECT_SCHEME)://oauth/callback</string>
+
+  <!--
+    The OAuth redirect target. The scheme is per flavor, set in Config/*.xcconfig.
 
     A private-use URI scheme, which RFC 8252 permits for a native app that controls no web domain.
     Any app on the device may declare the same scheme, so a partner who controls a domain should
     use a Universal Link instead — an `applinks:` entitlement plus an apple-app-site-association
     file on that host, which cannot be claimed by anyone else.
 
-    TODO(partner): your own scheme, or delete this block entirely and add the `applinks:`
-    entitlement for a host you own. Keep TraciveSample.REDIRECT_URI in step either way.
+    TODO(partner): your own scheme in Config/*.xcconfig, or delete this block entirely and add the
+    `applinks:` entitlement for a host you own, pointing TraciveRedirectURI above at it.
   -->
   <key>CFBundleURLTypes</key>
   <array>
@@ -84,10 +96,10 @@
       <key>CFBundleTypeRole</key>
       <string>Editor</string>
       <key>CFBundleURLName</key>
-      <string>id.tracive.sdk.sample.oauth</string>
+      <string>$(PRODUCT_BUNDLE_IDENTIFIER).oauth</string>
       <key>CFBundleURLSchemes</key>
       <array>
-        <string>tracive-sample</string>
+        <string>$(TRACIVE_REDIRECT_SCHEME)</string>
       </array>
     </dict>
   </array>

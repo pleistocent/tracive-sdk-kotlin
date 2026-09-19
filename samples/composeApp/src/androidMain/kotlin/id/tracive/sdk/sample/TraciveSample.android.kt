@@ -19,14 +19,22 @@ import kotlinx.coroutines.Dispatchers
  */
 @Volatile private var instance: TraciveClient? = null
 
-/** The shared client, built on first use. */
-fun traciveClient(context: Context): TraciveClient =
+/**
+ * The shared client, built on first use.
+ *
+ * [flavor] and [redirectUri] are `BuildConfig.FLAVOR` and `BuildConfig.TRACIVE_REDIRECT_URI` of the
+ * app module, which this library module cannot see for itself.
+ */
+fun traciveClient(context: Context, flavor: String, redirectUri: String): TraciveClient =
   instance
     ?: synchronized(TraciveSample) {
-      instance ?: create(context.applicationContext).also { instance = it }
+      instance
+        ?: create(context.applicationContext, SampleFlavor.named(flavor), redirectUri).also {
+          instance = it
+        }
     }
 
-private fun create(context: Context): TraciveClient {
+private fun create(context: Context, flavor: SampleFlavor, redirectUri: String): TraciveClient {
   val driver =
     AndroidSqliteDriver(
       schema = SqlDelightCheckCache.Schema,
@@ -50,5 +58,5 @@ private fun create(context: Context): TraciveClient {
       ioContext = Dispatchers.IO,
     )
 
-  return TraciveSample.client(cache)
+  return TraciveSample.client(cache, flavor, redirectUri)
 }

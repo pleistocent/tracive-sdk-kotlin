@@ -1,0 +1,15 @@
+// The Sandbox scheme's build settings: Debug-Sandbox and Release-Sandbox are based on this file.
+//
+// Each flavor installs as its own app with its own redirect scheme; SampleFlavor.kt in the shared
+// module says why. Info.plist reads every value below, and the Kotlin side reads TraciveEnvironment
+// and TraciveRedirectURI back out of it.
+//
+// No `://` in any value: xcconfig treats `//` as the start of a comment wherever it appears, so a
+// URL written here is silently cut off at the scheme. Info.plist assembles the redirect instead.
+
+TRACIVE_ENVIRONMENT = sandbox
+PRODUCT_BUNDLE_IDENTIFIER = id.tracive.sdk.sample.sandbox
+TRACIVE_DISPLAY_NAME = KMP Sandbox
+
+// TODO(partner): your own sandbox scheme, registered on your sandbox client id.
+TRACIVE_REDIRECT_SCHEME = tracive-sample-sandbox

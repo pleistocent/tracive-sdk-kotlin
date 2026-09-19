@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <!--
+    The sandbox build installs beside the production one, so the two need telling apart on the
+    home screen. Matches the iOS Sandbox scheme's display name, and stays short for the same reason
+    the production name does: see src/main/res/values/strings.xml.
+  -->
+  <string name="app_name">KMP Sandbox</string>
+</resources>

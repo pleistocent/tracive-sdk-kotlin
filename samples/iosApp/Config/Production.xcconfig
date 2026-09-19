@@ -1,0 +1,9 @@
+// The Production scheme's build settings: Debug-Production and Release-Production are based on
+// this file. Sandbox.xcconfig explains the shape.
+
+TRACIVE_ENVIRONMENT = production
+PRODUCT_BUNDLE_IDENTIFIER = id.tracive.sdk.sample
+TRACIVE_DISPLAY_NAME = Tracive KMP
+
+// TODO(partner): your own production scheme, registered on your production client id.
+TRACIVE_REDIRECT_SCHEME = tracive-sample

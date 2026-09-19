@@ -406,27 +406,49 @@ suite runs with no network, and yours should too.
 | `samples/androidApp` | A launcher Activity, the manifest, and the redirect plumbing that has to live in an Android component. |
 | `samples/iosApp` | An Xcode project holding the SwiftUI shell and its `Info.plist`. |
 
+### Sandbox and production
+
+The sample comes in two builds, one per Tracive environment, and switching between them is choosing
+the other build rather than editing code:
+
+| | Sandbox | Production |
+| --- | --- | --- |
+| Android variant | `sandboxDebug` (the default) | `productionDebug` |
+| iOS scheme | `Sandbox` | `Production` |
+| Talks to | `https://api-sandbox.tracive.id/v1` | `https://api.tracive.id/v1` |
+| Installs as | `id.tracive.sdk.sample.sandbox`, "KMP Sandbox" | `id.tracive.sdk.sample`, "Tracive KMP" |
+| Redirect | `tracive-sample-sandbox://oauth/callback` | `tracive-sample://oauth/callback` |
+
+The two install side by side on purpose. The SDK's token store and check cache are not keyed by
+environment, so one app rebuilt from sandbox to production would send the sandbox grant to
+production and serve sandbox verdicts as production answers. A separate application id gives each
+environment its own storage — and so its own redirect scheme, since two apps claiming one scheme
+leave the OS to pick which receives the authorization code.
+
+Each environment is a separate registration with Tracive: a sandbox client id is unknown to
+production. Register each flavor's redirect on the client id for that environment.
+
 ```bash
-./gradlew :samples:androidApp:assembleDebug          # Android
+./gradlew :samples:androidApp:installSandboxDebug      # or installProductionDebug
 ./gradlew :samples:composeApp:linkDebugFrameworkIosSimulatorArm64   # the iOS framework
 ```
 
-For iOS, open `samples/iosApp/iosApp.xcodeproj` and run — a build phase invokes Gradle for you, so
-there is no separate step. `xcodebuild` works too:
+For iOS, open `samples/iosApp/iosApp.xcodeproj`, pick the `Sandbox` or `Production` scheme and run —
+a build phase invokes Gradle for you, so there is no separate step. `xcodebuild` works too:
 
 ```bash
-cd samples/iosApp && xcodebuild -scheme iosApp \
+cd samples/iosApp && xcodebuild -scheme Sandbox \
   -destination 'platform=iOS Simulator,name=iPhone 16' build
 ```
+
+The per-flavor values live in `samples/androidApp/build.gradle.kts` (`productFlavors`) and
+`samples/iosApp/Config/*.xcconfig`; the client ids are in `TraciveSample.kt`.
 
 The two halves cannot be one Gradle module: from AGP 9 `com.android.application` registers its own
 `kotlin` extension, so `org.jetbrains.kotlin.multiplatform` cannot be applied beside it.
 
-Its network calls will fail until the API ships. What it demonstrates today is the wiring and the
-local half.
-
-Using it as your own experiment ground? Everything you have to supply — client id, redirect,
-scopes, `partnerUserId`, environment — is marked `TODO(partner)`:
+Using it as your own experiment ground? Everything you have to supply — a client id and a redirect
+per environment, scopes, `partnerUserId` — is marked `TODO(partner)`:
 
 ```bash
 grep -rn "TODO(partner)" samples

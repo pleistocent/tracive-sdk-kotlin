@@ -4,6 +4,7 @@ import app.cash.sqldelight.driver.native.NativeSqliteDriver
 import id.tracive.sdk.cache.SqlDelightCheckCache
 import id.tracive.sdk.client.TraciveClient
 import id.tracive.sdk.model.CachePolicy
+import platform.Foundation.NSBundle
 
 /**
  * The iOS half of the wiring: a Keychain-backed key store and the Kotlin/Native SQLite driver.
@@ -16,6 +17,16 @@ private val client: TraciveClient by lazy { create() }
 
 /** The shared client, built on first use. */
 internal fun traciveClient(): TraciveClient = client
+
+/**
+ * A value the flavor's `.xcconfig` put into `Info.plist`.
+ *
+ * Read here rather than handed over by Swift so that `SampleController` stays the framework's only
+ * export.
+ */
+private fun infoPlistString(key: String): String =
+  NSBundle.mainBundle.objectForInfoDictionaryKey(key) as? String
+    ?: error("Info.plist has no $key. Build with the Sandbox or Production scheme.")
 
 private fun create(): TraciveClient {
   val driver = NativeSqliteDriver(SqlDelightCheckCache.Schema, "tracive-check-cache.db")
@@ -34,5 +45,9 @@ private fun create(): TraciveClient {
       // `Dispatchers.Default`, which on native is a worker pool rather than a CPU-sized one.
     )
 
-  return TraciveSample.client(cache)
+  return TraciveSample.client(
+    cache,
+    flavor = SampleFlavor.named(infoPlistString("TraciveEnvironment")),
+    redirectUri = infoPlistString("TraciveRedirectURI"),
+  )
 }

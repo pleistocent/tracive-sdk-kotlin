@@ -1,3 +1,4 @@
+import com.android.build.api.dsl.ApplicationProductFlavor
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -13,6 +14,21 @@ plugins {
   alias(libs.plugins.composeCompiler)
 }
 
+/**
+ * A flavor's redirect, written once for the manifest's intent filter and for
+ * `BuildConfig.TRACIVE_REDIRECT_URI`, which is what the SDK is configured with. A mismatch between
+ * the two fails at the very end of the OAuth round trip, the most annoying time to discover it.
+ *
+ * A private-use scheme, which RFC 8252 permits for an app that controls no web domain. Any app on
+ * the device may declare one, so prefer an https App Link if you control a domain — see
+ * docs/oauth.md.
+ */
+fun ApplicationProductFlavor.redirect(scheme: String, host: String) {
+  manifestPlaceholders["traciveRedirectScheme"] = scheme
+  manifestPlaceholders["traciveRedirectHost"] = host
+  buildConfigField("String", "TRACIVE_REDIRECT_URI", "\"$scheme://$host/callback\"")
+}
+
 android {
   namespace = "id.tracive.sdk.sample"
   compileSdk = libs.versions.android.compileSdk.get().toInt()
@@ -23,17 +39,30 @@ android {
     targetSdk = libs.versions.android.compileSdk.get().toInt()
     versionCode = 1
     versionName = "0.1.0"
+  }
 
-    // The redirect this sample registers in its manifest. Kept in one place so the manifest
-    // placeholder and `TraciveSample.REDIRECT_URI` cannot drift apart — a mismatch there fails at
-    // the very end of the OAuth round trip, which is the most annoying possible time to discover
-    // it. The iOS shell's `Info.plist` carries the same pair.
-    //
-    // TODO(partner): your own scheme and host, and keep TraciveSample.REDIRECT_URI in step. Any
-    // app on the device may declare a custom scheme, so prefer an https App Link if you control a
-    // domain — see docs/oauth.md.
-    manifestPlaceholders["traciveRedirectScheme"] = "tracive-sample"
-    manifestPlaceholders["traciveRedirectHost"] = "oauth"
+  buildFeatures { buildConfig = true }
+
+  // One flavor per Tracive environment: `installSandboxDebug` or `installProductionDebug`, or the
+  // Build Variants panel in Android Studio. `SampleFlavor` in the shared module says why each one
+  // installs as its own app.
+  //
+  // Their own app means their own redirect scheme too. Two apps declaring one custom scheme leave
+  // the OS to choose which of them receives the authorization code.
+  flavorDimensions += "environment"
+  productFlavors {
+    create("sandbox") {
+      dimension = "environment"
+      isDefault = true
+      applicationIdSuffix = ".sandbox"
+      // TODO(partner): your own sandbox redirect, registered on your sandbox client id.
+      redirect(scheme = "tracive-sample-sandbox", host = "oauth")
+    }
+    create("production") {
+      dimension = "environment"
+      // TODO(partner): your own production redirect, registered on your production client id.
+      redirect(scheme = "tracive-sample", host = "oauth")
+    }
   }
 
   // Checked in rather than left to the debug keystore AGP generates per machine in

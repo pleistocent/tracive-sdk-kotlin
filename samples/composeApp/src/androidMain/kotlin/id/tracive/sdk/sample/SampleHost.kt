@@ -13,9 +13,9 @@ import androidx.compose.runtime.Composable
  * outright. Android has no such constraint, but keeping one entry point per platform means the two
  * shells stay symmetric and the shared code has a single, deliberate way in.
  */
-class SampleHost(context: Context) {
+class SampleHost(context: Context, flavor: String, redirectUri: String) {
 
-  private val model = CheckViewModel(traciveClient(context))
+  private val model = CheckViewModel(traciveClient(context, flavor, redirectUri))
 
   /** The shared screen. */
   @Composable fun Content() = SampleScreen(model)

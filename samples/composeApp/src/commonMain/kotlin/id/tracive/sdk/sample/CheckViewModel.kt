@@ -5,6 +5,7 @@ import id.tracive.sdk.TraciveQueryException
 import id.tracive.sdk.client.TraciveClient
 import id.tracive.sdk.model.AuthResult
 import id.tracive.sdk.model.CheckResult
+import id.tracive.sdk.model.TraciveEnvironment
 import id.tracive.sdk.query.TraciveQuery
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -52,6 +53,9 @@ internal class CheckViewModel(
 
   private val _state = MutableStateFlow(SampleUiState())
   val state: StateFlow<SampleUiState> = _state.asStateFlow()
+
+  val environment: TraciveEnvironment
+    get() = client.environment
 
   init {
     scope.launch {

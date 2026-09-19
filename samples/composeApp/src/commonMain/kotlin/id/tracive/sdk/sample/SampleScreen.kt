@@ -57,9 +57,13 @@ internal fun SampleScreen(model: CheckViewModel) {
       ) {
         Text("Tracive SDK sample", style = MaterialTheme.typography.headlineSmall)
         Text(
-          "phase 1: OAuth mode only. The Tracive Open API is not live yet, so any call that " +
-            "reaches the network will fail — the query folding, the encrypted cache and the OAuth " +
-            "flow up to the redirect are what you can exercise today.",
+          "${model.environment} · ${model.environment.baseUrl}",
+          style = MaterialTheme.typography.labelLarge,
+          color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+          "phase 1: OAuth mode only. The build picks the environment — the sandbox or production " +
+            "flavor on Android, the Sandbox or Production scheme on iOS.",
           style = MaterialTheme.typography.bodySmall,
         )
 
