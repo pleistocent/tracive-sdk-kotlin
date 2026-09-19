@@ -89,6 +89,10 @@ const ALLOWED_PLEISTOCENT_PATTERNS = [
   // still fails. A full stop may end a sentence after it; a dot that continues into a host or an id
   // may not.
   /PT Pleistocent Teknologi Nusantara(?![A-Za-z0-9_-]|\.[A-Za-z0-9])/g,
+
+  // The maintainer contact the published POM names. This one address only: the bare domain and any
+  // other mailbox on it still fail.
+  /developer@pleistocent\.com(?![A-Za-z0-9_-]|\.[A-Za-z0-9])/g,
   /com\.pleistocent\.tracive(?:\.[A-Za-z0-9_]+)*(?![A-Za-z0-9._-])/g,
   /github\.com\/pleistocent\/tracive-sdk-kotlin(\.git)?(?![A-Za-z0-9._-])/g,
   /pleistocent\/tracive-sdk-kotlin(?![A-Za-z0-9._-])/g,

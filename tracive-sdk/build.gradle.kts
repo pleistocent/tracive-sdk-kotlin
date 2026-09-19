@@ -153,12 +153,12 @@ publishing {
           url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
         }
       }
-      // Maven Central rejects a POM without at least one developer. No email: the only public
-      // address is the security desk's, which is for vulnerability reports.
+      // Maven Central rejects a POM without at least one developer.
       developers {
         developer {
           id.set("tracive")
           name.set("Tracive")
+          email.set("developer@pleistocent.com")
           organization.set("PT Pleistocent Teknologi Nusantara")
           organizationUrl.set("https://tracive.id")
         }
