@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+  <!--
+    Debug builds only: trust CAs the user installed, so an HTTPS proxy (Proxyman, Charles,
+    mitmproxy) can read and mock this sample's traffic. From Android 7 no app trusts user CAs by
+    default, debuggable or not — without this the proxy's TLS handshake is refused and every call
+    reads as "could not reach Tracive". debug-overrides is ignored when the build is not debuggable,
+    so a release build still trusts the system store only.
+  -->
+  <debug-overrides>
+    <trust-anchors>
+      <certificates src="user" />
+    </trust-anchors>
+  </debug-overrides>
+</network-security-config>
