@@ -56,10 +56,11 @@ internal fun runSdkTest(block: suspend CoroutineScope.() -> Unit) {
 /**
  * An [HttpTransport] that answers from a script instead of a socket.
  *
- * This is the seam the whole SDK is designed around, and it is not a convenience: the Tracive Open
- * API **does not exist yet**, so a test that reached for a real host would not be slow or flaky, it
- * would be impossible. Every request is recorded so a test can assert what went on the wire —
- * headers included, which is how "no API key is ever sent" is checked rather than assumed.
+ * This is the seam the whole SDK is designed around, and it is not a convenience: a test that
+ * reached for a real host would fail whenever that environment is down, and could not provoke the
+ * replies — a 402, a 429, a revoked grant — that most of this suite exists to cover. Every request
+ * is recorded so a test can assert what went on the wire — headers included, which is how "no API
+ * key is ever sent" is checked rather than assumed.
  */
 internal class FakeHttpTransport(private val handler: suspend (HttpRequest) -> HttpResponse) :
   HttpTransport {

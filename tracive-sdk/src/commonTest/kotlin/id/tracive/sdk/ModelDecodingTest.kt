@@ -19,9 +19,10 @@ import kotlinx.serialization.json.Json
 /**
  * Wire decoding for every model the Open API returns.
  *
- * The backend does not exist yet, so these payloads are written from the frozen spec rather than
- * captured from a server. That makes the forward-compatibility cases the important ones: whatever
- * phase 2 adds, an app already in users' hands must keep decoding what it knows and skip the rest.
+ * These payloads are written from the spec rather than captured from a server; replies captured
+ * from the live API are in [MissResponseDecodingTest]. That makes the forward-compatibility cases
+ * the important ones here: whatever phase 2 adds, an app already in users' hands must keep decoding
+ * what it knows and skip the rest.
  *
  * No network, no fixtures on disk, no clock.
  */

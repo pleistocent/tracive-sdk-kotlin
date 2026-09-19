@@ -5,9 +5,8 @@ package id.tracive.sdk.client
  *
  * Everything above this interface — endpoint construction, the error table, the retry rules, the
  * single-flight refresh, the cache — is pure logic over [HttpRequest] and [HttpResponse]. That is
- * what lets the whole SDK be tested with no server and no sockets, which matters here more than
- * usual: **the Tracive Open API does not exist yet**, so a test that reached for a real host would
- * not be slow or flaky, it would be untestable.
+ * what lets the whole SDK be tested with no server and no sockets — including the replies no real
+ * server gives on demand, such as a 402, a 429 or a revoked grant.
  *
  * Implementations must not log. A request carries `Authorization: Bearer <token>` and, on the token
  * endpoint, a refresh token in the body; a response body from `/oauth/token` carries both.

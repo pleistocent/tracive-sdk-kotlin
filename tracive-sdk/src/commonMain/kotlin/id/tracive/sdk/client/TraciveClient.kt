@@ -533,7 +533,8 @@ class TraciveClient(
         // exact POST after a 401 refresh. Without a key the server cannot tell those two attempts
         // apart, so anything billed before or during authorisation is charged twice and the caller
         // has no way to notice. What used to make that safe was "a 401 is rejected before billing"
-        // — an assumption about a server that does not exist yet. A key means nothing is assumed.
+        // — an assumption about the server's ordering that nothing on the client can verify. A key
+        // means nothing is assumed.
         idempotencyKey = callerKey ?: generatedIdempotencyKey(),
         // A generated key is not a licence to retry. Retrying is still gated on the *caller's* key,
         // because a retry is only safe if the caller can reuse the same key on a later call of

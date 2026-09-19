@@ -22,8 +22,8 @@ import kotlin.test.assertTrue
  * What the client puts on the wire, and what it does with the reply.
  *
  * Every test here runs against [FakeHttpTransport]. That is a hard requirement rather than a
- * preference: the Tracive Open API does not exist yet, so there is no host to talk to, and the SDK
- * has to be provably correct before there is one.
+ * preference: a test that reached either environment would fail whenever it is down, and could not
+ * provoke the error replies the client has to handle.
  */
 class TraciveClientTest {
 
