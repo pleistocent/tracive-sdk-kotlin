@@ -12,9 +12,9 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * Configuration types and the secrets they must never print.
@@ -164,29 +164,13 @@ class ConfigurationTest {
     assertEquals(1.hours, policy.ttlFor(RiskTier.NONE))
   }
 
-  /**
-   * `cacheTtlSeconds` is the backend's only way to make already-installed apps drop a cached answer
-   * without shipping a release, so it has to win over the tier default.
-   */
   @Test
-  fun aServerTtlOverridesTheTierDefault() {
-    val policy = CachePolicy.Default
-    assertEquals(90.seconds, policy.effectiveTtl(RiskTier.HIGH, 90L))
-    // Zero means "do not keep this", which is the point of the lever.
-    assertEquals(0.seconds, policy.effectiveTtl(RiskTier.HIGH, 0L))
-    // Absent means "use the default".
-    assertEquals(30.days, policy.effectiveTtl(RiskTier.HIGH, null))
-    // A negative value clamps to zero rather than falling back, so it retracts the answer instead
-    // of extending it. See `effectiveTtl` and `CacheTtlTest` for which way round that has to be.
-    assertEquals(0.seconds, policy.effectiveTtl(RiskTier.HIGH, -1L))
-    assertEquals(0.seconds, policy.effectiveTtl(RiskTier.HIGH, Long.MIN_VALUE))
-  }
-
-  @Test
-  fun anAppCanOptOutOfTheServerOverride() {
-    val policy = CachePolicy.Default.copy(honorServerTtlOverride = false)
-    assertEquals(30.days, policy.effectiveTtl(RiskTier.HIGH, 90L))
-    assertEquals(1.hours, policy.effectiveTtl(RiskTier.NONE, 90L))
+  fun aTierTtlCanBeZeroSoAHostCanRefuseToCacheThatTier() {
+    // Zero is not merely a short TTL: the cache treats it as "store nothing, and drop what is
+    // there". It is the only lifetime with a second meaning, so it has to survive configuration.
+    val policy = CachePolicy.Default.copy(noneTtl = Duration.ZERO)
+    assertEquals(Duration.ZERO, policy.ttlFor(RiskTier.NONE))
+    assertEquals(30.days, policy.ttlFor(RiskTier.HIGH))
   }
 
   @Test

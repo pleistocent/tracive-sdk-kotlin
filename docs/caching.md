@@ -190,25 +190,19 @@ Tune them if you have a reason:
 CachePolicy(highTtl = 7.days, noneTtl = 15.minutes)
 ```
 
-### The server's override wins
+### The tier ladder is the whole policy
 
-A response may carry `cacheTtlSeconds`, and when it does, it replaces the tier default:
+`policy.ttlFor(riskTier)` is the lifetime, and nothing in a response can change it. The backend used
+to be able to send a `cacheTtlSeconds` that replaced it; that duplicated the ladder above on the
+server, so it is gone. A `cacheTtlSeconds` still arriving from a proxy is an unknown key and is
+ignored, not an error.
 
-```kotlin
-policy.effectiveTtl(riskTier, cacheTtlSeconds)
-```
+Two edge cases of your own configuration, both tested:
 
-**Leave `honorServerTtlOverride` on.** It is the fleet-wide invalidation lever — the only way the
-backend can make already-installed apps stop trusting cached answers without shipping a release.
-Turning it off opts your users out of that.
-
-Three edge cases, all tested:
-
-- **`cacheTtlSeconds = 0`** means "do not keep this answer". Nothing is stored, *and any existing
-  entry is removed* — that is how the backend retracts something already on the device.
-- **A negative value** is treated as malformed and ignored, so the tier default applies. A bad
-  response degrades to normal caching rather than silently disabling it.
-- **An absurdly large value** saturates instead of overflowing. A wrapped `Long` would read as
+- **A TTL of zero** means "do not keep answers of this tier". Nothing is stored, *and any existing
+  entry for that query is removed* — otherwise a verdict that has since been superseded would keep
+  being served for the rest of its old lifetime.
+- **An absurdly large TTL** saturates instead of overflowing. A wrapped `Long` would read as
   "expired decades ago", every entry would miss, every check would be billed, and nothing in the
   logs would say why.
 
@@ -359,7 +353,6 @@ your UI knows that transfer spent nothing.
 |---|---|---|
 | Keyed on | the identifier | your transaction id, hashed |
 | Lifetime | `CachePolicy` tier TTL, 1 hour to 30 days | `transactionCheckRetention`, 90 days by default |
-| Server `cacheTtlSeconds` | applied, including retraction | **not applied** — a record of the past cannot be retracted |
 | Overwritten by a later check | yes | no |
 | `origin` on read | forced to `CACHE` | kept as recorded |
 | `checkId`, `billing` | dropped | kept — this record *is* that one call |

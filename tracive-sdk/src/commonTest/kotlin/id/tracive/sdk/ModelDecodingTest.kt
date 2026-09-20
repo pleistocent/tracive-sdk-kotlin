@@ -33,6 +33,9 @@ class ModelDecodingTest {
 
   @Test
   fun aMinimalResultDecodes() {
+    // The payload still carries `cacheTtlSeconds`, which this SDK no longer models. A server or
+    // proxy that keeps sending it must not break the decode, and this is where that is proved:
+    // without `ignoreUnknownKeys` the call below throws.
     val payload =
       """
       {
@@ -66,7 +69,6 @@ class ModelDecodingTest {
     assertEquals(mapOf("IDR" to 15000000.5, "USD" to 900.0), result.fraudAmount)
     assertEquals(listOf("investment", "impersonation"), result.tags)
     assertEquals(4, result.relatedScammerCount)
-    assertEquals(3600L, result.cacheTtlSeconds)
     assertEquals("Community reports, not adjudicated findings.", result.disclaimer)
 
     // detail = MINIMAL, so the narrative fields are absent rather than empty.
@@ -168,7 +170,6 @@ class ModelDecodingTest {
     assertEquals(emptyMap<String, Double>(), result.fraudAmount)
     assertEquals(emptyList<String>(), result.tags)
     assertEquals(0, result.relatedScammerCount)
-    assertNull(result.cacheTtlSeconds)
     assertNull(result.disclaimer)
   }
 
@@ -202,7 +203,6 @@ class ModelDecodingTest {
         fraudAmount = mapOf("IDR" to 250000.0),
         tags = listOf("marketplace"),
         relatedScammerCount = 2,
-        cacheTtlSeconds = 604800,
         disclaimer = "Community reports.",
         origin = Origin.CACHE,
         fetchedAt = Instant.parse("2026-07-31T09:10:11Z"),
@@ -235,7 +235,6 @@ class ModelDecodingTest {
         topChronologies = listOf(Chronology("narrative", 3, null)),
         comments = listOf(Comment("today", "text", true)),
         billing = Billing("USER", 1, null),
-        cacheTtlSeconds = 120,
         disclaimer = "Community reports.",
         fetchedAt = fetched,
       )
@@ -252,7 +251,6 @@ class ModelDecodingTest {
     assertEquals(full.riskTier, cacheable.riskTier)
     assertEquals(full.reportTotal, cacheable.reportTotal)
     assertEquals(full.tags, cacheable.tags)
-    assertEquals(full.cacheTtlSeconds, cacheable.cacheTtlSeconds)
     assertEquals(full.disclaimer, cacheable.disclaimer)
     assertEquals(fetched, cacheable.fetchedAt)
   }

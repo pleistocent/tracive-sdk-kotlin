@@ -1,5 +1,6 @@
 package id.tracive.sdk.cache
 
+import id.tracive.sdk.client.SdkJson
 import id.tracive.sdk.model.CachePolicy
 import id.tracive.sdk.model.CheckResult
 import id.tracive.sdk.model.RiskTier
@@ -13,11 +14,10 @@ import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.Duration.Companion.minutes
-import kotlin.time.Duration.Companion.seconds
 import kotlinx.coroutines.test.runTest
 
 /**
- * How long a cached answer stays usable, per risk tier and under a server override.
+ * How long a cached answer stays usable, per risk tier.
  *
  * Both directions of getting this wrong cost real money or real safety, which is why the boundary
  * is asserted to the millisecond rather than approximately:
@@ -53,119 +53,73 @@ class CacheTtlTest {
   }
 
   @Test
-  fun aHostCanShortenTheDefaultsWithoutTouchingTheOverride() = runTest {
+  fun aHostCanShortenTheDefaults() = runTest {
     val policy = CachePolicy(highTtl = 15.minutes, noneTtl = 5.minutes)
     assertLifetime(15.minutes, RiskTier.HIGH, policy = policy)
     assertLifetime(5.minutes, RiskTier.NONE, policy = policy)
   }
 
-  // ------------------------------------------------------ server override ----
+  // -------------------------------------------- no per-response override ----
 
   @Test
-  fun theServersCacheTtlSecondsWinsOverTheTierDefault() = runTest {
-    // The fleet-wide invalidation lever. A `HIGH` result would otherwise sit on the device for
-    // thirty days; the backend shortening this field is the only way to change that without
-    // shipping a release, so it has to win.
-    assertLifetime(
-      90.seconds,
-      RiskTier.HIGH,
-      result = serverResult(riskTier = RiskTier.HIGH, cacheTtlSeconds = 90),
-    )
+  fun aCacheTtlSecondsStillOnTheWireIsIgnored() = runTest {
+    // The backend stopped sending this field and the SDK no longer models it, but a proxy or an old
+    // deployment may still put it in the body. Two things have to hold: the decode must not fail
+    // over a key the model does not have, and the directive must not shorten the entry — a
+    // thirty-day HIGH stays thirty days.
+    val decoded =
+      SdkJson.decodeFromString(
+        CheckResult.serializer(),
+        """{"found":true,"riskTier":"HIGH","cacheTtlSeconds":90}""",
+      )
+
+    assertLifetime(30.days, RiskTier.HIGH, result = decoded)
   }
 
   @Test
-  fun theServerCanAlsoLengthenTheLifetime() = runTest {
-    assertLifetime(
-      2.days,
-      RiskTier.NONE,
-      result = serverResult(riskTier = RiskTier.NONE, cacheTtlSeconds = 2 * 24 * 60 * 60L),
-    )
-  }
-
-  @Test
-  fun aZeroTtlMeansDoNotKeepThisAnswer() = runTest {
+  fun aHostCanRefuseToCacheATierAtAll() = runTest {
+    // Zero is the one TTL that does more than shorten: nothing is stored at all. Zeroing a tier is
+    // now the only way to reach that path, which the server's retracted TTL used to own.
     val clock = TestClock.atStart()
-    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy.Default, clock)
+    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy(highTtl = Duration.ZERO), clock)
 
-    cache.put(query, serverResult(riskTier = RiskTier.HIGH, cacheTtlSeconds = 0))
+    cache.put(query, serverResult(riskTier = RiskTier.HIGH))
 
     assertNull(cache.get(query), "A zero TTL must not be stored, not even for an instant.")
     assertEquals(0, cache.size(), "A zero TTL must not leave a row behind either.")
   }
 
   @Test
-  fun aZeroTtlAlsoRetractsAnEntryAlreadyOnTheDevice() = runTest {
-    // This is the case that matters operationally. The user already holds a cached `HIGH` verdict;
-    // the report behind it is withdrawn; the next response carries `cacheTtlSeconds: 0`. If `put`
-    // only declined to store the new answer, the old one would keep being served for the rest of
-    // its thirty days.
+  fun aZeroedTierAlsoDropsAnEntryAlreadyOnTheDevice() = runTest {
+    // The operationally interesting half. The device holds a `HIGH` verdict; the identifier is
+    // re-checked and now comes back `NONE`, a tier this host does not cache. Declining to store the
+    // new answer is not enough — the old `HIGH` would keep being served for the rest of its thirty
+    // days.
     val clock = TestClock.atStart()
-    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy.Default, clock)
+    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy(noneTtl = Duration.ZERO), clock)
 
     cache.put(query, serverResult(riskTier = RiskTier.HIGH))
     assertNotNull(cache.get(query))
 
-    cache.put(query, serverResult(riskTier = RiskTier.NONE, cacheTtlSeconds = 0))
+    cache.put(query, serverResult(riskTier = RiskTier.NONE))
 
     assertNull(cache.get(query))
     assertEquals(0, cache.size())
   }
 
   @Test
-  fun aNegativeTtlRetractsTheEntryExactlyAsZeroDoes() = runTest {
-    // A negative TTL is either "expired already" or a bug, and both are answered by not trusting
-    // the entry. The reading this replaces — malformed, so use the tier default — is the only one
-    // that cannot be right: it keeps serving a HIGH verdict for another thirty days on the
-    // strength of a response the SDK has just decided it does not understand.
+  fun anAbsurdTtlSaturatesInsteadOfWrappingIntoThePast() = runTest {
+    // `now + ttl` in milliseconds overflows `Long` well before `Duration.INFINITE`. Wrapping would
+    // produce a negative expiry, which reads as "expired decades ago": every entry would miss,
+    // every check would be billed, and nothing would look wrong.
     val clock = TestClock.atStart()
-    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy.Default, clock)
+    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy(highTtl = Duration.INFINITE), clock)
 
     cache.put(query, serverResult(riskTier = RiskTier.HIGH))
-    assertNotNull(cache.get(query))
-
-    cache.put(query, serverResult(riskTier = RiskTier.HIGH, cacheTtlSeconds = -1))
-
-    assertNull(cache.get(query), "A negative TTL must not leave the old answer being served.")
-    assertEquals(0, cache.size(), "A negative TTL must delete the row, not merely skip the write.")
-  }
-
-  @Test
-  fun anAbsurdTtlSaturatesInsteadOfWrappingIntoThePast() = runTest {
-    // `now + ttl` in milliseconds overflows `Long` well before `Long.MAX_VALUE` seconds. Wrapping
-    // would produce a negative expiry, which reads as "expired decades ago": every entry would
-    // miss, every check would be billed, and nothing would look wrong.
-    val clock = TestClock.atStart()
-    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy.Default, clock)
-
-    cache.put(query, serverResult(riskTier = RiskTier.HIGH, cacheTtlSeconds = Long.MAX_VALUE))
 
     assertNotNull(cache.get(query))
     clock.advance(365.days * 100)
     assertNotNull(cache.get(query), "A saturated expiry must still be in the future.")
-  }
-
-  @Test
-  fun aHostCanOptOutOfTheServerOverride() = runTest {
-    // Opting out is supported but is a real decision: it takes this installation out of reach of
-    // the backend's invalidation lever, and `docs/caching.md` says so.
-    val policy = CachePolicy(honorServerTtlOverride = false)
-    assertLifetime(
-      1.hours,
-      RiskTier.NONE,
-      result = serverResult(riskTier = RiskTier.NONE, cacheTtlSeconds = 10),
-      policy = policy,
-    )
-  }
-
-  @Test
-  fun optingOutOfTheOverrideAlsoIgnoresAZeroTtl() = runTest {
-    val clock = TestClock.atStart()
-    val cache =
-      InMemoryCheckCache(testKeyStore(), CachePolicy(honorServerTtlOverride = false), clock)
-
-    cache.put(query, serverResult(riskTier = RiskTier.HIGH, cacheTtlSeconds = 0))
-
-    assertNotNull(cache.get(query), "With the override off, a zero TTL is not an instruction.")
   }
 
   // --------------------------------------------------------------- expiry ----

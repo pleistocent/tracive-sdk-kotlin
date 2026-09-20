@@ -11,6 +11,7 @@ import kotlin.test.assertFailsWith
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
 import kotlin.time.Duration.Companion.minutes
@@ -73,19 +74,18 @@ class TransactionCheckTest {
   }
 
   @Test
-  fun theServerTtlOverrideDoesNotRetractARecord() = runTest {
-    // `cacheTtlSeconds` is the backend's lever for un-trusting a verdict it no longer stands
-    // behind.
-    // Applied to a record it would erase the evidence that a warning was shown — which is precisely
-    // what a partner needs when the transfer is disputed.
+  fun aTierTtlOfZeroDoesNotStopARecordBeingFiled() = runTest {
+    // The two lifetimes are independent, and this is the direction that matters: a host that
+    // refuses to cache `HIGH` at all must still be able to show, weeks later, what the user was
+    // warned about before they sent the money. That is what a dispute is reconciled against.
     val clock = TestClock.atStart()
-    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy.Default, clock)
-    val retracted = serverResult(riskTier = RiskTier.HIGH, cacheTtlSeconds = 0L)
+    val cache = InMemoryCheckCache(testKeyStore(), CachePolicy(highTtl = Duration.ZERO), clock)
+    val result = serverResult(riskTier = RiskTier.HIGH)
 
-    cache.put(scammer, retracted)
-    cache.putTransactionCheck(firstTransfer, retracted)
+    cache.put(scammer, result)
+    cache.putTransactionCheck(firstTransfer, result)
 
-    assertNull(cache.get(scammer), "A zero server TTL retracts the cached answer.")
+    assertNull(cache.get(scammer), "A zero tier TTL stores no cache entry.")
     assertEquals(RiskTier.HIGH, assertNotNull(cache.getTransactionCheck(firstTransfer)).riskTier)
   }
 

@@ -259,9 +259,9 @@ shows both platforms). What it gives you:
 | `CAUTION` | 24 hours |
 | `NONE` | 1 hour |
 
-A hit costs zero credits and does zero network I/O, so it also works offline. The server can
-override any of these per response via `cacheTtlSeconds`; the SDK honours it, and that is the
-fleet-wide invalidation lever — leave `honorServerTtlOverride` on.
+A hit costs zero credits and does zero network I/O, so it also works offline. These numbers are the
+whole of the policy — there is no per-response override — so pass your own `CachePolicy` if you want
+different ones.
 
 Privacy: the row key is `SHA-256(searchQueryIndex)` and the payload is AES-256-GCM. **The identifier
 itself is never written to disk in any form**, and neither is the risk tier or the report count.

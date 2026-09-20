@@ -69,7 +69,7 @@ class CacheContentTest {
   @Test
   fun everyFieldThatDoesNotVaryWithDetailOrLocaleSurvivesTheRoundTrip() = runTest {
     val cache = InMemoryCheckCache(testKeyStore(), CachePolicy.Default, TestClock.atStart())
-    val server = serverResult(riskTier = RiskTier.ELEVATED, cacheTtlSeconds = 3_600)
+    val server = serverResult(riskTier = RiskTier.ELEVATED)
 
     cache.put(query, server)
     val hit = assertNotNull(cache.get(query))
@@ -84,7 +84,6 @@ class CacheContentTest {
     assertEquals(server.fraudAmount, hit.fraudAmount)
     assertEquals(server.tags, hit.tags)
     assertEquals(server.relatedScammerCount, hit.relatedScammerCount)
-    assertEquals(server.cacheTtlSeconds, hit.cacheTtlSeconds)
     // The disclaimer travels with the verdict because a UI is required to show it, and a cache hit
     // is displayed exactly like a live answer.
     assertEquals(server.disclaimer, hit.disclaimer)

@@ -64,7 +64,6 @@ private fun hexDigit(c: Char): Int =
  */
 internal fun serverResult(
   riskTier: RiskTier = RiskTier.HIGH,
-  cacheTtlSeconds: Long? = null,
   fetchedAt: Instant = TestClock.START,
 ): CheckResult =
   CheckResult(
@@ -84,7 +83,6 @@ internal fun serverResult(
     comments =
       listOf(Comment(date = "2026-05-12", text = COMMENT_MARKER, fromCredibleReport = true)),
     billing = Billing(creditSource = "USER", unitsCharged = 1, partnerBalanceRemaining = 998),
-    cacheTtlSeconds = cacheTtlSeconds,
     disclaimer = "User-submitted reports. Not an adjudicated finding.",
     origin = Origin.SERVER,
     fetchedAt = fetchedAt,

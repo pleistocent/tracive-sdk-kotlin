@@ -55,9 +55,8 @@ interface CheckCache {
   /**
    * Stores [result] for [query], replacing any existing entry.
    *
-   * The lifetime is `CachePolicy.effectiveTtl(result.riskTier, result.cacheTtlSeconds)`: the tier
-   * default, unless the server sent an override. A TTL of zero stores nothing and removes whatever
-   * was there — that is how the backend says "do not keep this answer".
+   * The lifetime is `CachePolicy.ttlFor(result.riskTier)`. A host that zeroes that tier's TTL
+   * stores nothing and removes whatever was there.
    *
    * Only the cacheable subset is written, whatever is passed in.
    */
@@ -85,8 +84,7 @@ interface CheckCache {
    * - **It outlives the cache entry.** The lifetime is
    *   [id.tracive.sdk.model.CachePolicy.transactionCheckRetention] rather than a tier TTL, because
    *   a `NONE` answer stops being *trustworthy* after an hour but never stops being *what was
-   *   shown*. The server's `cacheTtlSeconds` is not applied here for the same reason: it retracts a
-   *   verdict, and a record of the past cannot be retracted.
+   *   shown*.
    * - **`origin` and `fetchedAt` are stored as given.** A record whose origin is
    *   [id.tracive.sdk.model.Origin.CACHE] is the honest statement that this transaction spent no
    *   credit, which is exactly what a second transfer to the same account looks like.

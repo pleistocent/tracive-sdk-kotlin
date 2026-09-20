@@ -89,15 +89,6 @@ data class CheckResult(
   @SerialName("billing") val billing: Billing? = null,
 
   /**
-   * A server-driven lifetime for this entry, overriding the tier default in
-   * [CachePolicy.effectiveTtl].
-   *
-   * This is the backend's fleet-wide invalidation lever — the only way to make already-installed
-   * apps stop trusting a cached answer without shipping a release. Honour it.
-   */
-  @SerialName("cacheTtlSeconds") val cacheTtlSeconds: Long? = null,
-
-  /**
    * The legal disclaimer that must accompany this result.
    *
    * **Surface this in any UI built on the SDK.** These results are user-generated allegations about

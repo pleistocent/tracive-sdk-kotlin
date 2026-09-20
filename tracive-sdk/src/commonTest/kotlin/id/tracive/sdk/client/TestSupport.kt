@@ -267,21 +267,17 @@ internal const val TEST_BASE_URL: String = "https://api.test.invalid/v1"
 internal fun testQuery(): TraciveQuery = TraciveQuery.phone("+62 812 3456 7891")
 
 /** A minimal successful check body. */
-internal fun checkResultJson(
-  checkId: String = "chk_1",
-  riskTier: String = "HIGH",
-  cacheTtlSeconds: Long? = null,
-): String = buildString {
-  append("{\"checkId\":\"").append(checkId).append("\",")
-  append("\"found\":true,")
-  append("\"riskTier\":\"").append(riskTier).append("\",")
-  append("\"reportTotal\":12,\"credibleReports\":9,\"ambiguousReports\":3,")
-  append("\"fraudAmount\":{\"IDR\":25000000.0},")
-  append("\"tags\":[\"investment\"],\"relatedScammerCount\":4,")
-  append("\"disclaimer\":\"User-generated reports, not adjudicated findings.\"")
-  if (cacheTtlSeconds != null) append(",\"cacheTtlSeconds\":").append(cacheTtlSeconds)
-  append("}")
-}
+internal fun checkResultJson(checkId: String = "chk_1", riskTier: String = "HIGH"): String =
+  buildString {
+    append("{\"checkId\":\"").append(checkId).append("\",")
+    append("\"found\":true,")
+    append("\"riskTier\":\"").append(riskTier).append("\",")
+    append("\"reportTotal\":12,\"credibleReports\":9,\"ambiguousReports\":3,")
+    append("\"fraudAmount\":{\"IDR\":25000000.0},")
+    append("\"tags\":[\"investment\"],\"relatedScammerCount\":4,")
+    append("\"disclaimer\":\"User-generated reports, not adjudicated findings.\"")
+    append("}")
+  }
 
 /** The Tracive API's documented error envelope. */
 internal fun errorJson(code: String, message: String = "nope", checkId: String? = null): String =

@@ -484,25 +484,22 @@ public final class id/tracive/sdk/model/Billing$Companion {
 public final class id/tracive/sdk/model/CachePolicy {
 	public static final field Companion Lid/tracive/sdk/model/CachePolicy$Companion;
 	public static final field SCHEMA_VERSION I
-	public synthetic fun <init> (ZJJJJZIJILkotlin/jvm/internal/DefaultConstructorMarker;)V
-	public synthetic fun <init> (ZJJJJZIJLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (ZJJJJIJILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (ZJJJJIJLkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Z
 	public final fun component2-UwyO8pc ()J
 	public final fun component3-UwyO8pc ()J
 	public final fun component4-UwyO8pc ()J
 	public final fun component5-UwyO8pc ()J
-	public final fun component6 ()Z
-	public final fun component7 ()I
-	public final fun component8-UwyO8pc ()J
-	public final fun copy-q7jQ4eM (ZJJJJZIJ)Lid/tracive/sdk/model/CachePolicy;
-	public static synthetic fun copy-q7jQ4eM$default (Lid/tracive/sdk/model/CachePolicy;ZJJJJZIJILjava/lang/Object;)Lid/tracive/sdk/model/CachePolicy;
-	public final fun effectiveTtl-3nIYWDw (Lid/tracive/sdk/model/RiskTier;Ljava/lang/Long;)J
+	public final fun component6 ()I
+	public final fun component7-UwyO8pc ()J
+	public final fun copy-nVUvsLM (ZJJJJIJ)Lid/tracive/sdk/model/CachePolicy;
+	public static synthetic fun copy-nVUvsLM$default (Lid/tracive/sdk/model/CachePolicy;ZJJJJIJILjava/lang/Object;)Lid/tracive/sdk/model/CachePolicy;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getCautionTtl-UwyO8pc ()J
 	public final fun getElevatedTtl-UwyO8pc ()J
 	public final fun getEnabled ()Z
 	public final fun getHighTtl-UwyO8pc ()J
-	public final fun getHonorServerTtlOverride ()Z
 	public final fun getMaxEntries ()I
 	public final fun getNoneTtl-UwyO8pc ()J
 	public final fun getTransactionCheckRetention-UwyO8pc ()J
@@ -518,18 +515,17 @@ public final class id/tracive/sdk/model/CachePolicy$Companion {
 public final class id/tracive/sdk/model/CheckResult {
 	public static final field Companion Lid/tracive/sdk/model/CheckResult$Companion;
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/Long;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/Long;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component10 ()Ljava/util/List;
 	public final fun component11 ()I
 	public final fun component12 ()Ljava/util/List;
 	public final fun component13 ()Ljava/util/List;
 	public final fun component14 ()Lid/tracive/sdk/model/Billing;
-	public final fun component15 ()Ljava/lang/Long;
-	public final fun component16 ()Ljava/lang/String;
-	public final fun component17 ()Lid/tracive/sdk/model/Origin;
-	public final fun component18 ()Lkotlinx/datetime/Instant;
+	public final fun component15 ()Ljava/lang/String;
+	public final fun component16 ()Lid/tracive/sdk/model/Origin;
+	public final fun component17 ()Lkotlinx/datetime/Instant;
 	public final fun component2 ()Z
 	public final fun component3 ()Lid/tracive/sdk/model/RiskTier;
 	public final fun component4 ()I
@@ -538,12 +534,11 @@ public final class id/tracive/sdk/model/CheckResult {
 	public final fun component7 ()Lkotlinx/datetime/Instant;
 	public final fun component8 ()Lkotlinx/datetime/Instant;
 	public final fun component9 ()Ljava/util/Map;
-	public final fun copy (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/Long;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;)Lid/tracive/sdk/model/CheckResult;
-	public static synthetic fun copy$default (Lid/tracive/sdk/model/CheckResult;Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/Long;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lid/tracive/sdk/model/CheckResult;
+	public final fun copy (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;)Lid/tracive/sdk/model/CheckResult;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/CheckResult;Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lid/tracive/sdk/model/CheckResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAmbiguousReports ()I
 	public final fun getBilling ()Lid/tracive/sdk/model/Billing;
-	public final fun getCacheTtlSeconds ()Ljava/lang/Long;
 	public final fun getCheckId ()Ljava/lang/String;
 	public final fun getComments ()Ljava/util/List;
 	public final fun getCredibleReports ()I

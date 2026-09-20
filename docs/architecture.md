@@ -247,7 +247,7 @@ flowchart TD
     Net -->|"failure otherwise"| Fail["Throw the mapped TraciveException"]
     Fresh --> Store{"may this be stored"}
     Store -->|"detail is FULL"| NoStore["Never written"]
-    Store -->|"cacheTtlSeconds is 0"| Retract["Store nothing, and delete any existing row"]
+    Store -->|"the tier's TTL is zero"| Retract["Store nothing, and delete any existing row"]
     Store -->|"otherwise"| Put["put: toCacheable, sealed with AES-256-GCM, TTL from CachePolicy"]
 ```
 
@@ -259,10 +259,9 @@ flowchart TD
   answer would file locale-specific text under a locale-less key for the next minimal caller to read
   straight back. `disclaimer` is the one string every integrator is asked to put on screen. Caching
   full detail would first require the key to become the triple of query, detail and locale.
-- **A response carrying `cacheTtlSeconds` of zero.** That is the backend saying "do not keep this
-  answer", so nothing is stored *and* any existing row is removed. It is how an answer already on a
-  device gets retracted. A negative value is treated as malformed and ignored, so the tier default
-  applies rather than caching being silently disabled.
+- **A tier whose TTL the host has set to zero.** Zero means "do not keep answers of this tier", so
+  nothing is stored *and* any existing row for that query is removed — otherwise a superseded
+  verdict would keep being served for the rest of its old lifetime.
 - **Anything that failed.** Only a decoded 2xx result reaches `put`.
 
 A `Source.CACHE` lookup with no live entry raises `CacheMiss` rather than returning an empty

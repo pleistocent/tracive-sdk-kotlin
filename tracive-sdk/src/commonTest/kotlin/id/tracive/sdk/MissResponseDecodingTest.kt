@@ -50,7 +50,6 @@ class MissResponseDecodingTest {
     assertEquals(RiskTier.NONE, result.riskTier)
     assertEquals(emptyMap(), result.fraudAmount)
     assertEquals(emptyList(), result.tags)
-    assertEquals(3600L, result.cacheTtlSeconds)
     assertEquals(1, result.billing?.unitsCharged)
   }
 

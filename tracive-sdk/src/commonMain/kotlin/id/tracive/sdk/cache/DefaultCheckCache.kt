@@ -125,13 +125,10 @@ internal class DefaultCheckCache(
       // later version ever needs to cache full-detail content, the key must become the triple of
       // (query, detail, locale); changing only this line would ship an Indonesian narrative to an
       // English request.
-      //
-      // A TTL of zero stores nothing and drops what is there: a zero `cacheTtlSeconds` is how the
-      // backend retracts an answer that is already on the device.
       writeRecord(
         key = cacheKeyFor(query),
         record = result.toCacheable().copy(origin = Origin.CACHE),
-        lifetime = policy.effectiveTtl(result.riskTier, result.cacheTtlSeconds),
+        lifetime = policy.ttlFor(result.riskTier),
       )
     }
   }
@@ -141,10 +138,9 @@ internal class DefaultCheckCache(
     // it should not depend on opening a cipher or waiting behind another writer.
     val key = transactionCacheKeyFor(transactionId)
     mutex.withLock {
-      // `policy.transactionCheckRetention`, never `effectiveTtl`. The tier TTL asks how long a
-      // verdict stays trustworthy; this row answers "what was this user shown before they sent the
-      // money", and that does not decay. Feeding the server's `cacheTtlSeconds` in here would let
-      // the backend retract a record of the past, which is the one thing it must not be able to do.
+      // `policy.transactionCheckRetention`, never a tier TTL. The tier TTL asks how long a verdict
+      // stays trustworthy; this row answers "what was this user shown before they sent the money",
+      // and that does not decay.
       writeRecord(
         key = key,
         record = result.toTransactionRecord(),
@@ -234,10 +230,9 @@ internal class DefaultCheckCache(
    * Seals [record] under [key] for [lifetime], or removes whatever is there when the lifetime is
    * not positive.
    *
-   * The removal on a non-positive lifetime is the point rather than a guard: for a cache entry it
-   * is how the backend retracts an answer it has already put on a device, and for a transaction
-   * record it is how a host that sets `transactionCheckRetention` to zero opts out and takes the
-   * records it already wrote with it.
+   * The removal on a non-positive lifetime is the point rather than a guard: it is how a host that
+   * zeroes a tier TTL — or `transactionCheckRetention` — opts out of storing that kind of row and
+   * takes the rows it already wrote with it.
    *
    * Caller holds [mutex], which is what makes the nonce reservation below safe: two writers that
    * obtained the same counter value would seal two records under one nonce.
@@ -325,11 +320,12 @@ internal class DefaultCheckCache(
   /**
    * [now] plus [ttl], in epoch milliseconds, saturating instead of wrapping.
    *
-   * A server that sends an absurd `cacheTtlSeconds` — a bug, a signed/unsigned mix-up, or a test
-   * fixture — would otherwise overflow `Long` into a negative expiry, which reads as "expired
-   * decades ago". Every entry would then miss, every check would go to the server, and every one of
-   * them would be billed, with nothing in the logs to say why. Saturating turns that into "expires
-   * at the end of time", which is wrong in the harmless direction and visible in a debug screen.
+   * A host that configures an enormous tier TTL — `Duration.INFINITE`, or "effectively forever" as
+   * a large number of days — would otherwise overflow `Long` into a negative expiry, which reads as
+   * "expired decades ago". Every entry would then miss, every check would go to the server, and
+   * every one of them would be billed, with nothing in the logs to say why. Saturating turns that
+   * into "expires at the end of time", which is wrong in the harmless direction and visible in a
+   * debug screen.
    */
   private fun expiryEpochMs(now: Instant, ttl: Duration): Long {
     val nowMs = now.toEpochMilliseconds()

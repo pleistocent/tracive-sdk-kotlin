@@ -3,7 +3,6 @@ package id.tracive.sdk.model
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.days
 import kotlin.time.Duration.Companion.hours
-import kotlin.time.Duration.Companion.seconds
 
 /**
  * How long a cached [CheckResult] stays usable.
@@ -31,15 +30,6 @@ data class CachePolicy(
 
   /** Default lifetime of a `NONE` result: the tier most likely to be overtaken by a new report. */
   val noneTtl: Duration = 1.hours,
-
-  /**
-   * Whether a response's `cacheTtlSeconds` overrides the tier default.
-   *
-   * Leave this on. It is the fleet-wide invalidation lever: when the backend needs
-   * already-installed apps to stop trusting cached answers, shortening this field in its responses
-   * is the only way to do it without shipping a release. Turning it off opts this app out of that.
-   */
-  val honorServerTtlOverride: Boolean = true,
 
   /**
    * The most entries the cache keeps. Zero or less means no cap.
@@ -76,45 +66,23 @@ data class CachePolicy(
    * 90 days matches how far back a transaction list is usually browsed. Raise it if your history
    * screen goes back further — and raise [maxEntries] with it, since records are counted by the
    * same cap as cache entries.
-   *
-   * The server's `cacheTtlSeconds` override is not applied to these. That field retracts a verdict
-   * the backend no longer stands behind, which is the right lever for a cached answer and the wrong
-   * one for a record of what a user was already shown.
    */
   val transactionCheckRetention: Duration = 90.days,
 ) {
 
-  /** The default lifetime for [riskTier], ignoring any server override. */
+  /**
+   * How long a result of [riskTier] stays usable — the whole of the cache's lifetime policy.
+   *
+   * There is no per-response override. The backend used to be able to send a `cacheTtlSeconds` that
+   * replaced this, which duplicated the ladder below on the server; cache lifetime is the SDK's own
+   * business, so the field is gone and a host that wants different numbers passes them here.
+   */
   fun ttlFor(riskTier: RiskTier): Duration =
     when (riskTier) {
       RiskTier.HIGH -> highTtl
       RiskTier.ELEVATED -> elevatedTtl
       RiskTier.CAUTION -> cautionTtl
       RiskTier.NONE -> noneTtl
-    }
-
-  /**
-   * The lifetime to actually store an entry with: the server's [cacheTtlSeconds] when it sent one
-   * and [honorServerTtlOverride] is on, otherwise the tier default.
-   *
-   * A server TTL of zero means "do not keep this answer" and yields [Duration.ZERO], which makes
-   * the store delete any row that is already there — the retraction lever, and the only way the
-   * server can take back an answer it has already put on a device.
-   *
-   * **A negative value is clamped to zero, so it retracts too.** It used to be read as malformed
-   * and fall through to the tier default, which is the one reading that cannot be right: the two
-   * plausible intentions behind a negative number are "expired already" and "a bug", and the answer
-   * that serves both is to stop trusting the entry. Falling back to the tier default does the
-   * opposite — it keeps serving a `HIGH` verdict for thirty more days on the strength of a response
-   * the SDK has just decided it does not understand. Clamping matches the Swift and React Native
-   * SDKs, and it fails in the direction that costs a credit rather than the direction that shows a
-   * stale fraud verdict.
-   */
-  fun effectiveTtl(riskTier: RiskTier, cacheTtlSeconds: Long?): Duration =
-    if (honorServerTtlOverride && cacheTtlSeconds != null) {
-      cacheTtlSeconds.coerceAtLeast(0L).seconds
-    } else {
-      ttlFor(riskTier)
     }
 
   companion object {

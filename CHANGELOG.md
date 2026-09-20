@@ -30,9 +30,9 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   account cannot edit an earlier transaction's card. One check can be recorded against several
   transactions — the second transfer to an account you already checked is a cache hit, so it costs no
   credit, and its record carries `origin = Origin.CACHE` to say so. Retention is
-  `CachePolicy.transactionCheckRetention`, 90 days by default, and the server's `cacheTtlSeconds` is
-  deliberately not applied to it: that field retracts a verdict the backend no longer stands behind,
-  which is the wrong lever for a record of what someone was already shown.
+  `CachePolicy.transactionCheckRetention`, 90 days by default, and deliberately not a tier TTL: a
+  clean answer stops being trustworthy after an hour but never stops being what someone was
+  shown.
 
   It is a separate call rather than a parameter on `checkScammer` because of when the two things
   happen: the check runs on the confirmation screen and the reference number is minted after the PIN,
@@ -120,6 +120,21 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   unresolved symbols into material3's DatePicker calendar, which this sample does not use.
 
 ### Breaking
+
+- **The server TTL override is gone: `CachePolicy.honorServerTtlOverride`, `CachePolicy.effectiveTtl`
+  and `CheckResult.cacheTtlSeconds` are all removed.** The backend stopped sending `cacheTtlSeconds`
+   because its per-tier ladder was a copy of the one every SDK already has locally; cache lifetime
+  is the SDK's own business. So the flag gated a branch that could never be taken.
+  `policy.ttlFor(riskTier)` is now the whole of the lifetime policy — use it where you used
+  `effectiveTtl`, and pass your own `CachePolicy` if you want different numbers.
+
+  `CachePolicy` and `CheckResult` are data classes, so this also changes `copy()`, `componentN()`
+  and the constructor arity: a caller that passed either field by name, or destructured either
+  class, has to be updated. A `cacheTtlSeconds` still arriving from a proxy is ignored rather than
+  fatal — every `Json` in the SDK sets `ignoreUnknownKeys`.
+
+  One behaviour goes with it: a zero `cacheTtlSeconds` used to evict a row already on the device.
+  Setting that tier's TTL to zero in your own `CachePolicy` is now the only way to reach that path.
 
 - **`CheckCache` has three more members.** Anyone who implements the interface themselves — a test
   double, or a host that swapped the storage — has to add `putTransactionCheck`,
