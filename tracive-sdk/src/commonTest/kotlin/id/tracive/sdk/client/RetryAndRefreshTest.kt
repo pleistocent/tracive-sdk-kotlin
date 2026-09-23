@@ -327,6 +327,7 @@ class RetryAndRefreshTest {
     val error = assertFailsWith<TraciveException.RateLimited> { client.credits() }
 
     assertEquals(43_200.seconds, error.retryAfter)
+    assertTrue(error.isDailyQuotaExceeded)
     assertEquals(1, transport.requests.size, "a 429 must not be retried, even on a read")
   }
 

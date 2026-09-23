@@ -162,6 +162,31 @@ sealed class TraciveException(
       checkId,
     )
 
+  /**
+   * 403 `user_credit_not_permitted` — this partner's contract does not allow charging the user's
+   * subscription credits. Refused before any charge; retrying will not help.
+   */
+  class UserCreditNotPermitted(message: String? = null, checkId: String? = null) :
+    TraciveException(
+      message ?: "This client is not permitted to charge the user's subscription credits.",
+      CODE_USER_CREDIT_NOT_PERMITTED,
+      403,
+      checkId,
+    )
+
+  /**
+   * 403 `translation_not_permitted` — a `Detail.FULL` check asked for a non-English locale, and
+   * either the partner's contract withholds translation or the user has no premium subscription.
+   * Checking again without a locale returns the English result.
+   */
+  class TranslationNotPermitted(message: String? = null, checkId: String? = null) :
+    TraciveException(
+      message ?: "Translated results are not permitted for this request.",
+      CODE_TRANSLATION_NOT_PERMITTED,
+      403,
+      checkId,
+    )
+
   // ---------------------------------------------------------------- 409 ----
 
   /**
@@ -180,22 +205,32 @@ sealed class TraciveException(
   // ---------------------------------------------------------------- 429 ----
 
   /**
-   * 429 `rate_limited`.
+   * 429 `rate_limited`, or `daily_quota_exceeded` — tell them apart with [isDailyQuotaExceeded].
    *
    * [retryAfter] carries the `Retry-After` header when the server sent one. Retrying a
    * `checkScammer` without an `Idempotency-Key` risks a double charge — pass one before retrying.
    */
-  class RateLimited(
-    val retryAfter: Duration? = null,
-    message: String? = null,
-    checkId: String? = null,
-  ) :
-    TraciveException(
-      message ?: "The client is being rate limited.",
-      CODE_RATE_LIMITED,
-      429,
-      checkId,
-    )
+  class RateLimited
+  internal constructor(
+    val retryAfter: Duration?,
+    message: String?,
+    checkId: String?,
+    code: String,
+  ) : TraciveException(message ?: "The client is being rate limited.", code, 429, checkId) {
+
+    constructor(
+      retryAfter: Duration? = null,
+      message: String? = null,
+      checkId: String? = null,
+    ) : this(retryAfter, message, checkId, CODE_RATE_LIMITED)
+
+    /**
+     * The organisation's daily check quota is spent, rather than a short burst limit. Waiting a few
+     * seconds will not help: [retryAfter] points at the reset at 00:00 UTC.
+     */
+    val isDailyQuotaExceeded: Boolean
+      get() = errorCode == CODE_DAILY_QUOTA_EXCEEDED
+  }
 
   // ------------------------------------------------------------ generic ----
 
@@ -288,8 +323,11 @@ sealed class TraciveException(
     const val CODE_DETAIL_NOT_PERMITTED: String = "detail_not_permitted"
     const val CODE_CREDENTIAL_MISMATCH: String = "credential_mismatch"
     const val CODE_PARTNER_SUSPENDED: String = "partner_suspended"
+    const val CODE_USER_CREDIT_NOT_PERMITTED: String = "user_credit_not_permitted"
+    const val CODE_TRANSLATION_NOT_PERMITTED: String = "translation_not_permitted"
     const val CODE_IDEMPOTENCY_CONFLICT: String = "idempotency_conflict"
     const val CODE_RATE_LIMITED: String = "rate_limited"
+    const val CODE_DAILY_QUOTA_EXCEEDED: String = "daily_quota_exceeded"
 
     /**
      * Map one parsed error envelope onto a typed exception.
@@ -329,11 +367,15 @@ sealed class TraciveException(
         CODE_DETAIL_NOT_PERMITTED -> DetailNotPermitted(message, checkId)
         CODE_CREDENTIAL_MISMATCH -> CredentialMismatch(message, checkId)
         CODE_PARTNER_SUSPENDED -> PartnerSuspended(message, checkId)
+        CODE_USER_CREDIT_NOT_PERMITTED -> UserCreditNotPermitted(message, checkId)
+        CODE_TRANSLATION_NOT_PERMITTED -> TranslationNotPermitted(message, checkId)
         CODE_IDEMPOTENCY_CONFLICT -> IdempotencyConflict(message, checkId)
         CODE_RATE_LIMITED -> RateLimited(retryAfter, message, checkId)
+        CODE_DAILY_QUOTA_EXCEEDED ->
+          RateLimited(retryAfter, message, checkId, CODE_DAILY_QUOTA_EXCEEDED)
         else ->
           when {
-            status == 429 -> RateLimited(retryAfter, message, checkId)
+            status == 429 -> RateLimited(retryAfter, message, checkId, code ?: CODE_RATE_LIMITED)
             status in 500..599 -> Server(status, code, message, checkId)
             else -> Unknown(status, code, message, checkId)
           }

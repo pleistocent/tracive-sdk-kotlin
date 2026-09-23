@@ -337,7 +337,10 @@ try {
 } catch (e: TraciveException.InvalidToken) {
   reauthorize()                                  // no usable grant stored; nothing was sent
 } catch (e: TraciveException.RateLimited) {
-  backOff(e.retryAfter)                          // never auto-retried
+  if (e.isDailyQuotaExceeded) tryAgainTomorrow() // retryAfter runs to 00:00 UTC
+  else backOff(e.retryAfter)                     // never auto-retried
+} catch (e: TraciveException.TranslationNotPermitted) {
+  checkAgainInEnglish()                          // same query, no locale
 } catch (e: TraciveException.Network) {
   showOffline()
 }

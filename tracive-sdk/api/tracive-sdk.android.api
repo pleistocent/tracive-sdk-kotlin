@@ -6,6 +6,7 @@ public final class id/tracive/sdk/TraciveAndroid {
 
 public abstract class id/tracive/sdk/TraciveException : java/lang/Exception {
 	public static final field CODE_CREDENTIAL_MISMATCH Ljava/lang/String;
+	public static final field CODE_DAILY_QUOTA_EXCEEDED Ljava/lang/String;
 	public static final field CODE_DETAIL_NOT_PERMITTED Ljava/lang/String;
 	public static final field CODE_EXPIRED_TOKEN Ljava/lang/String;
 	public static final field CODE_GRANT_REVOKED Ljava/lang/String;
@@ -19,8 +20,10 @@ public abstract class id/tracive/sdk/TraciveException : java/lang/Exception {
 	public static final field CODE_MISSING_SCOPE Ljava/lang/String;
 	public static final field CODE_PARTNER_SUSPENDED Ljava/lang/String;
 	public static final field CODE_RATE_LIMITED Ljava/lang/String;
+	public static final field CODE_TRANSLATION_NOT_PERMITTED Ljava/lang/String;
 	public static final field CODE_UNSUPPORTED_CREDIT_SOURCE Ljava/lang/String;
 	public static final field CODE_UNSUPPORTED_INPUT_TYPE Ljava/lang/String;
+	public static final field CODE_USER_CREDIT_NOT_PERMITTED Ljava/lang/String;
 	public static final field Companion Lid/tracive/sdk/TraciveException$Companion;
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Throwable;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/Integer;Ljava/lang/String;Ljava/lang/Throwable;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -120,6 +123,7 @@ public final class id/tracive/sdk/TraciveException$RateLimited : id/tracive/sdk/
 	public synthetic fun <init> (Lkotlin/time/Duration;Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (Lkotlin/time/Duration;Ljava/lang/String;Ljava/lang/String;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getRetryAfter-FghU774 ()Lkotlin/time/Duration;
+	public final fun isDailyQuotaExceeded ()Z
 }
 
 public final class id/tracive/sdk/TraciveException$Server : id/tracive/sdk/TraciveException {
@@ -132,6 +136,12 @@ public final class id/tracive/sdk/TraciveException$TokenStorageFailed : id/traci
 	public fun <init> (Ljava/lang/Integer;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/Integer;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun getPlatformStatus ()Ljava/lang/Integer;
+}
+
+public final class id/tracive/sdk/TraciveException$TranslationNotPermitted : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 }
 
 public final class id/tracive/sdk/TraciveException$Unknown : id/tracive/sdk/TraciveException {
@@ -147,6 +157,12 @@ public final class id/tracive/sdk/TraciveException$UnsupportedCreditSource : id/
 }
 
 public final class id/tracive/sdk/TraciveException$UnsupportedInputType : id/tracive/sdk/TraciveException {
+	public fun <init> ()V
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
+	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+}
+
+public final class id/tracive/sdk/TraciveException$UserCreditNotPermitted : id/tracive/sdk/TraciveException {
 	public fun <init> ()V
 	public fun <init> (Ljava/lang/String;Ljava/lang/String;)V
 	public synthetic fun <init> (Ljava/lang/String;Ljava/lang/String;ILkotlin/jvm/internal/DefaultConstructorMarker;)V

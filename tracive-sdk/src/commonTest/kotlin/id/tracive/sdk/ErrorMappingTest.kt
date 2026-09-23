@@ -2,6 +2,7 @@ package id.tracive.sdk
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.seconds
@@ -35,8 +36,39 @@ class ErrorMappingTest {
     assertMaps(403, "detail_not_permitted") { it is TraciveException.DetailNotPermitted }
     assertMaps(403, "credential_mismatch") { it is TraciveException.CredentialMismatch }
     assertMaps(403, "partner_suspended") { it is TraciveException.PartnerSuspended }
+    assertMaps(403, "user_credit_not_permitted") { it is TraciveException.UserCreditNotPermitted }
+    assertMaps(403, "translation_not_permitted") { it is TraciveException.TranslationNotPermitted }
     assertMaps(409, "idempotency_conflict") { it is TraciveException.IdempotencyConflict }
     assertMaps(429, "rate_limited") { it is TraciveException.RateLimited }
+    assertMaps(429, "daily_quota_exceeded") { it is TraciveException.RateLimited }
+  }
+
+  /**
+   * A spent daily quota stays [TraciveException.RateLimited], so a caller's existing handler keeps
+   * working, and says which it is: its wait runs to 00:00 UTC, not a few seconds.
+   */
+  @Test
+  fun aDailyQuotaIsARateLimitThatSaysSo() {
+    val error =
+      TraciveException.fromApiError(429, "daily_quota_exceeded", retryAfter = 43_200.seconds)
+
+    assertTrue(error is TraciveException.RateLimited)
+    assertTrue(error.isDailyQuotaExceeded)
+    assertEquals("daily_quota_exceeded", error.errorCode)
+    assertEquals(43_200.seconds, error.retryAfter)
+
+    val burst = TraciveException.fromApiError(429, "rate_limited") as TraciveException.RateLimited
+    assertFalse(burst.isDailyQuotaExceeded)
+    val unlabelled = TraciveException.fromApiError(429, null) as TraciveException.RateLimited
+    assertFalse(unlabelled.isDailyQuotaExceeded)
+    assertFalse(TraciveException.RateLimited().isDailyQuotaExceeded)
+  }
+
+  @Test
+  fun anUnrecognised429KeepsItsRawCode() {
+    val error = TraciveException.fromApiError(429, "slow_down")
+    assertTrue(error is TraciveException.RateLimited)
+    assertEquals("slow_down", error.errorCode)
   }
 
   @Test

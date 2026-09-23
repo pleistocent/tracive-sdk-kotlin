@@ -11,6 +11,15 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Added
 
+- **Three newer server error codes now have a type.** `user_credit_not_permitted` and
+  `translation_not_permitted` (both 403 on a check) map to the new
+  `TraciveException.UserCreditNotPermitted` and `TraciveException.TranslationNotPermitted` instead
+  of `Unknown`. `daily_quota_exceeded` stays `RateLimited`, so an existing handler keeps working;
+  its `errorCode` is now the real code rather than `rate_limited`, and the new
+  `RateLimited.isDailyQuotaExceeded` tells it apart from a short burst limit. Any other
+  unrecognised 429 code is likewise kept on `errorCode`. The change is binary-compatible; an
+  exhaustive `when` over `TraciveException` with no `else` gains two branches.
+
 - **A check can now be recorded against your own transaction, so a transaction-detail screen can show
   it again later.** `client.cache` gains `putTransactionCheck(transactionId, result)`,
   `getTransactionCheck(transactionId)` and `removeTransactionCheck(transactionId)`.

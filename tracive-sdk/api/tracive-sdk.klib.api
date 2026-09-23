@@ -1297,6 +1297,8 @@ sealed class id.tracive.sdk/TraciveException : kotlin/Exception { // id.tracive.
     final class RateLimited : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.RateLimited|null[0]
         constructor <init>(kotlin.time/Duration? = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.RateLimited.<init>|<init>(kotlin.time.Duration?;kotlin.String?;kotlin.String?){}[0]
 
+        final val isDailyQuotaExceeded // id.tracive.sdk/TraciveException.RateLimited.isDailyQuotaExceeded|{}isDailyQuotaExceeded[0]
+            final fun <get-isDailyQuotaExceeded>(): kotlin/Boolean // id.tracive.sdk/TraciveException.RateLimited.isDailyQuotaExceeded.<get-isDailyQuotaExceeded>|<get-isDailyQuotaExceeded>(){}[0]
         final val retryAfter // id.tracive.sdk/TraciveException.RateLimited.retryAfter|{}retryAfter[0]
             final fun <get-retryAfter>(): kotlin.time/Duration? // id.tracive.sdk/TraciveException.RateLimited.retryAfter.<get-retryAfter>|<get-retryAfter>(){}[0]
     }
@@ -1312,6 +1314,10 @@ sealed class id.tracive.sdk/TraciveException : kotlin/Exception { // id.tracive.
             final fun <get-platformStatus>(): kotlin/Int? // id.tracive.sdk/TraciveException.TokenStorageFailed.platformStatus.<get-platformStatus>|<get-platformStatus>(){}[0]
     }
 
+    final class TranslationNotPermitted : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.TranslationNotPermitted|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.TranslationNotPermitted.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
     final class Unknown : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.Unknown|null[0]
         constructor <init>(kotlin/Int? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.Unknown.<init>|<init>(kotlin.Int?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
     }
@@ -1324,9 +1330,15 @@ sealed class id.tracive.sdk/TraciveException : kotlin/Exception { // id.tracive.
         constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.UnsupportedInputType.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
     }
 
+    final class UserCreditNotPermitted : id.tracive.sdk/TraciveException { // id.tracive.sdk/TraciveException.UserCreditNotPermitted|null[0]
+        constructor <init>(kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk/TraciveException.UserCreditNotPermitted.<init>|<init>(kotlin.String?;kotlin.String?){}[0]
+    }
+
     final object Companion { // id.tracive.sdk/TraciveException.Companion|null[0]
         final const val CODE_CREDENTIAL_MISMATCH // id.tracive.sdk/TraciveException.Companion.CODE_CREDENTIAL_MISMATCH|{}CODE_CREDENTIAL_MISMATCH[0]
             final fun <get-CODE_CREDENTIAL_MISMATCH>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_CREDENTIAL_MISMATCH.<get-CODE_CREDENTIAL_MISMATCH>|<get-CODE_CREDENTIAL_MISMATCH>(){}[0]
+        final const val CODE_DAILY_QUOTA_EXCEEDED // id.tracive.sdk/TraciveException.Companion.CODE_DAILY_QUOTA_EXCEEDED|{}CODE_DAILY_QUOTA_EXCEEDED[0]
+            final fun <get-CODE_DAILY_QUOTA_EXCEEDED>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_DAILY_QUOTA_EXCEEDED.<get-CODE_DAILY_QUOTA_EXCEEDED>|<get-CODE_DAILY_QUOTA_EXCEEDED>(){}[0]
         final const val CODE_DETAIL_NOT_PERMITTED // id.tracive.sdk/TraciveException.Companion.CODE_DETAIL_NOT_PERMITTED|{}CODE_DETAIL_NOT_PERMITTED[0]
             final fun <get-CODE_DETAIL_NOT_PERMITTED>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_DETAIL_NOT_PERMITTED.<get-CODE_DETAIL_NOT_PERMITTED>|<get-CODE_DETAIL_NOT_PERMITTED>(){}[0]
         final const val CODE_EXPIRED_TOKEN // id.tracive.sdk/TraciveException.Companion.CODE_EXPIRED_TOKEN|{}CODE_EXPIRED_TOKEN[0]
@@ -1353,10 +1365,14 @@ sealed class id.tracive.sdk/TraciveException : kotlin/Exception { // id.tracive.
             final fun <get-CODE_PARTNER_SUSPENDED>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_PARTNER_SUSPENDED.<get-CODE_PARTNER_SUSPENDED>|<get-CODE_PARTNER_SUSPENDED>(){}[0]
         final const val CODE_RATE_LIMITED // id.tracive.sdk/TraciveException.Companion.CODE_RATE_LIMITED|{}CODE_RATE_LIMITED[0]
             final fun <get-CODE_RATE_LIMITED>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_RATE_LIMITED.<get-CODE_RATE_LIMITED>|<get-CODE_RATE_LIMITED>(){}[0]
+        final const val CODE_TRANSLATION_NOT_PERMITTED // id.tracive.sdk/TraciveException.Companion.CODE_TRANSLATION_NOT_PERMITTED|{}CODE_TRANSLATION_NOT_PERMITTED[0]
+            final fun <get-CODE_TRANSLATION_NOT_PERMITTED>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_TRANSLATION_NOT_PERMITTED.<get-CODE_TRANSLATION_NOT_PERMITTED>|<get-CODE_TRANSLATION_NOT_PERMITTED>(){}[0]
         final const val CODE_UNSUPPORTED_CREDIT_SOURCE // id.tracive.sdk/TraciveException.Companion.CODE_UNSUPPORTED_CREDIT_SOURCE|{}CODE_UNSUPPORTED_CREDIT_SOURCE[0]
             final fun <get-CODE_UNSUPPORTED_CREDIT_SOURCE>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_UNSUPPORTED_CREDIT_SOURCE.<get-CODE_UNSUPPORTED_CREDIT_SOURCE>|<get-CODE_UNSUPPORTED_CREDIT_SOURCE>(){}[0]
         final const val CODE_UNSUPPORTED_INPUT_TYPE // id.tracive.sdk/TraciveException.Companion.CODE_UNSUPPORTED_INPUT_TYPE|{}CODE_UNSUPPORTED_INPUT_TYPE[0]
             final fun <get-CODE_UNSUPPORTED_INPUT_TYPE>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_UNSUPPORTED_INPUT_TYPE.<get-CODE_UNSUPPORTED_INPUT_TYPE>|<get-CODE_UNSUPPORTED_INPUT_TYPE>(){}[0]
+        final const val CODE_USER_CREDIT_NOT_PERMITTED // id.tracive.sdk/TraciveException.Companion.CODE_USER_CREDIT_NOT_PERMITTED|{}CODE_USER_CREDIT_NOT_PERMITTED[0]
+            final fun <get-CODE_USER_CREDIT_NOT_PERMITTED>(): kotlin/String // id.tracive.sdk/TraciveException.Companion.CODE_USER_CREDIT_NOT_PERMITTED.<get-CODE_USER_CREDIT_NOT_PERMITTED>|<get-CODE_USER_CREDIT_NOT_PERMITTED>(){}[0]
 
         final fun fromApiError(kotlin/Int, kotlin/String?, kotlin/String? = ..., kotlin/String? = ..., kotlin.time/Duration? = ...): id.tracive.sdk/TraciveException // id.tracive.sdk/TraciveException.Companion.fromApiError|fromApiError(kotlin.Int;kotlin.String?;kotlin.String?;kotlin.String?;kotlin.time.Duration?){}[0]
     }
