@@ -47,6 +47,14 @@ sealed class TraciveMode {
           "Tracive app refuses a consent without it, client-side and with no redirect, so the " +
           "failure would reach you as silence rather than as an error."
       }
+      // The rest of the server's rule, for the same reason: a refusal there has no redirect.
+      PartnerUserIdRule.problem(partnerUserId)?.let { problem ->
+        throw IllegalArgumentException(
+          "TraciveMode.OAuth partnerUserId $problem. Send an opaque id you store — a UUID or your " +
+            "own customer key, never an email or phone number. The server refuses it before any " +
+            "redirect exists, so the failure would otherwise reach you as silence."
+        )
+      }
     }
 
     override fun toString(): String =

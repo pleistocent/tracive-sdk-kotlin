@@ -105,6 +105,35 @@ class ConfigurationTest {
   }
 
   @Test
+  fun oauthModeRejectsAPartnerUserIdTheServerWouldRefuse() {
+    val refused =
+      listOf(
+        "budi@bca.co.id",
+        "08123456789",
+        "628123456789",
+        "+62 812-3456-7890",
+        "+6591234567",
+        "x".repeat(201),
+      )
+    for (value in refused) {
+      assertFailsWith<IllegalArgumentException>(value) {
+        TraciveMode.OAuth("cli_1", "https://partner.test/cb", emptyList(), value)
+      }
+    }
+    // A numeric customer number (CIF) is a valid id; so are UUIDs and non-ASCII ids.
+    for (value in
+      listOf(
+        "0012345678",
+        "1234567890123456",
+        "3f2b9c1e-uuid",
+        "pelanggan-ñandú",
+        "x".repeat(200),
+      )) {
+      TraciveMode.OAuth("cli_1", "https://partner.test/cb", emptyList(), value)
+    }
+  }
+
+  @Test
   fun proxyModeNeverPrintsItsCredentials() {
     val mode =
       TraciveMode.Proxy(

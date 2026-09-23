@@ -64,7 +64,9 @@ Notes on the arguments that are easy to get wrong:
   and cannot be blank: `TraciveMode.OAuth` rejects a blank one at construction, and the Tracive app
   refuses a consent that arrives without one client-side, with no redirect back, so the failure
   would otherwise reach you as silence rather than as an error. If you have no accounts, generate a
-  UUID on first run and persist it.
+  UUID on first run and persist it. It must also pass the server's rule, which `TraciveMode.OAuth`
+  checks at construction: at most 200 characters, no `@` (an email), and not a phone number (a
+  leading `+`, or an Indonesian mobile number `08…` / `628…`). A numeric customer number is fine.
 - **There is no API key parameter.** Not here, not anywhere. See the README for why.
 
 `environment` is `Production` by default; use `Sandbox` while building, and
