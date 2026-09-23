@@ -314,6 +314,39 @@ class RetryAndRefreshTest {
     assertEquals(1, transport.requests.size, "a rate limit must not be auto-retried")
   }
 
+  /**
+   * A spent daily quota answers 429 with a `Retry-After` that runs to the next UTC midnight. The
+   * policy here is the real default, with a real backoff: had the client waited at all, the call
+   * would have suspended on wall-clock time and [runSdkTest] would have failed.
+   */
+  @Test
+  fun aDailyQuotaOnCreditsIsSurfacedOnceWithoutWaiting() = runSdkTest {
+    val transport = FakeHttpTransport.always(dailyQuotaResponse())
+    val client = testClient(transport, retryPolicy = RetryPolicy())
+
+    val error = assertFailsWith<TraciveException.RateLimited> { client.credits() }
+
+    assertEquals(43_200.seconds, error.retryAfter)
+    assertEquals(1, transport.requests.size, "a 429 must not be retried, even on a read")
+  }
+
+  @Test
+  fun aDailyQuotaOnAKeyedCheckIsSurfacedOnceWithoutWaiting() = runSdkTest {
+    val transport = FakeHttpTransport.always(dailyQuotaResponse())
+    val client = testClient(transport, retryPolicy = RetryPolicy())
+
+    val error =
+      assertFailsWith<TraciveException.RateLimited> {
+        client.checkScammer(testQuery(), idempotencyKey = "idem-429")
+      }
+
+    assertEquals(43_200.seconds, error.retryAfter)
+    assertEquals(1, transport.requests.size, "a 429 must not be retried, even with a key")
+  }
+
+  private fun dailyQuotaResponse(): HttpResponse =
+    HttpResponse(429, errorJson("daily_quota_exceeded"), mapOf("retry-after" to "43200"))
+
   @Test
   fun aTransportFailureBecomesANetworkError() = runSdkTest {
     val transport = FakeHttpTransport { throw IllegalStateException("socket closed") }
