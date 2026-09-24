@@ -225,8 +225,9 @@ sealed class TraciveException(
     ) : this(retryAfter, message, checkId, CODE_RATE_LIMITED)
 
     /**
-     * The organisation's daily check quota is spent, rather than a short burst limit. Waiting a few
-     * seconds will not help: [retryAfter] points at the reset at 00:00 UTC.
+     * A daily allowance is spent — the connection's daily quota, its account reads, or the sandbox
+     * org cap — rather than a per-second limit. Waiting a few seconds will not help: [retryAfter]
+     * points at the reset at 00:00 UTC.
      */
     val isDailyQuotaExceeded: Boolean
       get() = errorCode == CODE_DAILY_QUOTA_EXCEEDED

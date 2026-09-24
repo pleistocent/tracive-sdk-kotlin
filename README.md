@@ -291,7 +291,7 @@ Everything throws a subclass of `TraciveException`, mapped from the server's `er
 | `InvalidToken` | — | No usable grant is stored: either nobody has authorised yet, or the stored record lost its access token and had no refresh token left to renew from. Send the user through `authorize()`. Nothing was sent to the server. |
 | `UserCreditNotPermitted` | 403 | Your contract does not let you charge the user's subscription credits. Contact Tracive; retrying will not help. |
 | `TranslationNotPermitted` | 403 | A `Detail.FULL` check asked for a non-English `locale`, and your contract withholds translation or the user has no premium subscription. Check again without `locale` for the English result. |
-| `RateLimited` | 429 | Wait `retryAfter`. Never auto-retried. When `isDailyQuotaExceeded` is `true` the organisation's daily check quota is spent and `retryAfter` points at 00:00 UTC: tell the user to try later. |
+| `RateLimited` | 429 | Wait `retryAfter`. Never auto-retried. When `isDailyQuotaExceeded` is `true` a daily allowance is spent (the connection's daily quota, its account reads, or the sandbox org cap) and `retryAfter` points at 00:00 UTC: tell the user to try later. |
 | `CacheMiss` | — | `Source.CACHE` with no live entry. Never a silent empty result. |
 | `NotImplemented` | — | You called something in Proxy mode. |
 
