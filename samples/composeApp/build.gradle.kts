@@ -37,9 +37,9 @@ kotlin {
     minSdk = libs.versions.android.minSdk.get().toInt()
   }
 
-  // iosX64 alongside the two current targets so a partner on an Intel Mac can still build the
-  // simulator framework, matching what `:tracive-sdk` itself declares.
-  listOf(iosX64(), iosArm64(), iosSimulatorArm64()).forEach { target ->
+  // No iosX64, unlike `:tracive-sdk`: Compose Multiplatform stopped publishing it in 1.11.0. The
+  // Xcode project excludes x86_64 from simulator builds to match.
+  listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
     target.binaries.framework {
       baseName = "TraciveSample"
       // Static: nothing else links against this framework, so it needs no embedding step and no

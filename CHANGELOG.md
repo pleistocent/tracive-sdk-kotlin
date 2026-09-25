@@ -122,6 +122,8 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   are written twice — key storage (`KeystoreCacheDataKeyStore` wraps the data key because an Android
   Keystore key will not hand back its bytes, `KeychainCacheDataKeyStore` simply stores it) and the
   SQLite driver. `samples/androidApp` is a launcher Activity, `samples/iosApp` an Xcode project.
+  The iOS sample runs on devices and Apple-silicon simulators only, because Compose Multiplatform
+  stopped publishing `iosX64` in 1.11.0; the SDK itself still ships `iosX64`.
 
   Three modules rather than one because from AGP 9 `com.android.application` registers its own
   `kotlin` extension, so `org.jetbrains.kotlin.multiplatform` cannot be applied beside it.
