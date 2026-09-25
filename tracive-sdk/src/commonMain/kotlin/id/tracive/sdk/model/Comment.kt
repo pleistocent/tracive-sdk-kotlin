@@ -12,9 +12,9 @@ import kotlinx.serialization.Serializable
 @Serializable
 data class Comment(
   /**
-   * When the comment was posted, as the server formatted it.
+   * The month the comment was posted, as `"YYYY-MM"` (e.g. `"2026-06"`).
    *
-   * A `String` rather than an instant: this field is display text, and its precision varies.
+   * A `String` rather than an instant: this field is display text. Do not parse it.
    */
   @SerialName("date") val date: String,
 

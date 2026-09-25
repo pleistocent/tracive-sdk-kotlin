@@ -126,7 +126,7 @@ private fun ResultCard(result: CheckResult) {
       Text("Linked identifiers: ${result.relatedScammerCount}")
       if (result.tags.isNotEmpty()) Text("Tags: ${result.tags.joinToString()}")
       result.fraudAmount.forEach { (currency, amount) -> Text("Reported loss: $amount $currency") }
-      result.lastReportOn?.let { Text("Most recent report: $it") }
+      result.lastReportOn?.let { Text("Most recent report: ${monthYear(it)}") }
 
       // Where the answer came from, and how old it is. A cache hit is displayed exactly like a live
       // one, so without this the user cannot tell that they are looking at yesterday's answer.

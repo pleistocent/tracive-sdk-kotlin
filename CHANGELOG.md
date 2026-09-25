@@ -109,6 +109,13 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Changed
 
+- **Report dates now carry month precision only.** The Tracive API sends `firstReportOn` and
+  `lastReportOn` as the 15th of the month at 12:00 UTC, and `Chronology.incidentDate` and
+  `Comment.date` as `"YYYY-MM"`. Show month and year only (e.g. "Jul 2026") — never the day, and
+  nothing computed from it such as "3 days ago": an exact date could help identify the reporter. This
+  is a server change, so it reaches installed apps whatever SDK version they run; the SDK's types and
+  decoding are unchanged. The sample now renders the month this way.
+
 - **The sample is now one Compose Multiplatform app covering Android and iOS.** It was Android-only
   and written against Jetpack Compose. `samples/composeApp` now holds the screen, the view model and
   the whole OAuth configuration as common code; only the two things that are genuinely per-platform

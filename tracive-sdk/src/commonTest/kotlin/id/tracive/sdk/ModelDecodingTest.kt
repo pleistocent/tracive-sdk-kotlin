@@ -45,8 +45,8 @@ class ModelDecodingTest {
         "reportTotal": 12,
         "credibleReports": 9,
         "ambiguousReports": 3,
-        "firstReportOn": "2025-01-02T03:04:05Z",
-        "lastReportOn": "2026-07-30T11:22:33Z",
+        "firstReportOn": "2025-01-15T12:00:00Z",
+        "lastReportOn": "2026-07-15T12:00:00.000Z",
         "fraudAmount": { "IDR": 15000000.5, "USD": 900.0 },
         "tags": ["investment", "impersonation"],
         "relatedScammerCount": 4,
@@ -64,8 +64,8 @@ class ModelDecodingTest {
     assertEquals(12, result.reportTotal)
     assertEquals(9, result.credibleReports)
     assertEquals(3, result.ambiguousReports)
-    assertEquals(Instant.parse("2025-01-02T03:04:05Z"), result.firstReportOn)
-    assertEquals(Instant.parse("2026-07-30T11:22:33Z"), result.lastReportOn)
+    assertEquals(Instant.parse("2025-01-15T12:00:00Z"), result.firstReportOn)
+    assertEquals(Instant.parse("2026-07-15T12:00:00Z"), result.lastReportOn)
     assertEquals(mapOf("IDR" to 15000000.5, "USD" to 900.0), result.fraudAmount)
     assertEquals(listOf("investment", "impersonation"), result.tags)
     assertEquals(4, result.relatedScammerCount)
@@ -92,8 +92,8 @@ class ModelDecodingTest {
           { "chronology": "Fake investment scheme." }
         ],
         "comments": [
-          { "date": "2 days ago", "text": "Same thing happened to me.", "fromCredibleReport": true },
-          { "date": "last week", "text": "Be careful." }
+          { "date": "2026-06", "text": "Same thing happened to me.", "fromCredibleReport": true },
+          { "date": "2026-05", "text": "Be careful." }
         ],
         "billing": { "creditSource": "USER", "unitsCharged": 1, "partnerBalanceRemaining": 4211 }
       }
@@ -111,8 +111,8 @@ class ModelDecodingTest {
     )
     assertEquals(
       listOf(
-        Comment("2 days ago", "Same thing happened to me.", true),
-        Comment("last week", "Be careful.", false),
+        Comment("2026-06", "Same thing happened to me.", true),
+        Comment("2026-05", "Be careful.", false),
       ),
       result.comments,
     )
@@ -133,7 +133,7 @@ class ModelDecodingTest {
         "networkGraphVersion": 7,
         "billing": { "creditSource": "PARTNER", "unitsCharged": 2, "settlementRef": "s_1" },
         "comments": [
-          { "date": "today", "text": "hi", "reactions": { "up": 3 } }
+          { "date": "2026-07", "text": "hi", "reactions": { "up": 3 } }
         ],
         "experiment": { "arm": "b", "weights": [1, 2, 3] }
       }
@@ -146,7 +146,7 @@ class ModelDecodingTest {
     assertEquals("PARTNER", result.billing?.creditSource)
     assertEquals(2, result.billing?.unitsCharged)
     assertNull(result.billing?.partnerBalanceRemaining)
-    assertEquals(listOf(Comment("today", "hi", false)), result.comments)
+    assertEquals(listOf(Comment("2026-07", "hi", false)), result.comments)
   }
 
   /**
@@ -198,8 +198,8 @@ class ModelDecodingTest {
         reportTotal = 5,
         credibleReports = 4,
         ambiguousReports = 1,
-        firstReportOn = Instant.parse("2024-05-06T07:08:09Z"),
-        lastReportOn = Instant.parse("2026-07-31T00:00:00Z"),
+        firstReportOn = Instant.parse("2024-05-15T12:00:00Z"),
+        lastReportOn = Instant.parse("2026-07-15T12:00:00Z"),
         fraudAmount = mapOf("IDR" to 250000.0),
         tags = listOf("marketplace"),
         relatedScammerCount = 2,
@@ -233,7 +233,7 @@ class ModelDecodingTest {
         reportTotal = 7,
         tags = listOf("phishing"),
         topChronologies = listOf(Chronology("narrative", 3, null)),
-        comments = listOf(Comment("today", "text", true)),
+        comments = listOf(Comment("2026-07", "text", true)),
         billing = Billing("USER", 1, null),
         disclaimer = "Community reports.",
         fetchedAt = fetched,

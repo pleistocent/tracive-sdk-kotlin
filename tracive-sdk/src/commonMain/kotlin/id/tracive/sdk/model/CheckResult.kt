@@ -45,11 +45,18 @@ data class CheckResult(
   /** Reports the server could not judge either way. Worth showing next to [credibleReports]. */
   @SerialName("ambiguousReports") val ambiguousReports: Int = 0,
 
-  /** When the earliest matching report was filed. */
+  /**
+   * The month of the earliest matching report.
+   *
+   * Month precision only: the server always sends the 15th at 12:00 UTC, which falls in the same
+   * month in every time zone. Show the month and year (e.g. "Jul 2026"). Never show the day or
+   * compute with it, such as "3 days ago": an exact date could help identify the reporter.
+   */
   @SerialName("firstReportOn") val firstReportOn: Instant? = null,
 
   /**
-   * When the most recent matching report was filed — usually the more decision-relevant of the two.
+   * The month of the most recent matching report — usually the more decision-relevant of the two.
+   * Month precision only, exactly like [firstReportOn].
    */
   @SerialName("lastReportOn") val lastReportOn: Instant? = null,
 

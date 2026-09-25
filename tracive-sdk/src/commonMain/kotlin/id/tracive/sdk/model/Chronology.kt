@@ -19,10 +19,10 @@ data class Chronology(
   @SerialName("riskLevel") val riskLevel: Int = 0,
 
   /**
-   * When the incident happened, as the reporter gave it.
+   * The month the incident happened, as `"YYYY-MM"` (e.g. `"2026-06"`).
    *
-   * A `String` rather than an instant on purpose: reporters supply partial and imprecise dates, and
-   * the server passes them through rather than inventing a timestamp. Do not parse it as ISO-8601.
+   * A `String` rather than an instant on purpose: it is display text, and the server never sends a
+   * day. Do not parse it as ISO-8601.
    */
   @SerialName("incidentDate") val incidentDate: String? = null,
 )
