@@ -45,8 +45,8 @@ class ModelDecodingTest {
         "reportTotal": 12,
         "credibleReports": 9,
         "ambiguousReports": 3,
-        "firstReportOn": "2025-01-15T12:00:00Z",
-        "lastReportOn": "2026-07-15T12:00:00.000Z",
+        "firstReportOn": "2025-01",
+        "lastReportOn": "2026-07",
         "fraudAmount": { "IDR": 15000000.5, "USD": 900.0 },
         "tags": ["investment", "impersonation"],
         "relatedScammerCount": 4,
@@ -64,8 +64,8 @@ class ModelDecodingTest {
     assertEquals(12, result.reportTotal)
     assertEquals(9, result.credibleReports)
     assertEquals(3, result.ambiguousReports)
-    assertEquals(Instant.parse("2025-01-15T12:00:00Z"), result.firstReportOn)
-    assertEquals(Instant.parse("2026-07-15T12:00:00Z"), result.lastReportOn)
+    assertEquals("2025-01", result.firstReportOn)
+    assertEquals("2026-07", result.lastReportOn)
     assertEquals(mapOf("IDR" to 15000000.5, "USD" to 900.0), result.fraudAmount)
     assertEquals(listOf("investment", "impersonation"), result.tags)
     assertEquals(4, result.relatedScammerCount)
@@ -173,6 +173,34 @@ class ModelDecodingTest {
     assertNull(result.disclaimer)
   }
 
+  /** An older server, or a cache payload written by an earlier build, sends a full date-time. */
+  @Test
+  fun aLegacyReportDateTimeKeepsOnlyItsMonth() {
+    val result =
+      json.decodeFromString(
+        CheckResult.serializer(),
+        """{"firstReportOn":"2025-11-15T12:00:00.000Z","lastReportOn":"2026-06-15T12:00:00Z"}""",
+      )
+
+    assertEquals("2025-11", result.firstReportOn)
+    assertEquals("2026-06", result.lastReportOn)
+  }
+
+  @Test
+  fun anUnreadableReportMonthDecodesToNull() {
+    for (raw in listOf("\"garbage\"", "\"2026-13\"", "\"26-06\"", "\"\"", "202606", "null")) {
+      val result =
+        json.decodeFromString(
+          CheckResult.serializer(),
+          """{"found":true,"firstReportOn":$raw,"lastReportOn":$raw}""",
+        )
+
+      assertNull(result.firstReportOn, raw)
+      assertNull(result.lastReportOn, raw)
+      assertTrue(result.found, raw)
+    }
+  }
+
   @Test
   fun riskTierUsesTheServersUpperCaseNames() {
     for (tier in RiskTier.values()) {
@@ -198,8 +226,8 @@ class ModelDecodingTest {
         reportTotal = 5,
         credibleReports = 4,
         ambiguousReports = 1,
-        firstReportOn = Instant.parse("2024-05-15T12:00:00Z"),
-        lastReportOn = Instant.parse("2026-07-15T12:00:00Z"),
+        firstReportOn = "2024-05",
+        lastReportOn = "2026-07",
         fraudAmount = mapOf("IDR" to 250000.0),
         tags = listOf("marketplace"),
         relatedScammerCount = 2,

@@ -2,12 +2,16 @@ package id.tracive.sdk.sample
 
 import android.text.format.DateFormat
 import java.text.SimpleDateFormat
-import java.util.Date
+import java.util.Calendar
 import java.util.Locale
-import kotlinx.datetime.Instant
 
-internal actual fun monthYear(instant: Instant): String {
+internal actual fun formatMonthYear(year: Int, month: Int): String {
   val locale = Locale.getDefault()
   val pattern = DateFormat.getBestDateTimePattern(locale, "MMMy")
-  return SimpleDateFormat(pattern, locale).format(Date(instant.toEpochMilliseconds()))
+  val calendar =
+    Calendar.getInstance().apply {
+      clear()
+      set(year, month - 1, 1)
+    }
+  return SimpleDateFormat(pattern, locale).format(calendar.time)
 }

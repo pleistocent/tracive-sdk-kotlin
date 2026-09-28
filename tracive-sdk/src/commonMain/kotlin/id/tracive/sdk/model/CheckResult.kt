@@ -46,19 +46,24 @@ data class CheckResult(
   @SerialName("ambiguousReports") val ambiguousReports: Int = 0,
 
   /**
-   * The month of the earliest matching report.
+   * The month of the earliest matching report, as `"YYYY-MM"` (e.g. `"2026-06"`), like
+   * [Chronology.incidentDate].
    *
-   * Month precision only: the server always sends the 15th at 12:00 UTC, which falls in the same
-   * month in every time zone. Show the month and year (e.g. "Jul 2026"). Never show the day or
-   * compute with it, such as "3 days ago": an exact date could help identify the reporter.
+   * Show the month and year only (e.g. "Jun 2026"). The server never sends a day, because an exact
+   * date could help identify the reporter. Do not invent one, and compute nothing from the month
+   * such as "3 days ago".
    */
-  @SerialName("firstReportOn") val firstReportOn: Instant? = null,
+  @SerialName("firstReportOn")
+  @Serializable(with = YearMonthSerializer::class)
+  val firstReportOn: String? = null,
 
   /**
    * The month of the most recent matching report — usually the more decision-relevant of the two.
-   * Month precision only, exactly like [firstReportOn].
+   * Same `"YYYY-MM"` format and display rule as [firstReportOn].
    */
-  @SerialName("lastReportOn") val lastReportOn: Instant? = null,
+  @SerialName("lastReportOn")
+  @Serializable(with = YearMonthSerializer::class)
+  val lastReportOn: String? = null,
 
   /**
    * Total reported loss, keyed by ISO 4217 currency code.

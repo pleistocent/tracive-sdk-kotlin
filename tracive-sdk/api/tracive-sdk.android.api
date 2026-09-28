@@ -531,8 +531,8 @@ public final class id/tracive/sdk/model/CachePolicy$Companion {
 public final class id/tracive/sdk/model/CheckResult {
 	public static final field Companion Lid/tracive/sdk/model/CheckResult$Companion;
 	public fun <init> ()V
-	public fun <init> (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;)V
-	public synthetic fun <init> (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILjava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;)V
+	public synthetic fun <init> (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILjava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()Ljava/lang/String;
 	public final fun component10 ()Ljava/util/List;
 	public final fun component11 ()I
@@ -547,11 +547,11 @@ public final class id/tracive/sdk/model/CheckResult {
 	public final fun component4 ()I
 	public final fun component5 ()I
 	public final fun component6 ()I
-	public final fun component7 ()Lkotlinx/datetime/Instant;
-	public final fun component8 ()Lkotlinx/datetime/Instant;
+	public final fun component7 ()Ljava/lang/String;
+	public final fun component8 ()Ljava/lang/String;
 	public final fun component9 ()Ljava/util/Map;
-	public final fun copy (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;)Lid/tracive/sdk/model/CheckResult;
-	public static synthetic fun copy$default (Lid/tracive/sdk/model/CheckResult;Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILkotlinx/datetime/Instant;Lkotlinx/datetime/Instant;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lid/tracive/sdk/model/CheckResult;
+	public final fun copy (Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILjava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;)Lid/tracive/sdk/model/CheckResult;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/CheckResult;Ljava/lang/String;ZLid/tracive/sdk/model/RiskTier;IIILjava/lang/String;Ljava/lang/String;Ljava/util/Map;Ljava/util/List;ILjava/util/List;Ljava/util/List;Lid/tracive/sdk/model/Billing;Ljava/lang/String;Lid/tracive/sdk/model/Origin;Lkotlinx/datetime/Instant;ILjava/lang/Object;)Lid/tracive/sdk/model/CheckResult;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getAmbiguousReports ()I
 	public final fun getBilling ()Lid/tracive/sdk/model/Billing;
@@ -560,10 +560,10 @@ public final class id/tracive/sdk/model/CheckResult {
 	public final fun getCredibleReports ()I
 	public final fun getDisclaimer ()Ljava/lang/String;
 	public final fun getFetchedAt ()Lkotlinx/datetime/Instant;
-	public final fun getFirstReportOn ()Lkotlinx/datetime/Instant;
+	public final fun getFirstReportOn ()Ljava/lang/String;
 	public final fun getFound ()Z
 	public final fun getFraudAmount ()Ljava/util/Map;
-	public final fun getLastReportOn ()Lkotlinx/datetime/Instant;
+	public final fun getLastReportOn ()Ljava/lang/String;
 	public final fun getOrigin ()Lid/tracive/sdk/model/Origin;
 	public final fun getRelatedScammerCount ()I
 	public final fun getReportTotal ()I

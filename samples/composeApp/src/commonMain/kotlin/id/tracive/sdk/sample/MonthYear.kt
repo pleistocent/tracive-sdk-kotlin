@@ -1,7 +1,11 @@
 package id.tracive.sdk.sample
 
-import kotlinx.datetime.Instant
+// Report dates are "YYYY-MM" and carry no day, so none is shown or made up.
+internal fun monthYear(yearMonth: String): String {
+  val year = yearMonth.substringBefore('-').toIntOrNull()
+  val month = yearMonth.substringAfter('-', "").toIntOrNull()
+  if (year == null || month == null || month !in 1..12) return yearMonth
+  return formatMonthYear(year, month)
+}
 
-// Report dates carry month precision only, so the day is never shown. The device time zone is safe
-// to format in: the server sends mid-month noon UTC, which is the same month everywhere.
-internal expect fun monthYear(instant: Instant): String
+internal expect fun formatMonthYear(year: Int, month: Int): String

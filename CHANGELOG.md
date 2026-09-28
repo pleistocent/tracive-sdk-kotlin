@@ -109,12 +109,13 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Changed
 
-- **Report dates now carry month precision only.** The Tracive API sends `firstReportOn` and
-  `lastReportOn` as the 15th of the month at 12:00 UTC, and `Chronology.incidentDate` and
-  `Comment.date` as `"YYYY-MM"`. Show month and year only (e.g. "Jul 2026") — never the day, and
-  nothing computed from it such as "3 days ago": an exact date could help identify the reporter. This
-  is a server change, so it reaches installed apps whatever SDK version they run; the SDK's types and
-  decoding are unchanged. The sample now renders the month this way.
+- **Breaking: `CheckResult.firstReportOn` and `lastReportOn` are now `String?` holding `"YYYY-MM"`
+  (e.g. `"2026-06"`), no longer `Instant?`.** The Tracive API now sends them as a plain month, the
+  same shape as `Chronology.incidentDate` and `Comment.date`: exact report dates never leave the
+  server, because they could help identify the reporter. Show month and year only (e.g. "Jun 2026")
+  and compute nothing from them, such as "3 days ago". A full date-time from an older server, or in
+  a cache entry written by an earlier build, is read as its month; a value with no valid month reads
+  as `null`. The sample formats the month without a day.
 
 - **The sample is now one Compose Multiplatform app covering Android and iOS.** It was Android-only
   and written against Jetpack Compose. `samples/composeApp` now holds the screen, the view model and
