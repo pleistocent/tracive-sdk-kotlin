@@ -1070,6 +1070,8 @@ final class id.tracive.sdk.query/TraciveQuery { // id.tracive.sdk.query/TraciveQ
 
     final object Companion { // id.tracive.sdk.query/TraciveQuery.Companion|null[0]
         final fun bankAccount(kotlin/String, kotlin/String, kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.bankAccount|bankAccount(kotlin.String;kotlin.String;kotlin.String){}[0]
+        final fun bankAccountByBic(kotlin/String, kotlin/String, kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.bankAccountByBic|bankAccountByBic(kotlin.String;kotlin.String;kotlin.String){}[0]
+        final fun bankAccountByShortCode(kotlin/String, kotlin/String, kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.bankAccountByShortCode|bankAccountByShortCode(kotlin.String;kotlin.String;kotlin.String){}[0]
         final fun crypto(kotlin/String, kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.crypto|crypto(kotlin.String;kotlin.String){}[0]
         final fun email(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.email|email(kotlin.String){}[0]
         final fun iban(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.iban|iban(kotlin.String){}[0]
@@ -1113,6 +1115,8 @@ final class id.tracive.sdk/TraciveQueryException : id.tracive.sdk/TraciveExcepti
             final fun <get-NOT_AN_EMAIL>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.NOT_AN_EMAIL.<get-NOT_AN_EMAIL>|<get-NOT_AN_EMAIL>(){}[0]
         final const val NOT_E164 // id.tracive.sdk/TraciveQueryException.Companion.NOT_E164|{}NOT_E164[0]
             final fun <get-NOT_E164>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.NOT_E164.<get-NOT_E164>|<get-NOT_E164>(){}[0]
+        final const val UNKNOWN_BANK_CODE // id.tracive.sdk/TraciveQueryException.Companion.UNKNOWN_BANK_CODE|{}UNKNOWN_BANK_CODE[0]
+            final fun <get-UNKNOWN_BANK_CODE>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.UNKNOWN_BANK_CODE.<get-UNKNOWN_BANK_CODE>|<get-UNKNOWN_BANK_CODE>(){}[0]
         final const val UNKNOWN_COUNTRY // id.tracive.sdk/TraciveQueryException.Companion.UNKNOWN_COUNTRY|{}UNKNOWN_COUNTRY[0]
             final fun <get-UNKNOWN_COUNTRY>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.UNKNOWN_COUNTRY.<get-UNKNOWN_COUNTRY>|<get-UNKNOWN_COUNTRY>(){}[0]
     }

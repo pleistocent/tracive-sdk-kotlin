@@ -33,6 +33,11 @@ import kotlinx.serialization.json.jsonPrimitive
  * semantics: `trim`, `\s`, `\d` and the case mappings all differ somewhere. Those two sections are
  * driven here as well, so "the SDK uses its platform default" cannot pass silently.
  *
+ * Fixture version 6 added the `BANK_SHORT_CODE` and `BANK_BIC` rules: a vector's `input` may name
+ * the bank by `bankShortCode` or `bic` instead of `bankCode`, the SDK translates either through the
+ * bundled `bank-codes.json`, and a code that resolves to nothing is rejected as
+ * `unknown_bank_code`.
+ *
  * Fixture version 5 added three rejection vectors and one guard case, all settled by executing the
  * server's own normalizer: an email with no `@`, an empty crypto address and an empty username
  * platform each get their own reason token, and `__a\nb__` is recorded as a key the server ACCEPTS.
@@ -58,9 +63,9 @@ class QueryGrammarTest {
 
   @Test
   fun theEmbeddedFixtureIsTheWholeVendoredFile() {
-    assertEquals(5, fixture.getValue("version").jsonPrimitive.int, "fixture schema version")
-    assertEquals(34, vectors.size, "vector count — did the embedded copy get truncated?")
-    assertEquals(14, rejected.size, "rejected count — did the embedded copy get truncated?")
+    assertEquals(6, fixture.getValue("version").jsonPrimitive.int, "fixture schema version")
+    assertEquals(42, vectors.size, "vector count — did the embedded copy get truncated?")
+    assertEquals(21, rejected.size, "rejected count — did the embedded copy get truncated?")
     assertTrue(
       fixture.getValue("derivedFrom").jsonObject.string("authority").isNotBlank(),
       "the fixture must still record where its expected values came from",
@@ -120,6 +125,13 @@ class QueryGrammarTest {
         .jsonObject
         .string("value")
     assertTrue(dottedI.startsWith(DOTTED_CAPITAL_I), "the input must still lead with U+0130")
+
+    val shortCode =
+      vectorWithId("bank-short-code-whitespace-stripped")
+        .getValue("input")
+        .jsonObject
+        .string("bankShortCode")
+    assertTrue(shortCode.endsWith(NBSP), "the short code must still end with an NBSP, not a space")
   }
 
   @Test
@@ -649,20 +661,34 @@ class QueryGrammarTest {
     when (type) {
       "PHONE" -> TraciveQuery.phone(input.string("value"))
       "EMAIL" -> TraciveQuery.email(input.string("value"))
-      "BANK" ->
-        if (input.getValue("isIban").jsonPrimitive.boolean) {
-          TraciveQuery.iban(input.string("iban"))
-        } else {
-          TraciveQuery.bankAccount(
-            input.string("country"),
-            input.string("bankCode"),
-            input.string("accountId"),
-          )
-        }
+      "BANK" -> buildBankQuery(input, id)
       "CRYPTO" -> TraciveQuery.crypto(input.string("chain"), input.string("address"))
       "USERNAME" -> TraciveQuery.username(input.string("platform"), input.string("handle"))
       else -> fail("vector $id has an unknown type $type — teach this test about it")
     }
+
+  /**
+   * An IBAN, or a country and account with the bank named by exactly one of `bankCode`,
+   * `bankShortCode` or `bic` — the server refuses a body naming two, so a vector that did would be
+   * testing nothing it could send.
+   */
+  private fun buildBankQuery(input: JsonObject, id: String): TraciveQuery {
+    if (input["isIban"]?.jsonPrimitive?.boolean == true) {
+      return TraciveQuery.iban(input.string("iban"))
+    }
+    val selectors = listOf("bankCode", "bankShortCode", "bic").filter { it in input }
+    if (selectors.size != 1) {
+      fail("vector $id names the bank by $selectors — teach this test about it")
+    }
+    val country = input.string("country")
+    val code = input.string(selectors.single())
+    val account = input.string("accountId")
+    return when (selectors.single()) {
+      "bankShortCode" -> TraciveQuery.bankAccountByShortCode(country, code, account)
+      "bic" -> TraciveQuery.bankAccountByBic(country, code, account)
+      else -> TraciveQuery.bankAccount(country, code, account)
+    }
+  }
 
   private fun JsonObject.string(key: String): String = getValue(key).jsonPrimitive.content
 

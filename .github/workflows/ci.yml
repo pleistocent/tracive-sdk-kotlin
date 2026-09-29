@@ -72,7 +72,7 @@ jobs:
       # Tracive API and lands in all four SDKs together, and the hash moves in all four with it.
       - name: Verify the query-grammar fixture is unmodified
         run: |
-          echo "f94bf48164c82bcc59fda30669d9d8c25dbc36ecc7ad93fcd7fb56ba2cdf2901  tracive-sdk/src/commonTest/resources/query-grammar-vectors.json" \
+          echo "e63439047455e20e0952d75ad438ec8c7b2f80e8b1872c5e6c47628daab89bfe  tracive-sdk/src/commonTest/resources/query-grammar-vectors.json" \
             | shasum -a 256 --check --strict
 
       # The phone-normalization fixture, pinned the same way and for the same reason. Its expected
@@ -110,6 +110,16 @@ jobs:
         run: |
           python3 tools/generate_vectors_kt.py
           git diff --exit-code -- tracive-sdk/src/commonTest/kotlin/id/tracive/sdk/QueryGrammarVectorsJson.kt
+
+      # The bank-code table the SDK ships, pinned and embedded the same way as the grammar fixture.
+      # It is the Tracive API's own table, vendored verbatim into all four SDKs, so the hash moves in
+      # all four together. `BankCodesVendoredFileTest` also compares the two copies on every test run.
+      - name: Check the bank-code table is unmodified and embedded
+        run: |
+          echo "77eda1e45ec5d2894d9a676452f98470fa2c337d6ea12ab628ff176e62e740d5  tracive-sdk/src/commonTest/resources/bank-codes.json" \
+            | shasum -a 256 --check --strict
+          python3 tools/generate_bank_codes_kt.py
+          git diff --exit-code -- tracive-sdk/src/commonMain/kotlin/id/tracive/sdk/query/BankCodesJson.kt
 
       # Verified before anything else that needs a compiler, because it is the cheapest check that
       # can fail and the one most likely to. ktfmt Google style, 2-space indent. `./gradlew

@@ -11,6 +11,16 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Added
 
+- **A bank account can be named by its national bank code or its BIC.**
+  `TraciveQuery.bankAccountByShortCode(countryAlpha3, bankShortCode, account)` and
+  `TraciveQuery.bankAccountByBic(countryAlpha3, bic, account)` take the code a partner already
+  stores — `014` or `CENAIDJA` for BCA — and build exactly the query `bankAccount("IDN", "BCA", …)`
+  builds, so the cache key and the record key are the ones the server uses. The translation table
+  is the Tracive API's own `bank-codes.json`, shipped inside the SDK so it works offline and parsed
+  only on the first lookup. A code the country does not list, or a malformed BIC, throws the new
+  `TraciveQueryException.UNKNOWN_BANK_CODE` (`unknown_bank_code`) before anything is sent. The
+  shared grammar fixture moves to version 6 with the vectors for both.
+
 - **Three newer server error codes now have a type.** `user_credit_not_permitted` and
   `translation_not_permitted` (both 403 on a check) map to the new
   `TraciveException.UserCreditNotPermitted` and `TraciveException.TranslationNotPermitted` instead

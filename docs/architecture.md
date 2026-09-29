@@ -225,7 +225,7 @@ write happens inside the flight, so a collapsed check is also stored once.
 
 ```mermaid
 flowchart TD
-    Build["TraciveQuery.phone, email, bankAccount, iban, crypto, username"] --> Valid{"folds and validates"}
+    Build["TraciveQuery.phone, email, bankAccount, bankAccountByShortCode, bankAccountByBic, iban, crypto, username"] --> Valid{"folds and validates"}
     Valid -->|"unusable input"| Reject["Throw TraciveQueryException. Nothing is sent, nothing is billed."]
     Valid -->|"canonical searchQueryIndex"| Call["client.checkScammer(query, source, detail, idempotencyKey)"]
     Call --> Mode{"mode"}
@@ -292,6 +292,8 @@ flowchart TD
     Kind -->|"phone"| P["Trim, keep one leading plus sign, drop everything that is not an ASCII digit.<br/>Reject anything that is not E.164 once stripped."]
     Kind -->|"email"| E["NFC, then lowercase, then trim, in that order.<br/>Reject when empty, or when there is no at sign."]
     Kind -->|"bankAccount"| B["country: uppercase and trim, must be alpha-3.<br/>bankCode: NFC, uppercase, trim, then remove underscores.<br/>account: uppercase, then remove whitespace and ASCII hyphens."]
+    Kind -->|"bankAccountByShortCode, bankAccountByBic"| T["Translate the national bank code or BIC to Tracive's bank code with the bundled table.<br/>Reject a code the country does not list, or a malformed BIC."]
+    T --> B
     Kind -->|"iban"| I["Uppercase, then remove whitespace and ASCII hyphens."]
     Kind -->|"crypto"| C["chain: NFC, uppercase, trim.<br/>address: trim, and lowercase only when it is an EVM address."]
     Kind -->|"username"| U["platform: NFC, uppercase, trim.<br/>handle: NFC, lowercase, trim, leading at sign kept."]
@@ -314,6 +316,8 @@ Worked examples, all of them vectors from the shared fixture:
 | `phone` | `+1 (415) 555.2671` | `PHONE_+14155552671` |
 | `email` | `Budi@Gmail.com` | `EMAIL_budi@gmail.com` |
 | `bankAccount` | `IDN`, `B_CA`, `3242-4242-422` | `BANK_IDN_BCA_32424242422` |
+| `bankAccountByShortCode` | `IDN`, `14`, `1234567890` | `BANK_IDN_BCA_1234567890` |
+| `bankAccountByBic` | `IDN`, `cenaidjaxxx`, `1234567890` | `BANK_IDN_BCA_1234567890` |
 | `iban` | `DE89 3704 0044 0532 0130 00` | `BANK_IBAN_DE89370400440532013000` |
 | `crypto` | `ETH`, `0x52908400…4169EE7` | `CRYPTO_ETH_0x52908400…4169ee7` |
 | `username` | `TIKTOK`, `@ScammerX` | `USERNAME_TIKTOK_@scammerx` |

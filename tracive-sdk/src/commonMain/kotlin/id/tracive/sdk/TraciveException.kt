@@ -390,10 +390,10 @@ sealed class TraciveException(
  * [reason] is a stable machine-readable token from `query-grammar-vectors.json`, or — for
  * [EMPTY_COUNTRY], [UNKNOWN_COUNTRY], [EMPTY_PHONE_NUMBER] and [COUNTRY_CONFLICT], which
  * `normalizePhoneNumber` raises — from `phone-normalization-vectors.json`: [NOT_E164],
- * [NOT_AN_EMAIL], [COUNTRY_NOT_ALPHA3], [EMPTY_ACCOUNT_ID], [EMPTY_BANK_CODE], [EMPTY_VALUE],
- * [EMPTY_HANDLE], [EMPTY_CHAIN], [EMPTY_ADDRESS], [EMPTY_PLATFORM] or [INVALID_DOCUMENT_ID]. Branch
- * on it rather than on the message: the token is identical across the Kotlin, Flutter and Swift
- * SDKs, whereas the wording is not.
+ * [NOT_AN_EMAIL], [COUNTRY_NOT_ALPHA3], [EMPTY_ACCOUNT_ID], [EMPTY_BANK_CODE], [UNKNOWN_BANK_CODE],
+ * [EMPTY_VALUE], [EMPTY_HANDLE], [EMPTY_CHAIN], [EMPTY_ADDRESS], [EMPTY_PLATFORM] or
+ * [INVALID_DOCUMENT_ID]. Branch on it rather than on the message: the token is identical across the
+ * Kotlin, Flutter and Swift SDKs, whereas the wording is not.
  *
  * Validation always runs before the network call. A key that cannot possibly match a stored
  * document still costs a credit when the server answers "not found", so the SDK refuses to send it.
@@ -436,6 +436,12 @@ class TraciveQueryException(val reason: String) :
 
     /** The bank code folded to an empty string. */
     const val EMPTY_BANK_CODE: String = "empty_bank_code"
+
+    /**
+     * The bank short code or BIC is unknown or malformed: the country lists no bank under it, or
+     * the value is not a BIC at all. Rejected locally, so it is never billed.
+     */
+    const val UNKNOWN_BANK_CODE: String = "unknown_bank_code"
 
     /**
      * The email address folded to an empty string.

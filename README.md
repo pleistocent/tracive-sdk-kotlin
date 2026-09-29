@@ -153,6 +153,8 @@ grammar each have their own diagram in [docs/architecture.md](docs/architecture.
 TraciveQuery.phone("+6281234567891")
 TraciveQuery.email("Someone@Example.COM")
 TraciveQuery.bankAccount(countryAlpha3 = "IDN", bankCode = "BCA", account = "1234567890")
+TraciveQuery.bankAccountByShortCode(countryAlpha3 = "IDN", bankShortCode = "014", account = "1234567890")
+TraciveQuery.bankAccountByBic(countryAlpha3 = "IDN", bic = "CENAIDJA", account = "1234567890")
 TraciveQuery.iban("GB82 WEST 1234 5698 7654 32")
 TraciveQuery.crypto(chain = "ETH", address = "0xAbC…")
 TraciveQuery.username(platform = "instagram", handle = "@SomeHandle")
@@ -162,6 +164,12 @@ Every builder folds its input into a canonical `searchQueryIndex` — the same s
 Swift SDKs produce for the same input, pinned by a shared fixture (`query-grammar-vectors.json`)
 that all three repos vendor verbatim. Invalid input throws `TraciveQueryException` **before**
 anything is sent, because a key that cannot possibly hit would still be billed.
+
+If you store a bank by its national bank code (`014`) or its BIC (`CENAIDJA`) rather than by
+Tracive's bank code (`BCA`), use `bankAccountByShortCode` or `bankAccountByBic`. The SDK translates
+the code with the Tracive API's own table, which it ships, so all three bank lines above build the
+same query and share one cache entry. A code the table does not list for that country throws
+`unknown_bank_code` instead of being sent.
 
 That is also why two of the builders check shape and not just emptiness. `phone()` requires E.164,
 and `email()` requires an `@`. Neither is validated server-side, so `EMAIL_budi` and

@@ -156,6 +156,11 @@ private val ALPHA3 = Regex("^[A-Z]{3}\$")
 private val EVM_ADDRESS = Regex("^0x[0-9a-fA-F]{40}\$")
 
 /**
+ * An 8- or 11-character BIC, after upper-casing — the server's pattern, character for character.
+ */
+private val BIC = Regex("^[A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?\$")
+
+/**
  * `PHONE_<value>`: strip everything that is not a digit, keeping a single leading `+`.
  *
  * ASCII digits only, matching the backend's `/\D/g` — JavaScript's `\D` is exactly `[^0-9]`, so an
@@ -212,10 +217,7 @@ internal fun foldIbanKey(iban: String): String {
 
 /** `BANK_<country>_<bankCode>_<accountId>`. */
 internal fun foldBankAccountKey(countryAlpha3: String, bankCode: String, account: String): String {
-  val country = countryAlpha3.uppercase().jsTrim()
-  if (!ALPHA3.matches(country)) {
-    throw TraciveQueryException(TraciveQueryException.COUNTRY_NOT_ALPHA3)
-  }
+  val country = foldCountryAlpha3(countryAlpha3)
   // Underscores are stripped from the bank code because the id is parsed by splitting on "_": an
   // underscore here would shift the account number into the bank-code position. They are kept in
   // the account number itself, where the backend's parser joins everything past the code back up.
@@ -228,6 +230,74 @@ internal fun foldBankAccountKey(countryAlpha3: String, bankCode: String, account
   val accountId = foldBankAccountId(account)
   if (accountId.isEmpty()) throw TraciveQueryException(TraciveQueryException.EMPTY_ACCOUNT_ID)
   return requireValidDocumentId("BANK_${country}_${code}_$accountId")
+}
+
+/**
+ * [foldBankAccountKey] for a bank named by its national bank code instead of Tracive's bank code.
+ *
+ * The server translates the code the same way and keys on the result, so a key built from the code
+ * as sent would never meet the one the write path stored — and this key is also the local cache
+ * key, formed before any request. An unresolved code is refused rather than keyed. The country is
+ * checked first, as the server checks it: `country_not_alpha3` wins over an unknown code.
+ */
+internal fun foldBankShortCodeKey(
+  countryAlpha3: String,
+  bankShortCode: String,
+  account: String,
+): String {
+  val country = foldCountryAlpha3(countryAlpha3)
+  val bankCode =
+    BankCodes.byShortCode(country, bankShortCode)
+      ?: throw TraciveQueryException(TraciveQueryException.UNKNOWN_BANK_CODE)
+  return foldBankAccountKey(country, bankCode, account)
+}
+
+/** [foldBankShortCodeKey] for a bank named by its BIC. */
+internal fun foldBankBicKey(countryAlpha3: String, bic: String, account: String): String {
+  val country = foldCountryAlpha3(countryAlpha3)
+  val bankCode =
+    BankCodes.byBic(country, bic)
+      ?: throw TraciveQueryException(TraciveQueryException.UNKNOWN_BANK_CODE)
+  return foldBankAccountKey(country, bankCode, account)
+}
+
+/**
+ * A national bank code in the form the bank-code table stores it: NFC, upper case, then every
+ * [JS_WHITESPACE] character, `.` and `-` removed — the server's `/[\s.-]/g`.
+ */
+internal fun foldBankShortCode(raw: String): String {
+  val uppercased = Nfc.normalize(raw).uppercase()
+  val folded = StringBuilder(uppercased.length)
+  for (index in uppercased.indices) {
+    val character = uppercased[index]
+    if (character !in JS_WHITESPACE && character != '.' && character != '-') {
+      folded.append(character)
+    }
+  }
+  return folded.toString()
+}
+
+/**
+ * The 8-character institution part of a BIC, or null when [raw] is not an 8- or 11-character BIC
+ * once folded. Only whitespace is removed, not `.` or `-`, exactly as the server folds a BIC.
+ */
+internal fun foldBic(raw: String): String? {
+  val uppercased = Nfc.normalize(raw).uppercase()
+  val folded = StringBuilder(uppercased.length)
+  for (index in uppercased.indices) {
+    val character = uppercased[index]
+    if (character !in JS_WHITESPACE) folded.append(character)
+  }
+  val bic = folded.toString()
+  return if (BIC.matches(bic)) bic.substring(0, 8) else null
+}
+
+private fun foldCountryAlpha3(countryAlpha3: String): String {
+  val country = countryAlpha3.uppercase().jsTrim()
+  if (!ALPHA3.matches(country)) {
+    throw TraciveQueryException(TraciveQueryException.COUNTRY_NOT_ALPHA3)
+  }
+  return country
 }
 
 /**

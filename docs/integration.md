@@ -254,8 +254,9 @@ wording is not, so branch on the token. The ones a user's typing can produce:
 | `not_e164` | `phone` | Not E.164 once punctuation is stripped. A local number such as `081234567891` is refused rather than guessed at — the SDK does not know the dial code. |
 | `not_an_email` | `email` | No `@` anywhere in the value. The check is `@`-presence only, so odd-but-real addresses still go through. |
 | `empty_value` | `email` | The value folded away to nothing. |
-| `country_not_alpha3` | `bankAccount` | The country is not `^[A-Z]{3}$` — usually an alpha-2 code such as `ID` where `IDN` was meant. |
-| `empty_bank_code`, `empty_account_id` | `bankAccount`, `iban` | The field folded away to nothing. |
+| `country_not_alpha3` | `bankAccount`, `bankAccountByShortCode`, `bankAccountByBic` | The country is not `^[A-Z]{3}$` — usually an alpha-2 code such as `ID` where `IDN` was meant. Checked before the bank code. |
+| `unknown_bank_code` | `bankAccountByShortCode`, `bankAccountByBic` | The country lists no bank under that national bank code or BIC, or the BIC is malformed. Nothing is sent, so nothing is billed. |
+| `empty_bank_code`, `empty_account_id` | `bankAccount`, `bankAccountByShortCode`, `bankAccountByBic`, `iban` | The field folded away to nothing. |
 | `empty_chain`, `empty_address` | `crypto` | The chain code, or the wallet address, folded away to nothing. |
 | `empty_platform`, `empty_handle` | `username` | The platform, or the handle, folded away to nothing. |
 | `invalid_document_id` | any | The folded key is not one the API can store under: it holds a `/`, an unpaired surrogate, or exceeds 1500 UTF-8 bytes. Not usually reachable from a builder. |

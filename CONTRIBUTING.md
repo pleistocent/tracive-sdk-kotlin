@@ -50,6 +50,10 @@ the suite did not run and the build was green anyway.
 
 - **The embedded grammar fixture matches the JSON.** The vectors are compiled into the test source
   *and* kept as a JSON file; this step fails if they drift apart.
+- **The bank-code table matches the JSON.** `bank-codes.json` sits beside the grammar fixture and is
+  just as much the Tracive API's file, not yours to edit. `BankCodesJson.kt` embeds it for
+  `bankAccountByShortCode` and `bankAccountByBic`; regenerate it with
+  `python3 tools/generate_bank_codes_kt.py`.
 - **`ktfmtCheck`** — Google style, two-space indent. `./gradlew ktfmtFormat` fixes it.
 - **`apiCheck`** — the public ABI dumps in `tracive-sdk/api/` must match the code. A deliberate
   surface change is accompanied by `./gradlew apiDump` and the regenerated dump in the same commit.

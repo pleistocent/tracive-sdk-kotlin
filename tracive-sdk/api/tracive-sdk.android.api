@@ -194,6 +194,7 @@ public final class id/tracive/sdk/TraciveQueryException : id/tracive/sdk/Tracive
 	public static final field INVALID_DOCUMENT_ID Ljava/lang/String;
 	public static final field NOT_AN_EMAIL Ljava/lang/String;
 	public static final field NOT_E164 Ljava/lang/String;
+	public static final field UNKNOWN_BANK_CODE Ljava/lang/String;
 	public static final field UNKNOWN_COUNTRY Ljava/lang/String;
 	public fun <init> (Ljava/lang/String;)V
 	public final fun getReason ()Ljava/lang/String;
@@ -1290,6 +1291,8 @@ public final class id/tracive/sdk/query/TraciveQuery {
 
 public final class id/tracive/sdk/query/TraciveQuery$Companion {
 	public final fun bankAccount (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
+	public final fun bankAccountByBic (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
+	public final fun bankAccountByShortCode (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
 	public final fun crypto (Ljava/lang/String;Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
 	public final fun email (Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;
 	public final fun iban (Ljava/lang/String;)Lid/tracive/sdk/query/TraciveQuery;

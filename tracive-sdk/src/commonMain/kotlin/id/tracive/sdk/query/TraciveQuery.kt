@@ -92,6 +92,44 @@ private constructor(
       TraciveQuery(foldBankAccountKey(countryAlpha3, bankCode, account))
 
     /**
+     * A domestic bank account whose bank is named by its national bank code — `014` for BCA in
+     * Indonesia — rather than by Tracive's bank code.
+     *
+     * The code is translated with the Tracive API's own table, which ships inside the SDK, so this
+     * is exactly the query [bankAccount] builds for that bank: `bankAccountByShortCode("IDN",
+     * "014", account)` equals `bankAccount("IDN", "BCA", account)`, and the two share a cache
+     * entry. Case, whitespace, `.` and `-` in the code are ignored, and so are leading zeros on an
+     * all-digit code, so `14` finds `014`.
+     *
+     * @param countryAlpha3 must be alpha-3, as for [bankAccount]. The code is looked up in this
+     *   country's list only.
+     * @throws TraciveQueryException [TraciveQueryException.COUNTRY_NOT_ALPHA3],
+     *   [TraciveQueryException.UNKNOWN_BANK_CODE] if the country lists no bank under this code, or
+     *   [TraciveQueryException.EMPTY_ACCOUNT_ID].
+     */
+    fun bankAccountByShortCode(
+      countryAlpha3: String,
+      bankShortCode: String,
+      account: String,
+    ): TraciveQuery = TraciveQuery(foldBankShortCodeKey(countryAlpha3, bankShortCode, account))
+
+    /**
+     * A domestic bank account whose bank is named by its BIC (SWIFT code) — `CENAIDJA` for BCA.
+     *
+     * Translated like [bankAccountByShortCode], to the same query [bankAccount] builds. An
+     * 11-character BIC is accepted and its branch suffix ignored; case and whitespace do not
+     * matter.
+     *
+     * @param countryAlpha3 must be alpha-3. The BIC is looked up in this country's list only, so a
+     *   Singapore bank's BIC under `IDN` is unknown.
+     * @throws TraciveQueryException [TraciveQueryException.COUNTRY_NOT_ALPHA3],
+     *   [TraciveQueryException.UNKNOWN_BANK_CODE] if the value is not a BIC or the country lists no
+     *   bank under it, or [TraciveQueryException.EMPTY_ACCOUNT_ID].
+     */
+    fun bankAccountByBic(countryAlpha3: String, bic: String, account: String): TraciveQuery =
+      TraciveQuery(foldBankBicKey(countryAlpha3, bic, account))
+
+    /**
      * An IBAN, in either printed groups of four or unbroken.
      *
      * @throws TraciveQueryException [TraciveQueryException.EMPTY_ACCOUNT_ID] if it is blank.
