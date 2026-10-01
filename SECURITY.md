@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-**Email <security@tracive.id>.** Please do not open a public GitHub issue for a security problem, and
+**Email <developer@pleistocent.com>.** Please do not open a public GitHub issue for a security problem, and
 please do not post it to a forum or a chat group first.
 
 If you want the report encrypted, say so in a first message with no details and we will send you a
