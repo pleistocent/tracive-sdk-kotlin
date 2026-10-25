@@ -174,7 +174,7 @@ before `Application.onCreate` returns. Only call it yourself if you strip that p
 <key>LSApplicationQueriesSchemes</key>
 <array>
   <string>tracive</string>
-  <string>tracivedev</string>
+  <string>tracivesandbox</string>
 </array>
 ```
 

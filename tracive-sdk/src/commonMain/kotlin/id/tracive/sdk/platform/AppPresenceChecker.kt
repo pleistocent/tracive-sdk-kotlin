@@ -52,7 +52,7 @@ interface AppPresenceChecker {
      * association is. What may not appear in a partner's *manifest* is a different rule, and the
      * `<queries><intent>` approach is what keeps it out of one — see CONTRIBUTING.md.
      */
-    const val ANDROID_SANDBOX_PACKAGE: String = "com.pleistocent.tracive.dev"
+    const val ANDROID_SANDBOX_PACKAGE: String = "com.pleistocent.tracive.sandbox"
 
     /**
      * The production Tracive app's iOS URL scheme, which must be listed in
@@ -63,7 +63,7 @@ interface AppPresenceChecker {
     /**
      * The sandbox Tracive app's iOS URL scheme. Also needs an `LSApplicationQueriesSchemes` entry.
      */
-    const val IOS_SANDBOX_URL_SCHEME: String = "tracivedev"
+    const val IOS_SANDBOX_URL_SCHEME: String = "tracivesandbox"
 
     /** Which Android build claims [environment]'s authorize App Link. */
     fun androidPackageFor(environment: TraciveEnvironment): String =
