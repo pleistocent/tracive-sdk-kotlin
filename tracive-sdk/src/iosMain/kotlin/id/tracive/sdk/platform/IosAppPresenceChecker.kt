@@ -15,7 +15,7 @@ import platform.UIKit.UIApplication
  * <key>LSApplicationQueriesSchemes</key>
  * <array>
  *   <string>tracive</string>
- *   <string>tracivedev</string>
+ *   <string>tracivesandbox</string>
  * </array>
  * ```
  *

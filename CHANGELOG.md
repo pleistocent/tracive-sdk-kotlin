@@ -150,6 +150,14 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ### Breaking
 
+- **Sandbox now looks for the Tracive sandbox app: `com.pleistocent.tracive.sandbox`, URL scheme
+  `tracivesandbox`.** It looked for `com.pleistocent.tracive.dev` and `tracivedev`, which is now an
+  internal build that claims no authorize host, so it can never answer a sandbox consent.
+  `AppPresenceChecker.ANDROID_SANDBOX_PACKAGE` and `IOS_SANDBOX_URL_SCHEME` change value. On iOS,
+  replace `tracivedev` with `tracivesandbox` in `LSApplicationQueriesSchemes`. On Android there is
+  nothing to change: the AAR's `<queries>` names the authorize App Link, not a package. Production,
+  `Custom` and the sandbox API and authorize hosts are unchanged.
+
 - **The server TTL override is gone: `CachePolicy.honorServerTtlOverride`, `CachePolicy.effectiveTtl`
   and `CheckResult.cacheTtlSeconds` are all removed.** The backend stopped sending `cacheTtlSeconds`
    because its per-tier ladder was a copy of the one every SDK already has locally; cache lifetime
@@ -236,7 +244,7 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   build: with no declaration in the sample's own manifest, the probe went from opening Play Store to
   opening the Tracive app's consent screen.
 
-  **On iOS, add `tracivedev` to `LSApplicationQueriesSchemes`** if you run against sandbox. An
+  **On iOS, add `tracivesandbox` to `LSApplicationQueriesSchemes`** if you run against sandbox. An
   `Info.plist` is not merged, so no library can ship that one for you.
 
 ### Added

@@ -59,14 +59,14 @@
     — it has to be here. Without it, canOpenURL answers false on every device, installed or not,
     and every user is sent to the install page instead of the consent screen.
 
-    Both entries: `tracive` is the production app, `tracivedev` the sandbox build, and the probe
+    Both entries: `tracive` is the production app, `tracivesandbox` the sandbox build, and the probe
     follows `environment`. Listing both costs nothing and removes the failure where switching
     environment silently starts answering false.
   -->
   <key>LSApplicationQueriesSchemes</key>
   <array>
     <string>tracive</string>
-    <string>tracivedev</string>
+    <string>tracivesandbox</string>
   </array>
 
   <!--
