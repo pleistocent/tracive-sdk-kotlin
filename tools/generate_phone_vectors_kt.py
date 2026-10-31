@@ -40,15 +40,23 @@ def main() -> None:
         for r in fixture["rejected"]
     )
 
+    lengths = "\n".join(
+        "      %s to setOf(%s)," % (kotlin_string(dial), ", ".join(str(n) for n in values))
+        for dial, values in fixture["nationalNumberLengths"].items()
+    )
+
     source = replace_block(source, "  private val vectors =\n    listOf(\n", vectors)
+    source = replace_block(source, "  private val nationalNumberLengths =\n    mapOf(\n", lengths)
     source = replace_block(source, "  private val rejections =\n    listOf(\n", rejections)
     source = re.sub(r"assertEquals\(\d+, vectors\.size", "assertEquals(%d, vectors.size" % len(fixture["vectors"]), source)
     source = re.sub(r"assertEquals\(\d+, rejections\.size", "assertEquals(%d, rejections.size" % len(fixture["rejected"]), source)
+    source = re.sub(r"assertEquals\(\d+, nationalNumberLengths\.size", "assertEquals(%d, nationalNumberLengths.size" % len(fixture["nationalNumberLengths"]), source)
     source = re.sub(r"assertEquals\(\d+, Country\.entries\.size", "assertEquals(%d, Country.entries.size" % fixture["countryCount"], source)
 
     io.open(TEST, "w", encoding="utf-8").write(source)
-    print("regenerated %d vectors, %d rejections, %d countries"
-          % (len(fixture["vectors"]), len(fixture["rejected"]), fixture["countryCount"]))
+    print("regenerated %d vectors, %d rejections, %d countries, %d national-length entries"
+          % (len(fixture["vectors"]), len(fixture["rejected"]), fixture["countryCount"],
+             len(fixture["nationalNumberLengths"])))
 
 
 if __name__ == "__main__":

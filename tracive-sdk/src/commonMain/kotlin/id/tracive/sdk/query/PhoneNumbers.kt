@@ -43,6 +43,122 @@ private const val DIAL_HUNGARY = "36"
  * writes after the 8 (`8 029 123 45 67`); the leading-zero strip removes it afterwards. Source: ITU
  * "Dialling procedures" and each country's numbering plan filed with the ITU.
  */
+/**
+ * Every length a national number can have, for the dial codes whose national numbers can start with
+ * the dial code's own digits (libphonenumber 9.0.42 metadata, all number types). The same table as
+ * `nationalNumberLengths` in `phone-normalization-vectors.json`, which the tests sweep.
+ */
+private val NATIONAL_NUMBER_LENGTHS: Map<String, Set<Int>> =
+  mapOf(
+    "7" to setOf(10, 14),
+    "20" to setOf(8, 9, 10),
+    "27" to setOf(5, 6, 7, 8, 9, 10),
+    "31" to setOf(5, 6, 7, 8, 9, 10, 11),
+    "32" to setOf(8, 9),
+    "33" to setOf(9),
+    "36" to setOf(8, 9),
+    "39" to setOf(6, 7, 8, 9, 10, 11, 12),
+    "41" to setOf(9, 12),
+    "43" to setOf(4, 5, 6, 7, 8, 9, 10, 11, 12, 13),
+    "45" to setOf(8),
+    "46" to setOf(6, 7, 8, 9, 10, 12),
+    "47" to setOf(5, 8),
+    "48" to setOf(6, 7, 8, 9, 10),
+    "49" to setOf(4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15),
+    "51" to setOf(8, 9),
+    "53" to setOf(6, 7, 8, 10),
+    "55" to setOf(8, 9, 10, 11),
+    "62" to setOf(7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17),
+    "63" to setOf(6, 8, 9, 10, 11, 12, 13),
+    "65" to setOf(8, 10, 11),
+    "66" to setOf(8, 9, 10, 13),
+    "84" to setOf(7, 8, 9, 10),
+    "90" to setOf(7, 10, 12, 13),
+    "91" to setOf(8, 9, 10, 11, 12, 13),
+    "92" to setOf(8, 9, 10, 11, 12),
+    "95" to setOf(6, 7, 8, 9, 10),
+    "213" to setOf(8, 9),
+    "216" to setOf(8),
+    "218" to setOf(9),
+    "220" to setOf(7, 9),
+    "222" to setOf(8),
+    "230" to setOf(7, 8, 10),
+    "231" to setOf(7, 8, 9),
+    "233" to setOf(8, 9),
+    "238" to setOf(7),
+    "241" to setOf(7, 8),
+    "243" to setOf(7, 8, 9, 10),
+    "244" to setOf(9),
+    "247" to setOf(5, 6),
+    "250" to setOf(8, 9),
+    "251" to setOf(9),
+    "252" to setOf(6, 7, 8, 9),
+    "255" to setOf(9),
+    "262" to setOf(9),
+    "266" to setOf(8),
+    "267" to setOf(7, 8, 10),
+    "290" to setOf(4, 5),
+    "298" to setOf(6),
+    "299" to setOf(6),
+    "355" to setOf(6, 7, 8, 9),
+    "358" to setOf(5, 6, 7, 8, 9, 10, 11, 12),
+    "359" to setOf(6, 7, 8, 9, 12),
+    "370" to setOf(8),
+    "373" to setOf(8),
+    "376" to setOf(6, 8, 9),
+    "377" to setOf(8, 9),
+    "379" to setOf(6, 7, 8, 9, 10, 11, 12),
+    "380" to setOf(9, 10),
+    "383" to setOf(8, 9, 10, 11, 12),
+    "386" to setOf(5, 6, 7, 8),
+    "387" to setOf(8, 9),
+    "421" to setOf(6, 7, 9),
+    "500" to setOf(5),
+    "501" to setOf(7, 11),
+    "502" to setOf(8, 11),
+    "503" to setOf(7, 8, 11),
+    "506" to setOf(8, 10),
+    "507" to setOf(7, 8, 10, 11),
+    "508" to setOf(6, 9),
+    "590" to setOf(9),
+    "594" to setOf(9),
+    "596" to setOf(9),
+    "677" to setOf(5, 7),
+    "679" to setOf(7, 11),
+    "680" to setOf(7),
+    "683" to setOf(4, 7),
+    "685" to setOf(5, 6, 7, 10),
+    "850" to setOf(8, 10),
+    "853" to setOf(7, 8),
+    "855" to setOf(8, 9, 10),
+    "886" to setOf(7, 8, 9, 10, 11),
+    "960" to setOf(7, 10),
+    "961" to setOf(7, 8),
+    "962" to setOf(8, 9),
+    "963" to setOf(8, 9),
+    "965" to setOf(7, 8),
+    "968" to setOf(7, 8, 9),
+    "971" to setOf(5, 6, 7, 8, 9, 10, 11, 12),
+    "972" to setOf(7, 8, 9, 10, 11, 12),
+    "973" to setOf(8),
+    "976" to setOf(8, 9, 10),
+    "992" to setOf(9),
+    "994" to setOf(9),
+    "996" to setOf(9, 10),
+    "998" to setOf(9),
+  )
+
+/**
+ * Digits that start with [dialCode] are a national number when their length is a national length
+ * and their length without the dial code is not. When both are (Indonesia's `62812…`, Italy's
+ * `393…`), the dial code is stripped as before, so a number typed with its country code never
+ * changes key.
+ */
+private fun isNationalNumber(dialCode: String, digits: String): Boolean {
+  val lengths = NATIONAL_NUMBER_LENGTHS[dialCode] ?: return false
+  return digits.length in lengths && digits.length - dialCode.length !in lengths
+}
+
 private val DIGITS_AFTER_TRUNK_8 =
   mapOf(
     "375" to 10, // Belarus
@@ -99,15 +215,19 @@ fun normalizePhoneNumber(countryOrDialCode: String, phoneNumber: String): String
   // A third, quieter one: emptiness is re-checked *after* the trunk prefix is stripped, so `000`,
   // `62` and `1` are refused. The app folds those to `+62` and `+1`, which cannot match any record,
   // so this belongs with the first kind — safe, not stricter. It did not.
-  if (phoneNumber.trimStart(*TRIMMED).startsWith('+') && !digits.startsWith(dialCode)) {
+  val international = phoneNumber.trimStart(*TRIMMED).startsWith('+')
+  if (international && !digits.startsWith(dialCode)) {
     throw TraciveQueryException(TraciveQueryException.COUNTRY_CONFLICT)
   }
 
   // The caller may have typed the country code into the local-number field, or pasted a number that
-  // was already international. Strip it rather than emitting +6262…
+  // was already international. Strip it rather than emitting +6262… — unless, without a `+`, the
+  // digits are a national number that merely starts with the dial code's own digits (Kazakh 701…).
   if (digits.startsWith("00$dialCode")) {
     digits = digits.removePrefix("00$dialCode")
-  } else if (digits.startsWith(dialCode)) {
+  } else if (
+    digits.startsWith(dialCode) && (international || !isNationalNumber(dialCode, digits))
+  ) {
     digits = digits.removePrefix(dialCode)
   }
 
