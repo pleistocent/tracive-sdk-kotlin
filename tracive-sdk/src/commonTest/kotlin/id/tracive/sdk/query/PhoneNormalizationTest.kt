@@ -44,6 +44,24 @@ class PhoneNormalizationTest {
       PhoneVector("IDN", "08571860907\uFE0F9", "+6285718609079"),
       PhoneVector("IDN", "0857\u200B1860\u200B9079", "+6285718609079"),
       PhoneVector("  IDN  ", "0857 1860 9079", "+6285718609079"),
+      PhoneVector("HUN", "06 30 123 4567", "+36301234567"),
+      PhoneVector("HUN", "+36 30 123 4567", "+36301234567"),
+      PhoneVector("HUN", "06 62 123 456", "+3662123456"),
+      PhoneVector("BLR", "8 029 123 45 67", "+375291234567"),
+      PhoneVector("BLR", "+375 29 123 45 67", "+375291234567"),
+      PhoneVector("BLR", "8 801 123 4567", "+3758011234567"),
+      PhoneVector("LTU", "8 612 34567", "+37061234567"),
+      PhoneVector("LTU", "0 612 34567", "+37061234567"),
+      PhoneVector("LTU", "800 12345", "+37080012345"),
+      PhoneVector("TKM", "8 65 123456", "+99365123456"),
+      PhoneVector("TJK", "8 93 123 4567", "+992931234567"),
+      PhoneVector("UZB", "8 90 123 45 67", "+998901234567"),
+      PhoneVector("UZB", "88 123 45 67", "+998881234567"),
+      PhoneVector("CIV", "07 12 34 56 78", "+2250712345678"),
+      PhoneVector("CIV", "+225 07 12 34 56 78", "+2250712345678"),
+      PhoneVector("BEN", "01 97 12 34 56", "+2290197123456"),
+      PhoneVector("COG", "06 123 4567", "+242061234567"),
+      PhoneVector("GAB", "077 12 34 56", "+24177123456"),
     )
 
   private val rejections =
@@ -67,11 +85,12 @@ class PhoneNormalizationTest {
       PhoneRejection("USA", "0000000000", "empty_phone_number"),
       PhoneRejection("RUS", "00000000000", "empty_phone_number"),
       PhoneRejection("IDN", "0000", "empty_phone_number"),
+      PhoneRejection("CIV", "0000000000", "empty_phone_number"),
     )
 
   @Test
   fun everyVectorFoldsByteForByte() {
-    assertEquals(20, vectors.size, "vector count — did the embedded copy get truncated?")
+    assertEquals(38, vectors.size, "vector count — did the embedded copy get truncated?")
     for (vector in vectors) {
       assertEquals(
         vector.expected,
@@ -83,7 +102,7 @@ class PhoneNormalizationTest {
 
   @Test
   fun everyRejectionIsRefusedWithItsExactReason() {
-    assertEquals(19, rejections.size, "rejection count")
+    assertEquals(20, rejections.size, "rejection count")
     for (rejection in rejections) {
       val failure =
         assertFailsWith<TraciveQueryException>("accepted an unusable input") {

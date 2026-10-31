@@ -33,6 +33,24 @@ private const val DIAL_RUSSIA_KAZAKHSTAN = "7"
 private const val DIAL_NANP = "1"
 private const val DIAL_ITALY = "39"
 private const val DIAL_SAN_MARINO = "378"
+private const val DIAL_COTE_DIVOIRE = "225"
+private const val DIAL_BENIN = "229"
+private const val DIAL_CONGO = "242"
+private const val DIAL_HUNGARY = "36"
+
+/**
+ * Countries whose trunk prefix is 8, with how many digits follow that 8. Belarus counts the 0 it
+ * writes after the 8 (`8 029 123 45 67`); the leading-zero strip removes it afterwards. Source: ITU
+ * "Dialling procedures" and each country's numbering plan filed with the ITU.
+ */
+private val DIGITS_AFTER_TRUNK_8 =
+  mapOf(
+    "375" to 10, // Belarus
+    "370" to 8, // Lithuania
+    "992" to 9, // Tajikistan
+    "993" to 8, // Turkmenistan
+    "998" to 9, // Uzbekistan
+  )
 
 /**
  * Normalizes [phoneNumber] to E.164 using [countryOrDialCode].
@@ -103,6 +121,24 @@ fun normalizePhoneNumber(countryOrDialCode: String, phoneNumber: String): String
       // produce a different subscriber, not a tidier one.
       DIAL_ITALY,
       DIAL_SAN_MARINO -> digits
+      // Côte d'Ivoire, Benin and the Republic of the Congo have no trunk prefix, and their
+      // regulators require the 0 after the country code (+225 07…, +229 01…, +242 06…).
+      DIAL_COTE_DIVOIRE,
+      DIAL_BENIN,
+      DIAL_CONGO -> digits
+      // Hungary: the trunk prefix is 06. A national number may start with 6 (Szeged is 62), so the
+      // pair is dropped, never a 0 and then a 6 on its own.
+      DIAL_HUNGARY -> digits.removePrefix("06").trimStart('0')
+      // A trunk 8 (Lithuania's until March 2024, 0 since). Some national numbers start with 8
+      // themselves (Belarusian 801 and Lithuanian 800 freephone, Uzbek 88 mobile), so the 8 goes
+      // only when exactly a national number's length follows it.
+      in DIGITS_AFTER_TRUNK_8 -> {
+        val afterTrunk = DIGITS_AFTER_TRUNK_8.getValue(dialCode)
+        val national =
+          if (digits.startsWith("8") && digits.length == afterTrunk + 1) digits.substring(1)
+          else digits
+        national.trimStart('0')
+      }
       // North America: the trunk prefix is 1, and a local number is 10 digits.
       DIAL_NANP ->
         if (digits.startsWith("1") && digits.length == 11) digits.substring(1) else digits
@@ -111,14 +147,11 @@ fun normalizePhoneNumber(countryOrDialCode: String, phoneNumber: String): String
     }
 
   // A number that is nothing but zeros is refused here, not left to `phone()`. For most countries
-  // the
-  // trunk-prefix rule strips the zeros away and the emptiness check above catches it — but Italy,
-  // San
-  // Marino, North America and Russia do not strip leading zeros, so `+390000000` survived, matched
-  // E.164, reached the network and was billed for a miss it could only ever be. Refusing it here
-  // also
-  // makes the reason the same in every country instead of `empty_phone_number` in Indonesia and
-  // `not_e164` in Italy for the identical input.
+  // the trunk-prefix rule strips the zeros away and the emptiness check above catches it — but
+  // Italy, San Marino, Côte d'Ivoire, Benin, the Congo, North America and Russia do not strip
+  // leading zeros, so `+390000000` survived, matched E.164, reached the network and was billed for
+  // a miss it could only ever be. Refusing it here also makes the reason the same in every country
+  // instead of `empty_phone_number` in Indonesia and `not_e164` in Italy for the identical input.
   if (digits.isEmpty() || digits.all { it == '0' }) {
     throw TraciveQueryException(TraciveQueryException.EMPTY_PHONE_NUMBER)
   }

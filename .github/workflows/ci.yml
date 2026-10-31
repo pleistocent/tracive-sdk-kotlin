@@ -93,7 +93,7 @@ jobs:
 
       - name: Verify the phone-normalization fixture is unmodified
         run: |
-          echo "de39974af93c6d466043708e0c1aa1f4e9d9aa6e426d458c5a29a1ac015323f1  tracive-sdk/src/commonTest/resources/phone-normalization-vectors.json" \
+          echo "b060199bb1785662c8e2670aecc38fc03ef6ebfad845a98ff37ad3c3308f903f  tracive-sdk/src/commonTest/resources/phone-normalization-vectors.json" \
             | shasum -a 256 --check --strict
 
       - name: Check the embedded phone vectors match the JSON
