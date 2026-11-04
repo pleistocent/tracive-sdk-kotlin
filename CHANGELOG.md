@@ -9,6 +9,15 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ## [Unreleased]
 
+## [0.1.0] — 2026-11-04
+
+First public release, on Maven Central as `com.pleistocent:tracive-sdk`. phase 1: OAuth mode
+only, against the live Tracive Open API.
+
+The 2026-07-31 entry below was a snapshot that was never published. This release is that snapshot
+plus everything listed here, so the **Breaking** items are changes from the snapshot, not from
+anything anyone could have installed.
+
 ### Added
 
 - **A bank account can be named by its national bank code or its BIC.**
@@ -607,7 +616,7 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   half of the guard cases — `__x`, `x__` and `_` are legal record keys, and a guard that rejected
   them would refuse queries the backend would have answered.
 
-## [0.1.0] — 2026-07-31
+## 2026-07-31 snapshot (never published)
 
 First release. phase 1: **OAuth mode only**, and **the backend Open API is not live yet** — every
 call that needs the network will fail until it ships. What works today is everything that does not:
