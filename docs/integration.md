@@ -10,14 +10,10 @@ Wiring the Tracive SDK into an Android or iOS app, end to end.
 
 ## 1. Depend on it
 
-Not on Maven Central yet:
-
-```bash
-./gradlew :tracive-sdk:publishToMavenLocal
-```
+From Maven Central:
 
 ```kotlin
-dependencies { implementation("id.tracive:tracive-sdk:0.1.0") }
+dependencies { implementation("com.pleistocent:tracive-sdk:0.1.0") }
 ```
 
 Android `minSdk` 24, iOS 15+, JDK 17 to build.

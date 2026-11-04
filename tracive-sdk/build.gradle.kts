@@ -5,7 +5,7 @@ plugins {
   alias(libs.plugins.androidKotlinMultiplatformLibrary)
   alias(libs.plugins.kotlinSerialization)
   alias(libs.plugins.sqldelight)
-  `maven-publish`
+  alias(libs.plugins.mavenPublish)
 }
 
 group = providers.gradleProperty("tracive.group").get()
@@ -139,34 +139,37 @@ sqldelight {
   }
 }
 
-publishing {
-  publications.withType<MavenPublication>().configureEach {
-    pom {
-      name.set("Tracive SDK")
-      description.set(
-        "Kotlin Multiplatform client for the Tracive scammer-check Open API (phase 1, OAuth mode)."
-      )
+mavenPublishing {
+  // Uploads and waits for Central to validate the deployment, but leaves Publish to a person: a
+  // version on Maven Central can never be deleted or replaced.
+  publishToMavenCentral(automaticRelease = false)
+  signAllPublications()
+
+  pom {
+    name.set("Tracive SDK")
+    description.set(
+      "Kotlin Multiplatform client for the Tracive scammer-check Open API (phase 1, OAuth mode)."
+    )
+    url.set("https://github.com/pleistocent/tracive-sdk-kotlin")
+    licenses {
+      license {
+        name.set("The Apache License, Version 2.0")
+        url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
+      }
+    }
+    // Maven Central rejects a POM without at least one developer.
+    developers {
+      developer {
+        id.set("tracive")
+        name.set("Tracive")
+        email.set("developer@pleistocent.com")
+        organization.set("PT Pleistocent Teknologi Nusantara")
+        organizationUrl.set("https://tracive.id")
+      }
+    }
+    scm {
       url.set("https://github.com/pleistocent/tracive-sdk-kotlin")
-      licenses {
-        license {
-          name.set("The Apache License, Version 2.0")
-          url.set("https://www.apache.org/licenses/LICENSE-2.0.txt")
-        }
-      }
-      // Maven Central rejects a POM without at least one developer.
-      developers {
-        developer {
-          id.set("tracive")
-          name.set("Tracive")
-          email.set("developer@pleistocent.com")
-          organization.set("PT Pleistocent Teknologi Nusantara")
-          organizationUrl.set("https://tracive.id")
-        }
-      }
-      scm {
-        url.set("https://github.com/pleistocent/tracive-sdk-kotlin")
-        connection.set("scm:git:https://github.com/pleistocent/tracive-sdk-kotlin.git")
-      }
+      connection.set("scm:git:https://github.com/pleistocent/tracive-sdk-kotlin.git")
     }
   }
 }

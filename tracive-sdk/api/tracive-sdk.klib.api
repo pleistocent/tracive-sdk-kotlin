@@ -5,7 +5,7 @@
 // - Show manifest properties: true
 // - Show declarations: true
 
-// Library unique name: <id.tracive:tracive-sdk>
+// Library unique name: <com.pleistocent:tracive-sdk>
 final enum class id.tracive.sdk.client/HttpMethod : kotlin/Enum<id.tracive.sdk.client/HttpMethod> { // id.tracive.sdk.client/HttpMethod|null[0]
     enum entry GET // id.tracive.sdk.client/HttpMethod.GET|null[0]
     enum entry POST // id.tracive.sdk.client/HttpMethod.POST|null[0]

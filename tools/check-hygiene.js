@@ -93,6 +93,10 @@ const ALLOWED_PLEISTOCENT_PATTERNS = [
   // The maintainer contact the published POM names. This one address only: the bare domain and any
   // other mailbox on it still fail.
   /developer@pleistocent\.com(?![A-Za-z0-9_-]|\.[A-Za-z0-9])/g,
+  // The Maven Central coordinate and the property that sets its group: Central only publishes under
+  // a namespace verified for the account. Exact, so the group with any other artifact still fails.
+  /com\.pleistocent:tracive-sdk(?![A-Za-z0-9._-])/g,
+  /^tracive\.group=com\.pleistocent$/g,
   /com\.pleistocent\.tracive(?:\.[A-Za-z0-9_]+)*(?![A-Za-z0-9._-])/g,
   /github\.com\/pleistocent\/tracive-sdk-kotlin(\.git)?(?![A-Za-z0-9._-])/g,
   /pleistocent\/tracive-sdk-kotlin(?![A-Za-z0-9._-])/g,

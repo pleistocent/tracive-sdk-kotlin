@@ -53,18 +53,11 @@ If you find yourself wanting a place to put a key, you want Proxy mode, and it i
 
 ## Install
 
-Not published to Maven Central yet. Until it is, build it locally:
-
-```bash
-./gradlew :tracive-sdk:publishToMavenLocal
-```
+On Maven Central:
 
 ```kotlin
-// settings.gradle.kts
-dependencyResolutionManagement { repositories { mavenLocal(); mavenCentral() } }
-
-// build.gradle.kts
-dependencies { implementation("id.tracive:tracive-sdk:0.1.0") }
+// build.gradle.kts — in a multiplatform module, put it in commonMain.dependencies { }
+dependencies { implementation("com.pleistocent:tracive-sdk:0.1.0") }
 ```
 
 Requirements: Android `minSdk` 24, iOS 15+, Kotlin 2.3, JDK 17 to build.
