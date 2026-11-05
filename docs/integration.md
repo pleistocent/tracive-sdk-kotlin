@@ -13,7 +13,7 @@ Wiring the Tracive SDK into an Android or iOS app, end to end.
 From Maven Central:
 
 ```kotlin
-dependencies { implementation("com.pleistocent:tracive-sdk:0.2.0") }
+dependencies { implementation("com.pleistocent:tracive-sdk:0.2.1") }
 ```
 
 Android `minSdk` 24, iOS 15+, JDK 17 to build.

@@ -54,7 +54,7 @@ object TraciveAndroid {
    *   would push the same failure into the Keystore or the package manager, where the error message
    *   would say nothing about the real cause.
    */
-  internal fun requireContext(): Context =
+  fun requireContext(): Context =
     applicationContext
       ?: error(
         "The Tracive SDK has no Android Context. Its manifest normally provides one automatically; " +

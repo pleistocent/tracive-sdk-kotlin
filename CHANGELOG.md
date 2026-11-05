@@ -9,6 +9,19 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ## [Unreleased]
 
+## [0.2.1] — 2026-11-06
+
+### Added
+
+- `TraciveOAuth.accessToken()` and `TraciveOAuth.refreshedToken(staleAccessToken)` are public, so
+  `tracive-sdk-extended` can use the stored grant. Both already existed; refresh stays
+  single-flight and stays here, because a reused refresh token revokes the grant.
+- `TraciveAndroid.requireContext()` is public, for the same module.
+
+### Documentation
+
+- `openReportForm` points at `tracive-sdk-extended` for reporting without leaving your app.
+
 ## [0.2.0] — 2026-11-05
 
 ### Added
@@ -763,6 +776,7 @@ parameter anywhere in the public surface in any mode; no raw identifier or token
 exception message or `toString()`; no identifier on disk; tokens only in platform key stores; S256
 only; no WebView; single-flight refresh.
 
-[Unreleased]: https://github.com/pleistocent/tracive-sdk-kotlin/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/pleistocent/tracive-sdk-kotlin/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/pleistocent/tracive-sdk-kotlin/releases/tag/v0.2.1
 [0.2.0]: https://github.com/pleistocent/tracive-sdk-kotlin/releases/tag/v0.2.0
 [0.1.0]: https://github.com/pleistocent/tracive-sdk-kotlin/releases/tag/v0.1.0

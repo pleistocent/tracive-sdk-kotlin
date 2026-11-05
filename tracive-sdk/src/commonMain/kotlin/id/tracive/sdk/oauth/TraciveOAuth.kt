@@ -731,7 +731,7 @@ class TraciveOAuth(
    *   is no credential left to spend. The caller has to authorize first; there is no anonymous
    *   mode.
    */
-  internal suspend fun accessToken(): String {
+  suspend fun accessToken(): String {
     val stored =
       tokenStoreProvider.value.load()
         ?: throw TraciveException.InvalidToken(
@@ -769,7 +769,7 @@ class TraciveOAuth(
    *   the SDK never learned what became of it. Terminal on purpose — the user authorizes again
    *   rather than the SDK risking the grant on a second presentation.
    */
-  internal suspend fun refreshedToken(staleAccessToken: String?): String {
+  suspend fun refreshedToken(staleAccessToken: String?): String {
     val store = tokenStoreProvider.value
     return refreshMutex.withLock {
       val current = store.load()

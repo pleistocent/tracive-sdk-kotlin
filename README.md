@@ -29,7 +29,7 @@ Three separate facts, none of which this README will pretend otherwise about:
    on-device cache with its TTL policy, error mapping and the OAuth flow are all covered against an
    injected fake transport, so the suite needs no server and no credentials.
 
-Version `0.2.0`. SemVer, and `0.x` means the surface can still move — it is frozen against the
+Version `0.2.1`. SemVer, and `0.x` means the surface can still move — it is frozen against the
 cross-language contract shared with the Flutter and Swift SDKs, not against you, until `1.0.0`.
 
 ## There is no API key. There will never be one.
@@ -57,7 +57,7 @@ On Maven Central:
 
 ```kotlin
 // build.gradle.kts — in a multiplatform module, put it in commonMain.dependencies { }
-dependencies { implementation("com.pleistocent:tracive-sdk:0.2.0") }
+dependencies { implementation("com.pleistocent:tracive-sdk:0.2.1") }
 ```
 
 Requirements: Android `minSdk` 24, iOS 15+, Kotlin 2.3, JDK 17 to build.

@@ -429,6 +429,9 @@ class TraciveClient(
    *   `IosReportFormLauncher(anchor = button)` so the sheet is a popover from that button on iPad;
    *   on Android `AndroidReportFormLauncher(activity)` keeps Tracive in your task's back stack.
    *   Kept per call rather than on the client because both hold a view or an Activity.
+   *
+   * To let the user report without leaving your app, use `tracive-sdk-extended`. This call hands
+   * the report to the Tracive app.
    */
   suspend fun openReportForm(
     query: TraciveQuery,
