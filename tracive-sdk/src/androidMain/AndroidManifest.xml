@@ -64,6 +64,24 @@
       android:exported="false"
       android:initOrder="100"
       android:multiprocess="true" />
+
+    <!--
+      Serves the report package that openReportForm hands to the Tracive app, from
+      cache/tracive-sdk/report/ only. Not exported: the Tracive app reads the one file through the
+      read grant on the intent that names it, and nothing else can open this provider at all.
+
+      Its own subclass and authority, so it neither collides with a host's FileProvider in the
+      manifest merger nor with another Tracive SDK in the same app.
+    -->
+    <provider
+      android:name="id.tracive.sdk.platform.TraciveFileProvider"
+      android:authorities="${applicationId}.tracive-sdk-files"
+      android:exported="false"
+      android:grantUriPermissions="true">
+      <meta-data
+        android:name="android.support.FILE_PROVIDER_PATHS"
+        android:resource="@xml/tracive_sdk_report_paths" />
+    </provider>
   </application>
 
 </manifest>

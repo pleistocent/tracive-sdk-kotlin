@@ -29,7 +29,7 @@ Three separate facts, none of which this README will pretend otherwise about:
    on-device cache with its TTL policy, error mapping and the OAuth flow are all covered against an
    injected fake transport, so the suite needs no server and no credentials.
 
-Version `0.1.0`. SemVer, and `0.x` means the surface can still move — it is frozen against the
+Version `0.2.0`. SemVer, and `0.x` means the surface can still move — it is frozen against the
 cross-language contract shared with the Flutter and Swift SDKs, not against you, until `1.0.0`.
 
 ## There is no API key. There will never be one.
@@ -57,7 +57,7 @@ On Maven Central:
 
 ```kotlin
 // build.gradle.kts — in a multiplatform module, put it in commonMain.dependencies { }
-dependencies { implementation("com.pleistocent:tracive-sdk:0.1.0") }
+dependencies { implementation("com.pleistocent:tracive-sdk:0.2.0") }
 ```
 
 Requirements: Android `minSdk` 24, iOS 15+, Kotlin 2.3, JDK 17 to build.
@@ -279,6 +279,39 @@ Each one is a snapshot on its own 90-day retention, so a later check of the same
 rewrite an older transaction's card, and one check can be recorded against several transactions —
 the second transfer to an account you already checked costs nothing and still gets a card. See
 [docs/caching.md](docs/caching.md#recording-what-a-transaction-was-shown).
+
+## Report a scammer
+
+A "Report" button on a transaction detail screen can open the Tracive app's report form with the
+account, the transaction date and the receipt already filled in:
+
+```kotlin
+when (val result = client.openReportForm(
+  query = TraciveQuery.bankAccount("IDN", "BCA", transfer.accountNumber),
+  incidentDate = transfer.date,                                   // kotlinx.datetime.LocalDate
+  attachments = listOf(
+    ReportAttachment.image(receiptPng, "image/png"),
+    ReportAttachment.pdf(receiptPdf),                             // under 1 MiB
+  ),
+)) {
+  is ReportFormResult.Opened ->
+    if (!result.attachmentsDelivered) tellUserToAttachTheReceiptInTracive()   // an older app
+  ReportFormResult.Cancelled -> Unit            // iOS: the user closed the sheet or picked another app
+  ReportFormResult.InstallPageOpened -> Unit    // no app: the install page is already open
+  is ReportFormResult.Failed -> show(result.error)              // nothing was opened
+}
+```
+
+It needs no grant, no token and no credit, and sends nothing over the network, so it works for a
+`CONFIDENTIAL` client too. The files stay on the phone until the user submits the report in
+Tracive. The input is checked against the app's own limits first (date not after today; 5
+attachments, or 10 for a phone number; JPEG, PNG, WebP, HEIC, HEIF, BMP or PDF whose bytes match
+the type; a PDF under 1 MiB; 20 MiB in all), and a failed check returns a typed `ReportFormError`
+with nothing opened.
+
+Two platform notes: on Android the SDK adds an unexported `FileProvider` to your merged manifest; on
+iOS add `tracive-report` and `tracivesandbox-report` to `LSApplicationQueriesSchemes`. Both are
+explained in [docs/integration.md](docs/integration.md#9-report-a-scammer).
 
 ## Errors
 

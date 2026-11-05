@@ -11,6 +11,10 @@ import id.tracive.sdk.model.CreditsInfo
 import id.tracive.sdk.model.Detail
 import id.tracive.sdk.model.Origin
 import id.tracive.sdk.model.ProfileInfo
+import id.tracive.sdk.model.ReportAttachment
+import id.tracive.sdk.model.ReportFormError
+import id.tracive.sdk.model.ReportFormResult
+import id.tracive.sdk.model.ReportTarget
 import id.tracive.sdk.model.Source
 import id.tracive.sdk.model.TraciveEnvironment
 import id.tracive.sdk.model.TraciveMode
@@ -20,7 +24,13 @@ import id.tracive.sdk.platform.AppPresenceChecker
 import id.tracive.sdk.platform.AuthorizeLauncher
 import id.tracive.sdk.platform.Base64Url
 import id.tracive.sdk.platform.CryptoProvider
+import id.tracive.sdk.platform.ReportFormLauncher
+import id.tracive.sdk.platform.ReportHandoff
+import id.tracive.sdk.platform.defaultAuthorizeLauncher
+import id.tracive.sdk.platform.defaultReportFormLauncher
 import id.tracive.sdk.query.TraciveQuery
+import id.tracive.sdk.report.ReportPackage
+import id.tracive.sdk.report.reportLink
 import kotlin.time.Duration
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -35,6 +45,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.datetime.Clock
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.todayIn
 import kotlinx.serialization.DeserializationStrategy
 
 /**
@@ -109,7 +122,8 @@ class TraciveClient(
   authorizeLauncher: AuthorizeLauncher? = null,
 
   /**
-   * Replaces the page a user without the Tracive app is sent to. Null uses the default.
+   * Replaces the page a user without the Tracive app is sent to, by [authorize] and by
+   * [openReportForm]. Null uses the default.
    *
    * Handed to [TraciveOAuth.installUrlOverride] unchanged, and it follows the same rule: null means
    * "use the default", any non-blank value is used verbatim, and a blank one is rejected rather
@@ -131,6 +145,14 @@ class TraciveClient(
   }
 
   private val clock: Clock = clock ?: Clock.System
+
+  /**
+   * The install page [openReportForm] opens, the same one [TraciveOAuth.installUrl] resolves to.
+   */
+  private val reportInstallUrl: String =
+    installUrl ?: TraciveOAuth.defaultInstallUrl((mode as? TraciveMode.OAuth)?.clientId.orEmpty())
+
+  private val installLauncherProvider = lazy { authorizeLauncher ?: defaultAuthorizeLauncher() }
 
   private val ownsTransport: Boolean = transport == null
 
@@ -363,6 +385,101 @@ class TraciveClient(
   suspend fun signOut() {
     oauth?.signOut()
     cache.clear()
+  }
+
+  /**
+   * Opens the Tracive app's report form with [query] filled in, and with [incidentDate] and
+   * [attachments] too when the installed app accepts them. Meant for a "Report" button.
+   *
+   * ```
+   * when (val result = client.openReportForm(
+   *   query = TraciveQuery.bankAccount("IDN", "BCA", accountNumber),
+   *   incidentDate = transaction.date,                      // a calendar date, no time zone
+   *   attachments = listOf(ReportAttachment.image(receiptPng, "image/png")),
+   * )) {
+   *   is ReportFormResult.Opened -> if (!result.attachmentsDelivered) askToAttachInTracive()
+   *   ReportFormResult.Cancelled -> Unit                    // iOS: the user chose not to send it
+   *   ReportFormResult.InstallPageOpened -> Unit            // the install page is already open
+   *   is ReportFormResult.Failed -> show(result.error)
+   * }
+   * ```
+   *
+   * The input is validated first, and a validation failure returns [ReportFormResult.Failed] with
+   * nothing opened; see [ReportFormError] for the checks and their order. Then, on the device:
+   * - the app accepts the report package → it receives the identifier, the date and the files,
+   *   which never leave the phone until the user submits the report in Tracive →
+   *   [ReportFormResult.Opened] with `attachmentsDelivered = true`;
+   * - an older app → its report form opens with the identifier only → [ReportFormResult.Opened]
+   *   with `attachmentsDelivered = false`;
+   * - no app → the install page from [installUrl][TraciveOAuth.installUrl], which carries nothing
+   *   from the report → [ReportFormResult.InstallPageOpened].
+   *
+   * On iOS the user picks Tracive in the "Open in" sheet, so the call returns only after that
+   * choice, and [ReportFormResult.Cancelled] when they close the sheet or pick anything else.
+   *
+   * It needs no grant and no token, spends no credit and sends nothing over the network, so it
+   * works for a [ClientType.CONFIDENTIAL][id.tracive.sdk.model.ClientType.CONFIDENTIAL] client and
+   * in [TraciveMode.Proxy] as well.
+   *
+   * @param incidentDate the transaction's date as the user saw it. Today is the latest accepted, in
+   *   the device's time zone.
+   * @param target the build to hand the report to. Null follows [environment] through
+   *   [ReportTarget.forEnvironment]. Pass one only to test against a build the SDK does not know.
+   * @param launcher the platform handoff. Null uses [defaultReportFormLauncher]. On iOS pass
+   *   `IosReportFormLauncher(anchor = button)` so the sheet is a popover from that button on iPad;
+   *   on Android `AndroidReportFormLauncher(activity)` keeps Tracive in your task's back stack.
+   *   Kept per call rather than on the client because both hold a view or an Activity.
+   */
+  suspend fun openReportForm(
+    query: TraciveQuery,
+    incidentDate: LocalDate? = null,
+    attachments: List<ReportAttachment> = emptyList(),
+    target: ReportTarget? = null,
+    launcher: ReportFormLauncher? = null,
+  ): ReportFormResult {
+    val reportQuery = query.searchQueryIndex
+    val today = clock.todayIn(TimeZone.currentSystemDefault())
+    ReportPackage.validate(reportQuery, incidentDate, today, attachments)?.let {
+      return ReportFormResult.Failed(it)
+    }
+
+    val reportTarget = target ?: ReportTarget.forEnvironment(environment)
+    var step = "check for the Tracive app"
+    return try {
+      val handoff = launcher ?: defaultReportFormLauncher()
+      when (handoff.prepare(reportTarget)) {
+        ReportHandoff.PACKAGE -> {
+          step = "hand the report to the Tracive app"
+          val reportPackage = ReportPackage.encode(reportQuery, incidentDate, attachments)
+          if (handoff.deliverPackage(reportTarget, reportPackage)) {
+            ReportFormResult.Opened(attachmentsDelivered = true)
+          } else {
+            ReportFormResult.Cancelled
+          }
+        }
+        ReportHandoff.LINK -> {
+          step = "open the Tracive app"
+          if (handoff.openLink(reportTarget, reportLink(reportTarget.urlScheme, reportQuery))) {
+            ReportFormResult.Opened(attachmentsDelivered = false)
+          } else {
+            ReportFormResult.Cancelled
+          }
+        }
+        ReportHandoff.APP_NOT_INSTALLED -> {
+          step = "open the install page"
+          installLauncherProvider.value.launchInstall(reportInstallUrl)
+          ReportFormResult.InstallPageOpened
+        }
+      }
+    } catch (cancellation: CancellationException) {
+      throw cancellation
+    } catch (failure: Throwable) {
+      ReportFormResult.Failed(
+        ReportFormError.PlatformFailure(
+          "Could not $step (${failure::class.simpleName ?: "unknown error"})."
+        )
+      )
+    }
   }
 
   /**

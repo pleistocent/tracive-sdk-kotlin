@@ -277,6 +277,12 @@ without either application id appearing in a partner's manifest. `PublishedAppli
 asserts that absence, because this went wrong once — a non-production `<package>` entry shipped
 inside every partner's manifest before anyone noticed.
 
+The one provider that serves files, `TraciveFileProvider` for `openReportForm`, stays
+`exported="false"` with `grantUriPermissions="true"`, under the SDK's own authority suffix, and its
+paths XML names exactly one folder, `cache/tracive-sdk/report/`. `PublishedApplicationIdTest`
+asserts all four. Exported, any app on the device could read the last report package; a wider path
+would let it serve more than that.
+
 `node tools/check-hygiene.js` scans for all of this, and CI runs it. It proves every one of its rules can still
 fire — against its own self-test corpus — before it scans anything, and refuses to run if one
 matches nothing: a check that cannot fail is worse than no check, because it reads as coverage.

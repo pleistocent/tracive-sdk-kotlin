@@ -33,7 +33,7 @@
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1.0</string>
+  <string>0.2.0</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>UILaunchScreen</key>
@@ -59,14 +59,24 @@
     — it has to be here. Without it, canOpenURL answers false on every device, installed or not,
     and every user is sent to the install page instead of the consent screen.
 
-    Both entries: `tracive` is the production app, `tracivesandbox` the sandbox build, and the probe
-    follows `environment`. Listing both costs nothing and removes the failure where switching
-    environment silently starts answering false.
+    `tracive` is the production app, `tracivesandbox` the sandbox build, and the probe follows
+    `environment`. Listing both costs nothing and removes the failure where switching environment
+    silently starts answering false.
+
+    The `-report` entries are for openReportForm: a Tracive build that accepts the report package
+    registers that scheme. Without them the Report button still opens Tracive, with the account only.
+
+    The `tracivedev` pair is the sample's own, for the "Dev build (QA)" choice on its Report button.
+    A partner app does not need it and should not ship it.
   -->
   <key>LSApplicationQueriesSchemes</key>
   <array>
     <string>tracive</string>
     <string>tracivesandbox</string>
+    <string>tracive-report</string>
+    <string>tracivesandbox-report</string>
+    <string>tracivedev</string>
+    <string>tracivedev-report</string>
   </array>
 
   <!--

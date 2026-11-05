@@ -24,8 +24,12 @@ class SampleController {
 
   private val model = CheckViewModel(traciveClient())
 
+  private val reportModel = ReportViewModel(traciveClient())
+
   /** The Compose screen, as something a `UIHostingController` can show. */
-  fun viewController(): UIViewController = ComposeUIViewController { SampleScreen(model) }
+  fun viewController(): UIViewController = ComposeUIViewController {
+    SampleScreen(model, reportModel)
+  }
 
   /**
    * Forwards a deep link from Swift's `onOpenURL`.

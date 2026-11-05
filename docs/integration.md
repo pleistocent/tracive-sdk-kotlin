@@ -13,7 +13,7 @@ Wiring the Tracive SDK into an Android or iOS app, end to end.
 From Maven Central:
 
 ```kotlin
-dependencies { implementation("com.pleistocent:tracive-sdk:0.1.0") }
+dependencies { implementation("com.pleistocent:tracive-sdk:0.2.0") }
 ```
 
 Android `minSdk` 24, iOS 15+, JDK 17 to build.
@@ -85,6 +85,9 @@ entry, which is why no Tracive application id appears in your shipped manifest.
 This matters more than it looks. Without package visibility on Android 11+, the SDK's "is the Tracive
 app installed?" pre-check silently answers "no" for every user who *does* have it — and every one of
 them gets sent to the install page instead of the consent screen.
+
+The same manifest also adds an unexported `FileProvider` for `openReportForm`; see
+[9. Report a scammer](#9-report-a-scammer) for the entry as it lands in your merged manifest.
 
 ### The redirect activity
 
@@ -177,6 +180,9 @@ before `Application.onCreate` returns. Only call it yourself if you strip that p
 Without it, `canOpenURL` returns `false` and every user with the Tracive app installed is sent to the
 App Store instead. The second entry is the sandbox build; list both, because the probe follows
 `environment` and a missing entry fails the same silent way when you switch.
+
+Using `openReportForm`? Add `tracive-report` and `tracivesandbox-report` as well; see
+[9. Report a scammer](#9-report-a-scammer).
 
 Then route the callback into the same client instance your shared Kotlin code exposes to Swift.
 `handleCallback` suspends, so Kotlin/Native exposes it to Swift as an `async` function — and its
@@ -375,7 +381,155 @@ client.signOut()   // best-effort revoke, then clears local tokens and the cache
 were fetched, and the next user of the device must not inherit them. `client.clearCache()` does the
 same on its own, for a user who stays signed in but wants their history gone.
 
-## 9. Testing your integration
+## 9. Report a scammer
+
+`openReportForm` opens the Tracive app's report form with the identifier already filled in, and with
+the transaction date and the receipt too when the installed app accepts them. It is meant for a
+"Report" button on a transaction detail screen.
+
+```kotlin
+val result = client.openReportForm(
+  query = TraciveQuery.bankAccount("IDN", "BCA", transfer.accountNumber),
+  incidentDate = transfer.date,          // kotlinx.datetime.LocalDate, the date the user saw
+  attachments = listOf(
+    ReportAttachment.image(receiptPng, "image/png"),
+    ReportAttachment.pdf(receiptPdf),
+  ),
+)
+when (result) {
+  is ReportFormResult.Opened ->
+    // false: an older Tracive app, opened with the identifier only. Ask the user to pick the date
+    // and attach the receipt there.
+    if (!result.attachmentsDelivered) tellUserToAttachTheReceiptInTracive()
+  ReportFormResult.Cancelled -> Unit         // iOS only: the user chose not to send it
+  ReportFormResult.InstallPageOpened -> Unit // Tracive is missing; the install page is open
+  is ReportFormResult.Failed -> when (val error = result.error) {
+    is ReportFormError.PdfTooLarge -> askForASmallerPdf(error.index)
+    is ReportFormError.PlatformFailure -> report(error.message)
+    else -> report(error.code)                // a validation failure: nothing was opened
+  }
+}
+```
+
+**No grant, no token, no credit, no network.** It works before the user has authorised, for a
+`CONFIDENTIAL` client, and in Proxy mode. The receipt never leaves the phone until the user submits
+the report in Tracive.
+
+**What it does, in order.** It validates the input first and opens nothing if a check fails. The
+checks run in this order and the first failure is returned:
+
+| Error | Rule |
+| --- | --- |
+| `IncidentDateInFuture` | The date is after today in the device's time zone. Today is fine. |
+| `TooManyAttachments(max)` | More than 5 attachments, or more than 10 for a phone-number query. |
+| `UnsupportedType(index)` | Not `image/jpeg` (`image/jpg` is read as JPEG), `image/png`, `image/webp`, `image/heic`, `image/heif`, `image/bmp` or `application/pdf`, ignoring case. GIF is refused. |
+| `ContentMismatch(index)` | The bytes are not the declared type, or are empty. |
+| `PdfTooLarge(index)` | A PDF of 1 MiB (1,048,576 bytes) or more. Images have no cap; Tracive compresses them. |
+| `PackageTooLarge(max)` | Everything together encodes to more than 20 MiB. Base64 adds about a third. |
+
+Then it looks at the device:
+
+| On the device | It does | Result |
+| --- | --- | --- |
+| Tracive accepts the report package | hands over the identifier, date and attachments | `Opened(attachmentsDelivered = true)` |
+| An older Tracive | opens its report form with the identifier only | `Opened(attachmentsDelivered = false)` |
+| No Tracive | opens the install page, exactly as `authorize()` does, carrying nothing from the report | `InstallPageOpened` |
+
+The target build follows `environment`: the sandbox app for `TraciveEnvironment.Sandbox`, the
+production app otherwise, including `Custom`.
+
+### Android
+
+The SDK's manifest adds this to your merged manifest. If you audit that file, this is the entry:
+
+```xml
+<provider
+  android:name="id.tracive.sdk.platform.TraciveFileProvider"
+  android:authorities="${applicationId}.tracive-sdk-files"
+  android:exported="false"
+  android:grantUriPermissions="true">
+  <meta-data
+    android:name="android.support.FILE_PROVIDER_PATHS"
+    android:resource="@xml/tracive_sdk_report_paths" />
+</provider>
+```
+
+It is the SDK's own `FileProvider` subclass, so it does not collide with yours, and it serves only
+`cache/tracive-sdk/report/`. It is not exported: the Tracive app reads the one file through the read
+grant on an explicit intent addressed to its package, so no other app can receive it or open the
+provider, and no chooser appears. The SDK deletes the file on the next call. Nothing else is needed
+in your manifest; package visibility already comes from the SDK's `<queries>`.
+
+The default launcher starts Tracive in a new task from the application context. To keep it on top
+of your own task, pass your Activity:
+
+```kotlin
+client.openReportForm(query, date, attachments, launcher = AndroidReportFormLauncher(activity))
+```
+
+### iOS
+
+Add the two capability schemes next to the two you already list:
+
+```xml
+<key>LSApplicationQueriesSchemes</key>
+<array>
+  <string>tracive</string>
+  <string>tracivesandbox</string>
+  <string>tracive-report</string>
+  <string>tracivesandbox-report</string>
+</array>
+```
+
+A Tracive build that accepts the report package registers `tracive-report` (`tracivesandbox-report`
+for sandbox), and that is the only way to tell it from an older one. **If you leave these out**,
+`canOpenURL` answers no and every user gets the identifier-only link: it still works, but the date
+and the receipt are dropped.
+
+The user then taps Tracive in the "Open in" sheet, so the call returns after that choice. Closing the
+sheet, "Save to Files" or any other app returns `Cancelled`. On iPad, rotating the device closes the
+sheet too, and the call returns `Cancelled` about a second later. The identifier-only link may also
+show iOS's own "Open in Tracive?" prompt, and declining it returns `Cancelled` too.
+
+Give the sheet its anchor, so it is a popover from your button on iPad. Kotlin/Native exposes the
+call to Swift as an `async` function:
+
+```swift
+let result = try await client.openReportForm(
+  query: query,
+  incidentDate: date,
+  attachments: attachments,
+  target: nil,
+  launcher: IosReportFormLauncher(anchor: reportButton)
+)
+```
+
+Without an anchor (the default launcher, or `IosReportFormLauncher()`), the sheet is presented from
+the key window's top view controller. Every UIKit call is made on the main thread for you.
+
+### Testing against another Tracive build
+
+`target` exists for testing against a build the SDK does not know about, such as a QA build of the
+Tracive app:
+
+```kotlin
+val qaBuild = ReportTarget(
+  applicationId = "com.example.tracive.qa",   // Android application id, also the iOS bundle id
+  urlScheme = "traciveqa",
+  capabilityScheme = "traciveqa-report",
+  fileExtension = "traciveqareport",
+)
+client.openReportForm(query, date, attachments, target = qaBuild)
+```
+
+That build needs a `<queries><package android:name="…"/></queries>` entry in your own manifest on
+Android, and both of its schemes in `LSApplicationQueriesSchemes` on iOS. Never ship one: production
+code leaves `target` null.
+
+To test your screen without a device, pass a fake `ReportFormLauncher` that answers `prepare` with
+the `ReportHandoff` you want to exercise.
+
+## 10. Testing your integration
 
 Test against the seam rather than a server: a suite that reaches either environment fails whenever
 that environment is down or mid-deploy.
@@ -452,6 +606,19 @@ a build phase invokes Gradle for you, so there is no separate step. `xcodebuild`
 cd samples/iosApp && xcodebuild -scheme Sandbox \
   -destination 'platform=iOS Simulator,name=iPhone 16' build
 ```
+
+### The Report button
+
+Below the check, the sample shows a mock transaction detail (amount, yesterday's date, a BCA
+account) with a **Report** button. It calls `openReportForm` with that bank account, yesterday's
+date and a receipt made in code (one PNG, one small PDF), and prints the result. It works without
+authorising first.
+
+"Report to" picks the Tracive build, whichever flavor you are running: **Sandbox** (the default),
+**Production**, or **Dev build (QA)**, the Tracive app's QA build (`com.pleistocent.tracive.dev`,
+schemes `tracivedev` and `tracivedev-report`). The dev build needs the `<queries>` entry in the
+sample's manifest and the `tracivedev` pair in its `Info.plist`; both are already there and are
+sample-only.
 
 The per-flavor values live in `samples/androidApp/build.gradle.kts` (`productFlavors`) and
 `samples/iosApp/Config/*.xcconfig`; the client ids are in `TraciveSample.kt`.

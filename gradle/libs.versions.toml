@@ -5,6 +5,9 @@ android-minSdk = "24"
 androidx-activity = "1.13.0"
 androidx-browser = "1.9.0"
 androidx-core = "1.18.0"
+# The SDK's own floor, kept at what androidx-browser already brings so the SDK raises no partner's
+# androidx.core. The sample's core-ktx above is free to be newer.
+androidx-core-sdk = "1.10.0"
 androidx-lifecycle = "2.10.0"
 binaryCompatibilityValidator = "0.18.1"
 compose-bom = "2025.11.00"
@@ -54,6 +57,7 @@ compose-material3 = { module = "org.jetbrains.compose.material3:material3", vers
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "compose-multiplatform" }
 
 androidx-browser = { module = "androidx.browser:browser", version.ref = "androidx-browser" }
+androidx-core = { module = "androidx.core:core", version.ref = "androidx-core-sdk" }
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "androidx-core" }
 androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity" }
 androidx-lifecycle-runtime-ktx = { module = "androidx.lifecycle:lifecycle-runtime-ktx", version.ref = "androidx-lifecycle" }

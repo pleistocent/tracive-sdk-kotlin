@@ -9,8 +9,8 @@ import kotlin.test.assertTrue
 
 /**
  * The library manifest is merged into every partner's shipped app, so what it declares is published
- * inside someone else's manifest. Two things are asserted about it, and neither is about secrecy —
- * an application id is not a secret, and each authorize host publishes its own at
+ * inside someone else's manifest. Two things are asserted about its queries, and neither is about
+ * secrecy — an application id is not a secret, and each authorize host publishes its own at
  * `/.well-known/assetlinks.json` because that is what an App Link association is.
  *
  * **No `<queries><package>` entry.** A bank auditing its merged manifest has to account for every
@@ -23,6 +23,8 @@ import kotlin.test.assertTrue
  * lost its `<queries>` block entirely would satisfy it while reporting "not installed" for every
  * user on API 30+. The hosts and paths are compared against the constants the SDK actually builds
  * its authorize URL from, so the manifest and that URL cannot drift apart.
+ *
+ * **The report package provider stays unexported** and serves one cache folder.
  *
  * This is a JVM-only test because the manifest is Android's. It reads files from the working tree,
  * which no other test here does; the alternative is a rule enforced only by whoever reviews the
@@ -56,7 +58,9 @@ class PublishedApplicationIdTest {
 
     for ((host, path) in expected) {
       assertTrue(
-        queried.any { it.contains("android:host=\"$host\"") && it.contains("android:path=\"$path\"") },
+        queried.any {
+          it.contains("android:host=\"$host\"") && it.contains("android:path=\"$path\"")
+        },
         "No <queries><intent> matches $host$path, so the SDK cannot see the build that claims it " +
           "and reports \"not installed\" for every user on API 30+. Found: $queried",
       )
@@ -64,24 +68,65 @@ class PublishedApplicationIdTest {
   }
 
   /**
-   * The manifest, read from the repository root — found by walking up from the test's working
-   * directory, because which directory that is depends on how the tests are launched. A search that
-   * finds nothing fails here rather than leaving both assertions quietly reading an empty string.
+   * The report package provider lands in every partner's merged manifest too. Exported, any app on
+   * the device could read whatever package was last written; widened paths, it could serve more
+   * than that folder.
    */
-  private fun manifest(): String {
+  @Test
+  fun theReportFileProviderStaysUnexportedAndServesOneFolder() {
+    val providers = PROVIDER.findAll(manifest()).map { it.groupValues[1] }.toList()
+    val provider =
+      providers.singleOrNull {
+        it.contains("android:name=\"${TraciveFileProvider::class.java.name}\"")
+      } ?: throw AssertionError("No <provider> for TraciveFileProvider. Found: $providers")
+
+    assertTrue(provider.contains("android:exported=\"false\""), provider)
+    assertTrue(provider.contains("android:grantUriPermissions=\"true\""), provider)
+    assertTrue(
+      provider.contains(
+        "android:authorities=\"\${applicationId}${ReportPackageFiles.AUTHORITY_SUFFIX}\""
+      ),
+      provider,
+    )
+    assertTrue(provider.contains("android:resource=\"@xml/$PATHS_NAME\""), provider)
+
+    val paths = PATH_ENTRY.findAll(repositoryFile(PATHS_PATH)).map { it.value }.toList()
+    assertEquals(
+      listOf("<cache-path name=\"report\" path=\"${ReportPackageFiles.DIRECTORY}/\" />"),
+      paths,
+    )
+  }
+
+  private fun manifest(): String = repositoryFile(MANIFEST_PATH)
+
+  /**
+   * A file read from the repository root — found by walking up from the test's working directory,
+   * because which directory that is depends on how the tests are launched. A search that finds
+   * nothing fails here rather than leaving the assertions quietly reading an empty string.
+   */
+  private fun repositoryFile(path: String): String {
     var directory: File? = File(System.getProperty("user.dir")!!).absoluteFile
     while (directory != null) {
-      val candidate = File(directory, MANIFEST_PATH)
+      val candidate = File(directory, path)
       if (candidate.exists()) return candidate.readText()
       directory = directory.parentFile
     }
     throw AssertionError(
-      "Could not find $MANIFEST_PATH above ${System.getProperty("user.dir")}, so nothing was checked."
+      "Could not find $path above ${System.getProperty("user.dir")}, so nothing was checked."
     )
   }
 
   private companion object {
     const val MANIFEST_PATH = "tracive-sdk/src/androidMain/AndroidManifest.xml"
+
+    const val PATHS_NAME = "tracive_sdk_report_paths"
+    const val PATHS_PATH = "tracive-sdk/src/androidMain/res/xml/$PATHS_NAME.xml"
+
+    /** A whole `<provider>` element, its children included. */
+    val PROVIDER = Regex("""<provider\s([\s\S]*?)(?:/>|</provider>)""")
+
+    /** Every path entry a FileProvider understands, whatever its kind. */
+    val PATH_ENTRY = Regex("""<[a-z-]*-path\s[^>]*>""")
 
     /** The `android:name` of a `<queries><package>` entry. */
     val QUERIED_PACKAGE = Regex("""<package\s+android:name="([^"]+)"""")

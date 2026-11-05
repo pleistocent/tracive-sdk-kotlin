@@ -91,6 +91,18 @@ final enum class id.tracive.sdk.model/Source : kotlin/Enum<id.tracive.sdk.model/
     final fun values(): kotlin/Array<id.tracive.sdk.model/Source> // id.tracive.sdk.model/Source.values|values#static(){}[0]
 }
 
+final enum class id.tracive.sdk.platform/ReportHandoff : kotlin/Enum<id.tracive.sdk.platform/ReportHandoff> { // id.tracive.sdk.platform/ReportHandoff|null[0]
+    enum entry APP_NOT_INSTALLED // id.tracive.sdk.platform/ReportHandoff.APP_NOT_INSTALLED|null[0]
+    enum entry LINK // id.tracive.sdk.platform/ReportHandoff.LINK|null[0]
+    enum entry PACKAGE // id.tracive.sdk.platform/ReportHandoff.PACKAGE|null[0]
+
+    final val entries // id.tracive.sdk.platform/ReportHandoff.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<id.tracive.sdk.platform/ReportHandoff> // id.tracive.sdk.platform/ReportHandoff.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): id.tracive.sdk.platform/ReportHandoff // id.tracive.sdk.platform/ReportHandoff.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<id.tracive.sdk.platform/ReportHandoff> // id.tracive.sdk.platform/ReportHandoff.values|values#static(){}[0]
+}
+
 final enum class id.tracive.sdk.query/Country : kotlin/Enum<id.tracive.sdk.query/Country> { // id.tracive.sdk.query/Country|null[0]
     enum entry AFGHANISTAN // id.tracive.sdk.query/Country.AFGHANISTAN|null[0]
     enum entry ALBANIA // id.tracive.sdk.query/Country.ALBANIA|null[0]
@@ -416,6 +428,12 @@ abstract interface id.tracive.sdk.platform/AuthorizeLauncher { // id.tracive.sdk
     abstract suspend fun launchInstall(kotlin/String) // id.tracive.sdk.platform/AuthorizeLauncher.launchInstall|launchInstall(kotlin.String){}[0]
 }
 
+abstract interface id.tracive.sdk.platform/ReportFormLauncher { // id.tracive.sdk.platform/ReportFormLauncher|null[0]
+    abstract suspend fun deliverPackage(id.tracive.sdk.model/ReportTarget, kotlin/ByteArray): kotlin/Boolean // id.tracive.sdk.platform/ReportFormLauncher.deliverPackage|deliverPackage(id.tracive.sdk.model.ReportTarget;kotlin.ByteArray){}[0]
+    abstract suspend fun openLink(id.tracive.sdk.model/ReportTarget, kotlin/String): kotlin/Boolean // id.tracive.sdk.platform/ReportFormLauncher.openLink|openLink(id.tracive.sdk.model.ReportTarget;kotlin.String){}[0]
+    abstract suspend fun prepare(id.tracive.sdk.model/ReportTarget): id.tracive.sdk.platform/ReportHandoff // id.tracive.sdk.platform/ReportFormLauncher.prepare|prepare(id.tracive.sdk.model.ReportTarget){}[0]
+}
+
 final class id.tracive.sdk.cache/AesGcmCacheCipher : id.tracive.sdk.cache/CacheCipher { // id.tracive.sdk.cache/AesGcmCacheCipher|null[0]
     constructor <init>(id.tracive.sdk.cache/CacheDataKey) // id.tracive.sdk.cache/AesGcmCacheCipher.<init>|<init>(id.tracive.sdk.cache.CacheDataKey){}[0]
     constructor <init>(kotlin/ByteArray) // id.tracive.sdk.cache/AesGcmCacheCipher.<init>|<init>(kotlin.ByteArray){}[0]
@@ -598,6 +616,7 @@ final class id.tracive.sdk.client/TraciveClient { // id.tracive.sdk.client/Traci
     final suspend fun credits(): id.tracive.sdk.model/CreditsInfo // id.tracive.sdk.client/TraciveClient.credits|credits(){}[0]
     final suspend fun handleCallback(kotlin/String): id.tracive.sdk.model/AuthResult? // id.tracive.sdk.client/TraciveClient.handleCallback|handleCallback(kotlin.String){}[0]
     final suspend fun isAuthorized(): kotlin/Boolean // id.tracive.sdk.client/TraciveClient.isAuthorized|isAuthorized(){}[0]
+    final suspend fun openReportForm(id.tracive.sdk.query/TraciveQuery, kotlinx.datetime/LocalDate? = ..., kotlin.collections/List<id.tracive.sdk.model/ReportAttachment> = ..., id.tracive.sdk.model/ReportTarget? = ..., id.tracive.sdk.platform/ReportFormLauncher? = ...): id.tracive.sdk.model/ReportFormResult // id.tracive.sdk.client/TraciveClient.openReportForm|openReportForm(id.tracive.sdk.query.TraciveQuery;kotlinx.datetime.LocalDate?;kotlin.collections.List<id.tracive.sdk.model.ReportAttachment>;id.tracive.sdk.model.ReportTarget?;id.tracive.sdk.platform.ReportFormLauncher?){}[0]
     final suspend fun profile(): id.tracive.sdk.model/ProfileInfo // id.tracive.sdk.client/TraciveClient.profile|profile(){}[0]
     final suspend fun signOut() // id.tracive.sdk.client/TraciveClient.signOut|signOut(){}[0]
 
@@ -903,6 +922,49 @@ final class id.tracive.sdk.model/ProfileInfo { // id.tracive.sdk.model/ProfileIn
     }
 }
 
+final class id.tracive.sdk.model/ReportAttachment { // id.tracive.sdk.model/ReportAttachment|null[0]
+    final val mimeType // id.tracive.sdk.model/ReportAttachment.mimeType|{}mimeType[0]
+        final fun <get-mimeType>(): kotlin/String // id.tracive.sdk.model/ReportAttachment.mimeType.<get-mimeType>|<get-mimeType>(){}[0]
+    final val sizeBytes // id.tracive.sdk.model/ReportAttachment.sizeBytes|{}sizeBytes[0]
+        final fun <get-sizeBytes>(): kotlin/Int // id.tracive.sdk.model/ReportAttachment.sizeBytes.<get-sizeBytes>|<get-sizeBytes>(){}[0]
+
+    final fun toString(): kotlin/String // id.tracive.sdk.model/ReportAttachment.toString|toString(){}[0]
+
+    final object Companion { // id.tracive.sdk.model/ReportAttachment.Companion|null[0]
+        final fun image(kotlin/ByteArray, kotlin/String): id.tracive.sdk.model/ReportAttachment // id.tracive.sdk.model/ReportAttachment.Companion.image|image(kotlin.ByteArray;kotlin.String){}[0]
+        final fun pdf(kotlin/ByteArray): id.tracive.sdk.model/ReportAttachment // id.tracive.sdk.model/ReportAttachment.Companion.pdf|pdf(kotlin.ByteArray){}[0]
+    }
+}
+
+final class id.tracive.sdk.model/ReportTarget { // id.tracive.sdk.model/ReportTarget|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String, kotlin/String) // id.tracive.sdk.model/ReportTarget.<init>|<init>(kotlin.String;kotlin.String;kotlin.String;kotlin.String){}[0]
+
+    final val applicationId // id.tracive.sdk.model/ReportTarget.applicationId|{}applicationId[0]
+        final fun <get-applicationId>(): kotlin/String // id.tracive.sdk.model/ReportTarget.applicationId.<get-applicationId>|<get-applicationId>(){}[0]
+    final val capabilityScheme // id.tracive.sdk.model/ReportTarget.capabilityScheme|{}capabilityScheme[0]
+        final fun <get-capabilityScheme>(): kotlin/String // id.tracive.sdk.model/ReportTarget.capabilityScheme.<get-capabilityScheme>|<get-capabilityScheme>(){}[0]
+    final val fileExtension // id.tracive.sdk.model/ReportTarget.fileExtension|{}fileExtension[0]
+        final fun <get-fileExtension>(): kotlin/String // id.tracive.sdk.model/ReportTarget.fileExtension.<get-fileExtension>|<get-fileExtension>(){}[0]
+    final val urlScheme // id.tracive.sdk.model/ReportTarget.urlScheme|{}urlScheme[0]
+        final fun <get-urlScheme>(): kotlin/String // id.tracive.sdk.model/ReportTarget.urlScheme.<get-urlScheme>|<get-urlScheme>(){}[0]
+
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/ReportTarget.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.model/ReportTarget.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.model/ReportTarget.toString|toString(){}[0]
+
+    final object Companion { // id.tracive.sdk.model/ReportTarget.Companion|null[0]
+        final const val ANDROID_MIME_TYPE // id.tracive.sdk.model/ReportTarget.Companion.ANDROID_MIME_TYPE|{}ANDROID_MIME_TYPE[0]
+            final fun <get-ANDROID_MIME_TYPE>(): kotlin/String // id.tracive.sdk.model/ReportTarget.Companion.ANDROID_MIME_TYPE.<get-ANDROID_MIME_TYPE>|<get-ANDROID_MIME_TYPE>(){}[0]
+
+        final val Production // id.tracive.sdk.model/ReportTarget.Companion.Production|{}Production[0]
+            final fun <get-Production>(): id.tracive.sdk.model/ReportTarget // id.tracive.sdk.model/ReportTarget.Companion.Production.<get-Production>|<get-Production>(){}[0]
+        final val Sandbox // id.tracive.sdk.model/ReportTarget.Companion.Sandbox|{}Sandbox[0]
+            final fun <get-Sandbox>(): id.tracive.sdk.model/ReportTarget // id.tracive.sdk.model/ReportTarget.Companion.Sandbox.<get-Sandbox>|<get-Sandbox>(){}[0]
+
+        final fun forEnvironment(id.tracive.sdk.model/TraciveEnvironment): id.tracive.sdk.model/ReportTarget // id.tracive.sdk.model/ReportTarget.Companion.forEnvironment|forEnvironment(id.tracive.sdk.model.TraciveEnvironment){}[0]
+    }
+}
+
 final class id.tracive.sdk.oauth/AuthorizeUrlBuilder { // id.tracive.sdk.oauth/AuthorizeUrlBuilder|null[0]
     constructor <init>(id.tracive.sdk.model/TraciveEnvironment = ..., kotlin/String? = ...) // id.tracive.sdk.oauth/AuthorizeUrlBuilder.<init>|<init>(id.tracive.sdk.model.TraciveEnvironment;kotlin.String?){}[0]
 
@@ -1060,6 +1122,15 @@ final class id.tracive.sdk.platform/IosAuthorizeLauncher : id.tracive.sdk.platfo
     final suspend fun launchInstall(kotlin/String) // id.tracive.sdk.platform/IosAuthorizeLauncher.launchInstall|launchInstall(kotlin.String){}[0]
 }
 
+final class id.tracive.sdk.platform/IosReportFormLauncher : id.tracive.sdk.platform/ReportFormLauncher { // id.tracive.sdk.platform/IosReportFormLauncher|null[0]
+    constructor <init>(platform.UIKit/UIView? = ...) // id.tracive.sdk.platform/IosReportFormLauncher.<init>|<init>(platform.UIKit.UIView?){}[0]
+
+    final fun toString(): kotlin/String // id.tracive.sdk.platform/IosReportFormLauncher.toString|toString(){}[0]
+    final suspend fun deliverPackage(id.tracive.sdk.model/ReportTarget, kotlin/ByteArray): kotlin/Boolean // id.tracive.sdk.platform/IosReportFormLauncher.deliverPackage|deliverPackage(id.tracive.sdk.model.ReportTarget;kotlin.ByteArray){}[0]
+    final suspend fun openLink(id.tracive.sdk.model/ReportTarget, kotlin/String): kotlin/Boolean // id.tracive.sdk.platform/IosReportFormLauncher.openLink|openLink(id.tracive.sdk.model.ReportTarget;kotlin.String){}[0]
+    final suspend fun prepare(id.tracive.sdk.model/ReportTarget): id.tracive.sdk.platform/ReportHandoff // id.tracive.sdk.platform/IosReportFormLauncher.prepare|prepare(id.tracive.sdk.model.ReportTarget){}[0]
+}
+
 final class id.tracive.sdk.query/TraciveQuery { // id.tracive.sdk.query/TraciveQuery|null[0]
     final val searchQueryIndex // id.tracive.sdk.query/TraciveQuery.searchQueryIndex|{}searchQueryIndex[0]
         final fun <get-searchQueryIndex>(): kotlin/String // id.tracive.sdk.query/TraciveQuery.searchQueryIndex.<get-searchQueryIndex>|<get-searchQueryIndex>(){}[0]
@@ -1168,6 +1239,140 @@ sealed class id.tracive.sdk.model/AuthResult { // id.tracive.sdk.model/AuthResul
 
     final object Denied : id.tracive.sdk.model/AuthResult { // id.tracive.sdk.model/AuthResult.Denied|null[0]
         final fun toString(): kotlin/String // id.tracive.sdk.model/AuthResult.Denied.toString|toString(){}[0]
+    }
+}
+
+sealed class id.tracive.sdk.model/ReportFormError { // id.tracive.sdk.model/ReportFormError|null[0]
+    abstract val code // id.tracive.sdk.model/ReportFormError.code|{}code[0]
+        abstract fun <get-code>(): kotlin/String // id.tracive.sdk.model/ReportFormError.code.<get-code>|<get-code>(){}[0]
+
+    final class ContentMismatch : id.tracive.sdk.model/ReportFormError { // id.tracive.sdk.model/ReportFormError.ContentMismatch|null[0]
+        constructor <init>(kotlin/Int) // id.tracive.sdk.model/ReportFormError.ContentMismatch.<init>|<init>(kotlin.Int){}[0]
+
+        final val code // id.tracive.sdk.model/ReportFormError.ContentMismatch.code|{}code[0]
+            final fun <get-code>(): kotlin/String // id.tracive.sdk.model/ReportFormError.ContentMismatch.code.<get-code>|<get-code>(){}[0]
+        final val index // id.tracive.sdk.model/ReportFormError.ContentMismatch.index|{}index[0]
+            final fun <get-index>(): kotlin/Int // id.tracive.sdk.model/ReportFormError.ContentMismatch.index.<get-index>|<get-index>(){}[0]
+
+        final fun component1(): kotlin/Int // id.tracive.sdk.model/ReportFormError.ContentMismatch.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): id.tracive.sdk.model/ReportFormError.ContentMismatch // id.tracive.sdk.model/ReportFormError.ContentMismatch.copy|copy(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/ReportFormError.ContentMismatch.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // id.tracive.sdk.model/ReportFormError.ContentMismatch.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormError.ContentMismatch.toString|toString(){}[0]
+    }
+
+    final class PackageTooLarge : id.tracive.sdk.model/ReportFormError { // id.tracive.sdk.model/ReportFormError.PackageTooLarge|null[0]
+        constructor <init>(kotlin/Int) // id.tracive.sdk.model/ReportFormError.PackageTooLarge.<init>|<init>(kotlin.Int){}[0]
+
+        final val code // id.tracive.sdk.model/ReportFormError.PackageTooLarge.code|{}code[0]
+            final fun <get-code>(): kotlin/String // id.tracive.sdk.model/ReportFormError.PackageTooLarge.code.<get-code>|<get-code>(){}[0]
+        final val max // id.tracive.sdk.model/ReportFormError.PackageTooLarge.max|{}max[0]
+            final fun <get-max>(): kotlin/Int // id.tracive.sdk.model/ReportFormError.PackageTooLarge.max.<get-max>|<get-max>(){}[0]
+
+        final fun component1(): kotlin/Int // id.tracive.sdk.model/ReportFormError.PackageTooLarge.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): id.tracive.sdk.model/ReportFormError.PackageTooLarge // id.tracive.sdk.model/ReportFormError.PackageTooLarge.copy|copy(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/ReportFormError.PackageTooLarge.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // id.tracive.sdk.model/ReportFormError.PackageTooLarge.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormError.PackageTooLarge.toString|toString(){}[0]
+    }
+
+    final class PdfTooLarge : id.tracive.sdk.model/ReportFormError { // id.tracive.sdk.model/ReportFormError.PdfTooLarge|null[0]
+        constructor <init>(kotlin/Int) // id.tracive.sdk.model/ReportFormError.PdfTooLarge.<init>|<init>(kotlin.Int){}[0]
+
+        final val code // id.tracive.sdk.model/ReportFormError.PdfTooLarge.code|{}code[0]
+            final fun <get-code>(): kotlin/String // id.tracive.sdk.model/ReportFormError.PdfTooLarge.code.<get-code>|<get-code>(){}[0]
+        final val index // id.tracive.sdk.model/ReportFormError.PdfTooLarge.index|{}index[0]
+            final fun <get-index>(): kotlin/Int // id.tracive.sdk.model/ReportFormError.PdfTooLarge.index.<get-index>|<get-index>(){}[0]
+
+        final fun component1(): kotlin/Int // id.tracive.sdk.model/ReportFormError.PdfTooLarge.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): id.tracive.sdk.model/ReportFormError.PdfTooLarge // id.tracive.sdk.model/ReportFormError.PdfTooLarge.copy|copy(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/ReportFormError.PdfTooLarge.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // id.tracive.sdk.model/ReportFormError.PdfTooLarge.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormError.PdfTooLarge.toString|toString(){}[0]
+    }
+
+    final class PlatformFailure : id.tracive.sdk.model/ReportFormError { // id.tracive.sdk.model/ReportFormError.PlatformFailure|null[0]
+        constructor <init>(kotlin/String) // id.tracive.sdk.model/ReportFormError.PlatformFailure.<init>|<init>(kotlin.String){}[0]
+
+        final val code // id.tracive.sdk.model/ReportFormError.PlatformFailure.code|{}code[0]
+            final fun <get-code>(): kotlin/String // id.tracive.sdk.model/ReportFormError.PlatformFailure.code.<get-code>|<get-code>(){}[0]
+        final val message // id.tracive.sdk.model/ReportFormError.PlatformFailure.message|{}message[0]
+            final fun <get-message>(): kotlin/String // id.tracive.sdk.model/ReportFormError.PlatformFailure.message.<get-message>|<get-message>(){}[0]
+
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormError.PlatformFailure.toString|toString(){}[0]
+    }
+
+    final class TooManyAttachments : id.tracive.sdk.model/ReportFormError { // id.tracive.sdk.model/ReportFormError.TooManyAttachments|null[0]
+        constructor <init>(kotlin/Int) // id.tracive.sdk.model/ReportFormError.TooManyAttachments.<init>|<init>(kotlin.Int){}[0]
+
+        final val code // id.tracive.sdk.model/ReportFormError.TooManyAttachments.code|{}code[0]
+            final fun <get-code>(): kotlin/String // id.tracive.sdk.model/ReportFormError.TooManyAttachments.code.<get-code>|<get-code>(){}[0]
+        final val max // id.tracive.sdk.model/ReportFormError.TooManyAttachments.max|{}max[0]
+            final fun <get-max>(): kotlin/Int // id.tracive.sdk.model/ReportFormError.TooManyAttachments.max.<get-max>|<get-max>(){}[0]
+
+        final fun component1(): kotlin/Int // id.tracive.sdk.model/ReportFormError.TooManyAttachments.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): id.tracive.sdk.model/ReportFormError.TooManyAttachments // id.tracive.sdk.model/ReportFormError.TooManyAttachments.copy|copy(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/ReportFormError.TooManyAttachments.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // id.tracive.sdk.model/ReportFormError.TooManyAttachments.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormError.TooManyAttachments.toString|toString(){}[0]
+    }
+
+    final class UnsupportedType : id.tracive.sdk.model/ReportFormError { // id.tracive.sdk.model/ReportFormError.UnsupportedType|null[0]
+        constructor <init>(kotlin/Int) // id.tracive.sdk.model/ReportFormError.UnsupportedType.<init>|<init>(kotlin.Int){}[0]
+
+        final val code // id.tracive.sdk.model/ReportFormError.UnsupportedType.code|{}code[0]
+            final fun <get-code>(): kotlin/String // id.tracive.sdk.model/ReportFormError.UnsupportedType.code.<get-code>|<get-code>(){}[0]
+        final val index // id.tracive.sdk.model/ReportFormError.UnsupportedType.index|{}index[0]
+            final fun <get-index>(): kotlin/Int // id.tracive.sdk.model/ReportFormError.UnsupportedType.index.<get-index>|<get-index>(){}[0]
+
+        final fun component1(): kotlin/Int // id.tracive.sdk.model/ReportFormError.UnsupportedType.component1|component1(){}[0]
+        final fun copy(kotlin/Int = ...): id.tracive.sdk.model/ReportFormError.UnsupportedType // id.tracive.sdk.model/ReportFormError.UnsupportedType.copy|copy(kotlin.Int){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/ReportFormError.UnsupportedType.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // id.tracive.sdk.model/ReportFormError.UnsupportedType.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormError.UnsupportedType.toString|toString(){}[0]
+    }
+
+    final object IncidentDateInFuture : id.tracive.sdk.model/ReportFormError { // id.tracive.sdk.model/ReportFormError.IncidentDateInFuture|null[0]
+        final val code // id.tracive.sdk.model/ReportFormError.IncidentDateInFuture.code|{}code[0]
+            final fun <get-code>(): kotlin/String // id.tracive.sdk.model/ReportFormError.IncidentDateInFuture.code.<get-code>|<get-code>(){}[0]
+
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormError.IncidentDateInFuture.toString|toString(){}[0]
+    }
+}
+
+sealed class id.tracive.sdk.model/ReportFormResult { // id.tracive.sdk.model/ReportFormResult|null[0]
+    final class Failed : id.tracive.sdk.model/ReportFormResult { // id.tracive.sdk.model/ReportFormResult.Failed|null[0]
+        constructor <init>(id.tracive.sdk.model/ReportFormError) // id.tracive.sdk.model/ReportFormResult.Failed.<init>|<init>(id.tracive.sdk.model.ReportFormError){}[0]
+
+        final val error // id.tracive.sdk.model/ReportFormResult.Failed.error|{}error[0]
+            final fun <get-error>(): id.tracive.sdk.model/ReportFormError // id.tracive.sdk.model/ReportFormResult.Failed.error.<get-error>|<get-error>(){}[0]
+
+        final fun component1(): id.tracive.sdk.model/ReportFormError // id.tracive.sdk.model/ReportFormResult.Failed.component1|component1(){}[0]
+        final fun copy(id.tracive.sdk.model/ReportFormError = ...): id.tracive.sdk.model/ReportFormResult.Failed // id.tracive.sdk.model/ReportFormResult.Failed.copy|copy(id.tracive.sdk.model.ReportFormError){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/ReportFormResult.Failed.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // id.tracive.sdk.model/ReportFormResult.Failed.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormResult.Failed.toString|toString(){}[0]
+    }
+
+    final class Opened : id.tracive.sdk.model/ReportFormResult { // id.tracive.sdk.model/ReportFormResult.Opened|null[0]
+        constructor <init>(kotlin/Boolean) // id.tracive.sdk.model/ReportFormResult.Opened.<init>|<init>(kotlin.Boolean){}[0]
+
+        final val attachmentsDelivered // id.tracive.sdk.model/ReportFormResult.Opened.attachmentsDelivered|{}attachmentsDelivered[0]
+            final fun <get-attachmentsDelivered>(): kotlin/Boolean // id.tracive.sdk.model/ReportFormResult.Opened.attachmentsDelivered.<get-attachmentsDelivered>|<get-attachmentsDelivered>(){}[0]
+
+        final fun component1(): kotlin/Boolean // id.tracive.sdk.model/ReportFormResult.Opened.component1|component1(){}[0]
+        final fun copy(kotlin/Boolean = ...): id.tracive.sdk.model/ReportFormResult.Opened // id.tracive.sdk.model/ReportFormResult.Opened.copy|copy(kotlin.Boolean){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/ReportFormResult.Opened.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // id.tracive.sdk.model/ReportFormResult.Opened.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormResult.Opened.toString|toString(){}[0]
+    }
+
+    final object Cancelled : id.tracive.sdk.model/ReportFormResult { // id.tracive.sdk.model/ReportFormResult.Cancelled|null[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormResult.Cancelled.toString|toString(){}[0]
+    }
+
+    final object InstallPageOpened : id.tracive.sdk.model/ReportFormResult { // id.tracive.sdk.model/ReportFormResult.InstallPageOpened|null[0]
+        final fun toString(): kotlin/String // id.tracive.sdk.model/ReportFormResult.InstallPageOpened.toString|toString(){}[0]
     }
 }
 
@@ -1429,5 +1634,6 @@ final object id.tracive.sdk.platform/CryptoProvider { // id.tracive.sdk.platform
 final fun id.tracive.sdk.platform/SecureTokenStore(): id.tracive.sdk.oauth/TokenStore // id.tracive.sdk.platform/SecureTokenStore|SecureTokenStore(){}[0]
 final fun id.tracive.sdk.platform/defaultAppPresenceChecker(id.tracive.sdk.model/TraciveEnvironment): id.tracive.sdk.platform/AppPresenceChecker // id.tracive.sdk.platform/defaultAppPresenceChecker|defaultAppPresenceChecker(id.tracive.sdk.model.TraciveEnvironment){}[0]
 final fun id.tracive.sdk.platform/defaultAuthorizeLauncher(): id.tracive.sdk.platform/AuthorizeLauncher // id.tracive.sdk.platform/defaultAuthorizeLauncher|defaultAuthorizeLauncher(){}[0]
+final fun id.tracive.sdk.platform/defaultReportFormLauncher(): id.tracive.sdk.platform/ReportFormLauncher // id.tracive.sdk.platform/defaultReportFormLauncher|defaultReportFormLauncher(){}[0]
 final fun id.tracive.sdk.query/normalizePhoneNumber(id.tracive.sdk.query/Country, kotlin/String): kotlin/String // id.tracive.sdk.query/normalizePhoneNumber|normalizePhoneNumber(id.tracive.sdk.query.Country;kotlin.String){}[0]
 final fun id.tracive.sdk.query/normalizePhoneNumber(kotlin/String, kotlin/String): kotlin/String // id.tracive.sdk.query/normalizePhoneNumber|normalizePhoneNumber(kotlin.String;kotlin.String){}[0]

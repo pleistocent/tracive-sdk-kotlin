@@ -111,6 +111,16 @@ jobs:
           python3 tools/generate_vectors_kt.py
           git diff --exit-code -- tracive-sdk/src/commonTest/kotlin/id/tracive/sdk/QueryGrammarVectorsJson.kt
 
+      # The report package fixture, pinned and embedded the same way. It is the wire contract of
+      # openReportForm, shared byte-identically by the four SDKs and the Tracive app, so the hash
+      # moves in all of them together. `ReportPackageVendoredFileTest` also compares the two copies.
+      - name: Check the report package fixture is unmodified and embedded
+        run: |
+          echo "1c0afd923252df3e7167f910f1727c82ab6251822e315b46e9a8f46222932563  tracive-sdk/src/commonTest/resources/report-package-vectors.json" \
+            | shasum -a 256 --check --strict
+          python3 tools/generate_report_vectors_kt.py
+          git diff --exit-code -- tracive-sdk/src/commonTest/kotlin/id/tracive/sdk/report/ReportPackageVectorsJson.kt
+
       # The bank-code table the SDK ships, pinned and embedded the same way as the grammar fixture.
       # It is the Tracive API's own table, vendored verbatim into all four SDKs, so the hash moves in
       # all four together. `BankCodesVendoredFileTest` also compares the two copies on every test run.

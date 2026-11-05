@@ -132,8 +132,10 @@ internal class FakeAppPresenceChecker(private val installed: Boolean) : AppPrese
 }
 
 /** Records the URLs the flow would have opened, instead of opening them. */
-internal class RecordingAuthorizeLauncher(private val onAuthorize: ((String) -> Unit)? = null) :
-  AuthorizeLauncher {
+internal class RecordingAuthorizeLauncher(
+  private val onAuthorize: ((String) -> Unit)? = null,
+  private val onInstall: ((String) -> Unit)? = null,
+) : AuthorizeLauncher {
 
   val authorizeUrls: MutableList<String> = mutableListOf()
   val installUrls: MutableList<String> = mutableListOf()
@@ -145,6 +147,7 @@ internal class RecordingAuthorizeLauncher(private val onAuthorize: ((String) -> 
 
   override suspend fun launchInstall(url: String) {
     installUrls += url
+    onInstall?.invoke(url)
   }
 }
 

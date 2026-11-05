@@ -416,6 +416,8 @@ public final class id/tracive/sdk/client/TraciveClient {
 	public final fun getRetryPolicy ()Lid/tracive/sdk/client/RetryPolicy;
 	public final fun handleCallback (Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun isAuthorized (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun openReportForm (Lid/tracive/sdk/query/TraciveQuery;Lkotlinx/datetime/LocalDate;Ljava/util/List;Lid/tracive/sdk/model/ReportTarget;Lid/tracive/sdk/platform/ReportFormLauncher;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static synthetic fun openReportForm$default (Lid/tracive/sdk/client/TraciveClient;Lid/tracive/sdk/query/TraciveQuery;Lkotlinx/datetime/LocalDate;Ljava/util/List;Lid/tracive/sdk/model/ReportTarget;Lid/tracive/sdk/platform/ReportFormLauncher;Lkotlin/coroutines/Continuation;ILjava/lang/Object;)Ljava/lang/Object;
 	public final fun profile (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun signOut (Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 }
@@ -759,6 +761,149 @@ public final class id/tracive/sdk/model/ProfileInfo$Companion {
 	public final fun serializer ()Lkotlinx/serialization/KSerializer;
 }
 
+public final class id/tracive/sdk/model/ReportAttachment {
+	public static final field Companion Lid/tracive/sdk/model/ReportAttachment$Companion;
+	public final fun getMimeType ()Ljava/lang/String;
+	public final fun getSizeBytes ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportAttachment$Companion {
+	public final fun image ([BLjava/lang/String;)Lid/tracive/sdk/model/ReportAttachment;
+	public final fun pdf ([B)Lid/tracive/sdk/model/ReportAttachment;
+}
+
+public abstract class id/tracive/sdk/model/ReportFormError {
+	public abstract fun getCode ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportFormError$ContentMismatch : id/tracive/sdk/model/ReportFormError {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lid/tracive/sdk/model/ReportFormError$ContentMismatch;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/ReportFormError$ContentMismatch;IILjava/lang/Object;)Lid/tracive/sdk/model/ReportFormError$ContentMismatch;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public final fun getIndex ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportFormError$IncidentDateInFuture : id/tracive/sdk/model/ReportFormError {
+	public static final field INSTANCE Lid/tracive/sdk/model/ReportFormError$IncidentDateInFuture;
+	public fun getCode ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportFormError$PackageTooLarge : id/tracive/sdk/model/ReportFormError {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lid/tracive/sdk/model/ReportFormError$PackageTooLarge;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/ReportFormError$PackageTooLarge;IILjava/lang/Object;)Lid/tracive/sdk/model/ReportFormError$PackageTooLarge;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public final fun getMax ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportFormError$PdfTooLarge : id/tracive/sdk/model/ReportFormError {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lid/tracive/sdk/model/ReportFormError$PdfTooLarge;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/ReportFormError$PdfTooLarge;IILjava/lang/Object;)Lid/tracive/sdk/model/ReportFormError$PdfTooLarge;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public final fun getIndex ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportFormError$PlatformFailure : id/tracive/sdk/model/ReportFormError {
+	public fun <init> (Ljava/lang/String;)V
+	public fun getCode ()Ljava/lang/String;
+	public final fun getMessage ()Ljava/lang/String;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportFormError$TooManyAttachments : id/tracive/sdk/model/ReportFormError {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lid/tracive/sdk/model/ReportFormError$TooManyAttachments;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/ReportFormError$TooManyAttachments;IILjava/lang/Object;)Lid/tracive/sdk/model/ReportFormError$TooManyAttachments;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public final fun getMax ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportFormError$UnsupportedType : id/tracive/sdk/model/ReportFormError {
+	public fun <init> (I)V
+	public final fun component1 ()I
+	public final fun copy (I)Lid/tracive/sdk/model/ReportFormError$UnsupportedType;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/ReportFormError$UnsupportedType;IILjava/lang/Object;)Lid/tracive/sdk/model/ReportFormError$UnsupportedType;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getCode ()Ljava/lang/String;
+	public final fun getIndex ()I
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public abstract class id/tracive/sdk/model/ReportFormResult {
+}
+
+public final class id/tracive/sdk/model/ReportFormResult$Cancelled : id/tracive/sdk/model/ReportFormResult {
+	public static final field INSTANCE Lid/tracive/sdk/model/ReportFormResult$Cancelled;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportFormResult$Failed : id/tracive/sdk/model/ReportFormResult {
+	public fun <init> (Lid/tracive/sdk/model/ReportFormError;)V
+	public final fun component1 ()Lid/tracive/sdk/model/ReportFormError;
+	public final fun copy (Lid/tracive/sdk/model/ReportFormError;)Lid/tracive/sdk/model/ReportFormResult$Failed;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/ReportFormResult$Failed;Lid/tracive/sdk/model/ReportFormError;ILjava/lang/Object;)Lid/tracive/sdk/model/ReportFormResult$Failed;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getError ()Lid/tracive/sdk/model/ReportFormError;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportFormResult$InstallPageOpened : id/tracive/sdk/model/ReportFormResult {
+	public static final field INSTANCE Lid/tracive/sdk/model/ReportFormResult$InstallPageOpened;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportFormResult$Opened : id/tracive/sdk/model/ReportFormResult {
+	public fun <init> (Z)V
+	public final fun component1 ()Z
+	public final fun copy (Z)Lid/tracive/sdk/model/ReportFormResult$Opened;
+	public static synthetic fun copy$default (Lid/tracive/sdk/model/ReportFormResult$Opened;ZILjava/lang/Object;)Lid/tracive/sdk/model/ReportFormResult$Opened;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttachmentsDelivered ()Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportTarget {
+	public static final field ANDROID_MIME_TYPE Ljava/lang/String;
+	public static final field Companion Lid/tracive/sdk/model/ReportTarget$Companion;
+	public fun <init> (Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getApplicationId ()Ljava/lang/String;
+	public final fun getCapabilityScheme ()Ljava/lang/String;
+	public final fun getFileExtension ()Ljava/lang/String;
+	public final fun getUrlScheme ()Ljava/lang/String;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/model/ReportTarget$Companion {
+	public final fun forEnvironment (Lid/tracive/sdk/model/TraciveEnvironment;)Lid/tracive/sdk/model/ReportTarget;
+	public final fun getProduction ()Lid/tracive/sdk/model/ReportTarget;
+	public final fun getSandbox ()Lid/tracive/sdk/model/ReportTarget;
+}
+
 public final class id/tracive/sdk/model/RiskTier : java/lang/Enum {
 	public static final field CAUTION Lid/tracive/sdk/model/RiskTier;
 	public static final field Companion Lid/tracive/sdk/model/RiskTier$Companion;
@@ -982,6 +1127,18 @@ public final class id/tracive/sdk/platform/AndroidAuthorizeLauncherKt {
 	public static final fun defaultAuthorizeLauncher ()Lid/tracive/sdk/platform/AuthorizeLauncher;
 }
 
+public final class id/tracive/sdk/platform/AndroidReportFormLauncher : id/tracive/sdk/platform/ReportFormLauncher {
+	public fun <init> (Landroid/content/Context;)V
+	public fun deliverPackage (Lid/tracive/sdk/model/ReportTarget;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun openLink (Lid/tracive/sdk/model/ReportTarget;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun prepare (Lid/tracive/sdk/model/ReportTarget;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class id/tracive/sdk/platform/AndroidReportFormLauncherKt {
+	public static final fun defaultReportFormLauncher ()Lid/tracive/sdk/platform/ReportFormLauncher;
+}
+
 public final class id/tracive/sdk/platform/AndroidSecureTokenStoreKt {
 	public static final fun SecureTokenStore ()Lid/tracive/sdk/oauth/TokenStore;
 }
@@ -1013,6 +1170,21 @@ public final class id/tracive/sdk/platform/CryptoProvider {
 	public static final field INSTANCE Lid/tracive/sdk/platform/CryptoProvider;
 	public final fun randomBytes (I)[B
 	public final fun sha256 ([B)[B
+}
+
+public abstract interface class id/tracive/sdk/platform/ReportFormLauncher {
+	public abstract fun deliverPackage (Lid/tracive/sdk/model/ReportTarget;[BLkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun openLink (Lid/tracive/sdk/model/ReportTarget;Ljava/lang/String;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun prepare (Lid/tracive/sdk/model/ReportTarget;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public final class id/tracive/sdk/platform/ReportHandoff : java/lang/Enum {
+	public static final field APP_NOT_INSTALLED Lid/tracive/sdk/platform/ReportHandoff;
+	public static final field LINK Lid/tracive/sdk/platform/ReportHandoff;
+	public static final field PACKAGE Lid/tracive/sdk/platform/ReportHandoff;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lid/tracive/sdk/platform/ReportHandoff;
+	public static fun values ()[Lid/tracive/sdk/platform/ReportHandoff;
 }
 
 public final class id/tracive/sdk/query/Country : java/lang/Enum {

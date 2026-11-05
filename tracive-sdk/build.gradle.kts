@@ -23,7 +23,13 @@ kotlin {
     // Runs `commonTest` (and any `androidHostTest`) on the JVM. Without it the KMP library plugin
     // treats `src/commonTest` as an orphaned source set and warns, and the cache tests would only
     // ever run on an Apple host — which would make Linux CI green while testing nothing.
-    withHostTest {}
+    //
+    // Default values let a host test drive AndroidReportFormLauncher.prepare() through a
+    // ContextWrapper whose framework calls answer null instead of throwing "Stub!".
+    withHostTest { isReturnDefaultValues = true }
+
+    // The FileProvider's paths XML is a resource; the KMP library plugin has resources off.
+    androidResources { enable = true }
 
     compilations.configureEach {
       compileTaskProvider.configure { compilerOptions { jvmTarget.set(JvmTarget.JVM_17) } }
@@ -64,6 +70,9 @@ kotlin {
       // Custom Tabs. RFC 8252 and Android App Links both rule out an in-app WebView for the
       // authorization step, so this is a functional dependency, not a convenience.
       api(libs.androidx.browser)
+      // FileProvider, for the report package. Already on the classpath through androidx.browser
+      // at this version; declared so it stops depending on that.
+      implementation(libs.androidx.core)
       implementation(libs.sqldelight.driver.android)
     }
 

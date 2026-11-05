@@ -40,7 +40,7 @@ import id.tracive.sdk.model.RiskTier
  * is AndroidX and has no Compose Multiplatform equivalent, and this screen is the whole app.
  */
 @Composable
-internal fun SampleScreen(model: CheckViewModel) {
+internal fun SampleScreen(model: CheckViewModel, reportModel: ReportViewModel) {
   val state by model.state.collectAsState()
 
   MaterialTheme {
@@ -106,6 +106,8 @@ internal fun SampleScreen(model: CheckViewModel) {
         }
 
         state.result?.let { ResultCard(it) }
+
+        ReportSection(reportModel)
 
         Spacer(Modifier.height(24.dp))
       }

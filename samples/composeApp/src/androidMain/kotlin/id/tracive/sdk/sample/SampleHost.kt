@@ -15,10 +15,14 @@ import androidx.compose.runtime.Composable
  */
 class SampleHost(context: Context, flavor: String, redirectUri: String) {
 
-  private val model = CheckViewModel(traciveClient(context, flavor, redirectUri))
+  private val client = traciveClient(context, flavor, redirectUri)
+
+  private val model = CheckViewModel(client)
+
+  private val reportModel = ReportViewModel(client)
 
   /** The shared screen. */
-  @Composable fun Content() = SampleScreen(model)
+  @Composable fun Content() = SampleScreen(model, reportModel)
 
   /**
    * Forwards a deep link from the Activity.
