@@ -9,6 +9,55 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ## [Unreleased]
 
+## [0.2.0] — 2026-11-05
+
+### Added
+
+- **A partner app can open the Tracive report form with the scammer's account, the transaction
+  date and the receipt already filled in.** `TraciveClient.openReportForm(query, incidentDate,
+  attachments)` takes a `TraciveQuery`, a `kotlinx.datetime.LocalDate` and a list of
+  `ReportAttachment.image(bytes, mimeType)` / `ReportAttachment.pdf(bytes)`, and returns a
+  `ReportFormResult`: `Opened(attachmentsDelivered)`, `Cancelled` (iOS, the user chose not to send
+  it), `InstallPageOpened`, or `Failed(ReportFormError)`.
+
+  ```kotlin
+  client.openReportForm(
+    TraciveQuery.bankAccount("IDN", "BCA", "1234567890"),
+    incidentDate = LocalDate(2026, 11, 3),
+    attachments = listOf(ReportAttachment.image(receiptPng, "image/png")),
+  )
+  ```
+
+  A Tracive app that accepts the report package receives everything; an older one opens with the
+  identifier only (`attachmentsDelivered = false`); with no app the install page opens, carrying
+  nothing from the report. It needs no grant, token or credit and sends nothing over the network,
+  so it works for `CONFIDENTIAL` clients and in Proxy mode too.
+
+  The input is validated first, against the Tracive app's own limits, and a failure opens nothing:
+  `IncidentDateInFuture`, `TooManyAttachments(max)` (5, or 10 for a phone number),
+  `UnsupportedType(index)`, `ContentMismatch(index)`, `PdfTooLarge(index)` (1 MiB or more) and
+  `PackageTooLarge(max)` (20 MiB), checked in that order. `PlatformFailure` covers the operating
+  system refusing a step. Every case carries a `code` shared with the other Tracive SDKs.
+
+  The target build follows `environment`; `ReportTarget` overrides it for testing against a build
+  the SDK does not know about. `ReportFormLauncher` is the platform seam, with
+  `AndroidReportFormLauncher(context)` and `IosReportFormLauncher(anchor)`. Pass the latter with your
+  Report button so the iPad sheet is a popover from it.
+
+  The package format is pinned by `report-package-vectors.json`, vendored byte-identically into the
+  four SDKs.
+
+- **Android: the merged manifest gains one provider.** `id.tracive.sdk.platform.TraciveFileProvider`,
+  authority `${applicationId}.tracive-sdk-files`, `exported="false"`, serving only
+  `cache/tracive-sdk/report/`. It hands the report package to the Tracive app through a read grant on
+  an explicit intent. The SDK now declares `androidx.core:core` 1.10.0, which `androidx.browser`
+  already brought in.
+
+- **iOS: two more `LSApplicationQueriesSchemes` entries for `openReportForm`.** Add
+  `tracive-report` and `tracivesandbox-report` beside `tracive` and `tracivesandbox`. Without them
+  every user gets the identifier-only link: the report form still opens, without the date and the
+  receipt.
+
 ## [0.1.0] — 2026-11-04
 
 First public release, on Maven Central as `com.pleistocent:tracive-sdk`. phase 1: OAuth mode
@@ -714,5 +763,6 @@ parameter anywhere in the public surface in any mode; no raw identifier or token
 exception message or `toString()`; no identifier on disk; tokens only in platform key stores; S256
 only; no WebView; single-flight refresh.
 
-[Unreleased]: https://github.com/pleistocent/tracive-sdk-kotlin/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/pleistocent/tracive-sdk-kotlin/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/pleistocent/tracive-sdk-kotlin/releases/tag/v0.2.0
 [0.1.0]: https://github.com/pleistocent/tracive-sdk-kotlin/releases/tag/v0.1.0

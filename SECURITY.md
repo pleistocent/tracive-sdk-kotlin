@@ -90,7 +90,8 @@ exploit:
 
 | Version | Supported |
 |---|---|
-| 0.1.x | Yes |
+| 0.2.x | Yes |
+| 0.1.x | No |
 
 Pre-1.0. Fixes land on the latest `0.x` and there is no backport branch yet.
 
