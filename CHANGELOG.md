@@ -9,7 +9,7 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ## [Unreleased]
 
-## [0.2.1] — 2026-11-06
+## [0.2.1] — 2026-11-07
 
 ### Added
 
