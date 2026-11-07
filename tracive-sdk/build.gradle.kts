@@ -19,6 +19,7 @@ kotlin {
     namespace = "id.tracive.sdk"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     minSdk = libs.versions.android.minSdk.get().toInt()
+    aarMetadata { minCompileSdk = libs.versions.android.minCompileSdk.get().toInt() }
 
     // Runs `commonTest` (and any `androidHostTest`) on the JVM. Without it the KMP library plugin
     // treats `src/commonTest` as an orphaned source set and warns, and the cache tests would only

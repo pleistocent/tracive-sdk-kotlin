@@ -18,6 +18,11 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
   single-flight and stays here, because a reused refresh token revokes the grant.
 - `TraciveAndroid.requireContext()` is public, for the same module.
 
+### Fixed
+
+- The Android AAR no longer forces `compileSdk` 37 on your app. It now asks for 36, which is what
+  `androidx.browser` 1.9.0 needs anyway.
+
 ### Documentation
 
 - `openReportForm` points at `tracive-sdk-extended` for reporting without leaving your app.
