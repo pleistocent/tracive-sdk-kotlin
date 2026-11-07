@@ -9,6 +9,19 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ## [Unreleased]
 
+## [0.2.2] — 2026-11-08
+
+### Added
+
+- `com.pleistocent:tracive-sdk-extended` and `com.pleistocent:tracive-sdk-extended-ui` now live in
+  this repository and share its version. They let a user report a scammer from inside your app. See
+  [`docs/extended.md`](docs/extended.md). Their 0.2.1 went out from a separate repository, which no
+  longer holds them; 0.2.2 is the same code.
+
+### Changed
+
+- Published klibs store source paths relative to the repository, not the build machine's.
+
 ## [0.2.1] — 2026-11-07
 
 ### Added
@@ -781,7 +794,8 @@ parameter anywhere in the public surface in any mode; no raw identifier or token
 exception message or `toString()`; no identifier on disk; tokens only in platform key stores; S256
 only; no WebView; single-flight refresh.
 
-[Unreleased]: https://github.com/pleistocent/tracive-sdk-kotlin/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/pleistocent/tracive-sdk-kotlin/compare/v0.2.2...HEAD
+[0.2.2]: https://github.com/pleistocent/tracive-sdk-kotlin/releases/tag/v0.2.2
 [0.2.1]: https://github.com/pleistocent/tracive-sdk-kotlin/releases/tag/v0.2.1
 [0.2.0]: https://github.com/pleistocent/tracive-sdk-kotlin/releases/tag/v0.2.0
 [0.1.0]: https://github.com/pleistocent/tracive-sdk-kotlin/releases/tag/v0.1.0
