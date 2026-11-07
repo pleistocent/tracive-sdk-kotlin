@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="tracive_report_form_title">Buat Laporan</string>
+  <string name="tracive_report_status_title">Status Laporan</string>
+  <string name="tracive_report_close">Tutup</string>
+  <string name="tracive_report_ok">OK</string>
+  <string name="tracive_report_cancel">Batal</string>
+  <string name="tracive_report_retry">Coba Lagi</string>
+  <string name="tracive_report_done">Selesai</string>
+  <string name="tracive_report_remove">Hapus</string>
+  <string name="tracive_report_send">Kirim</string>
+  <string name="tracive_report_sending">Mengirim… %1$d%%</string>
+  <string name="tracive_report_count">%1$d/%2$d</string>
+  <string name="tracive_report_load_failed">Halaman ini gagal dimuat</string>
+  <string name="tracive_report_no_browser">Tidak ada browser untuk membuka tautan ini.</string>
+
+  <string name="tracive_report_media_title">Media Penipu</string>
+  <string name="tracive_report_media_phone">Nomor telepon</string>
+  <string name="tracive_report_media_email">Email</string>
+  <string name="tracive_report_media_bank">Rekening bank</string>
+  <string name="tracive_report_media_crypto">Alamat kripto</string>
+  <string name="tracive_report_media_social">Media sosial</string>
+  <string name="tracive_report_media_other">Akun</string>
+
+  <string name="tracive_report_date_label">Tanggal Kejadian</string>
+  <string name="tracive_report_date_placeholder">Pilih tanggal</string>
+  <string name="tracive_report_title_label">Judul Laporan</string>
+  <string name="tracive_report_title_placeholder">Contoh: Penipuan jual beli HP di Facebook</string>
+  <string name="tracive_report_chronology_label">Cerita Anda</string>
+  <string name="tracive_report_chronology_description">Jelaskan bagaimana Anda dihubungi dan apa yang terjadi. Jelaskan sedetail mungkin. Minimal %1$d karakter.</string>
+  <string name="tracive_report_chronology_placeholder">Contoh: Awalnya dia menawarkan barang murah lewat DM, saya sudah transfer tapi langsung diblokir</string>
+  <string name="tracive_report_comment_label">Komentar Anda</string>
+  <string name="tracive_report_comment_description">Semua orang akan melihatnya di halaman detail pencarian. Nama Anda tidak akan ditampilkan. Ini opsional.</string>
+  <string name="tracive_report_evidence_label">Bukti</string>
+  <string name="tracive_report_evidence_description">Unggah tangkapan layar, pesan, riwayat transaksi atau bukti lainnya. Maksimal %1$d file.</string>
+  <string name="tracive_report_evidence_file">File</string>
+  <string name="tracive_report_evidence_preparing">Mengompresi…</string>
+  <string name="tracive_report_evidence_ready">Siap</string>
+  <string name="tracive_report_add_photos">Tambah Foto</string>
+  <string name="tracive_report_add_pdf">Tambah PDF</string>
+
+  <string name="tracive_report_problem_no_identifier">Minimal 1 media diperlukan</string>
+  <string name="tracive_report_problem_too_many_identifiers">Satu laporan maksimal memuat %1$d media</string>
+  <string name="tracive_report_problem_title_missing">Masukkan judul laporan</string>
+  <string name="tracive_report_problem_too_long">Maksimal %1$d karakter</string>
+  <string name="tracive_report_problem_too_short">Minimal %1$d karakter diperlukan</string>
+  <string name="tracive_report_problem_no_evidence">Minimal 1 bukti diperlukan</string>
+  <string name="tracive_report_problem_too_many_evidence">Anda bisa melampirkan maksimal %1$d file</string>
+  <string name="tracive_report_problem_date_missing">Pilih tanggal kejadian</string>
+  <string name="tracive_report_problem_date_future">Tanggal tidak boleh di masa depan</string>
+  <string name="tracive_report_problem_evidence_preparing">Tunggu sampai file Anda siap.</string>
+  <string name="tracive_report_problem_evidence_failed">Hapus file yang ditandai merah.</string>
+
+  <string name="tracive_report_terms_sentence">Dengan menekan Kirim, Anda menyetujui</string>
+  <string name="tracive_report_terms_and">dan</string>
+  <string name="tracive_report_term_terms_of_service">Ketentuan Layanan</string>
+  <string name="tracive_report_term_privacy_policy">Kebijakan Privasi</string>
+
+  <string name="tracive_report_error_needs_consent">Aplikasi ini perlu izin Anda di Tracive terlebih dulu.</string>
+  <string name="tracive_report_error_email_not_verified">Verifikasi email Anda di aplikasi Tracive, lalu coba lagi.</string>
+  <string name="tracive_report_error_report_not_found">Laporan bisa dicek selama 30 hari setelah dikirim.</string>
+  <string name="tracive_report_error_terms_outdated">Ketentuan berubah. Baca tautan baru di bawah, lalu tekan Kirim lagi.</string>
+  <string name="tracive_report_error_invalid_report">Tracive tidak bisa menerima laporan ini. Periksa isian Anda dan coba lagi.</string>
+  <string name="tracive_report_error_attachment_invalid">Tracive tidak bisa menerima salah satu file Anda. Hapus atau ganti file itu, lalu coba lagi.</string>
+  <string name="tracive_report_error_daily_limit">Batas laporan hari ini sudah tercapai. Coba lagi nanti.</string>
+  <plurals name="tracive_report_error_daily_limit_hours">
+    <item quantity="other">Batas laporan hari ini sudah tercapai. Coba lagi sekitar %1$d jam lagi.</item>
+  </plurals>
+  <string name="tracive_report_error_reporting_disabled">Pelaporan sedang dimatikan. Coba lagi nanti.</string>
+  <string name="tracive_report_error_network">Tidak bisa terhubung ke Tracive. Periksa koneksi Anda dan coba lagi.</string>
+  <string name="tracive_report_error_server">Tracive belum bisa memproses ini. Coba lagi sebentar lagi.</string>
+  <string name="tracive_report_error_unsupported_file">Hanya gambar dan file PDF yang bisa dilampirkan.</string>
+  <string name="tracive_report_error_file_too_large">PDF ini terlalu besar. Pilih file yang lebih kecil.</string>
+  <string name="tracive_report_error_image_unreadable">File ini tidak bisa dibaca atau diperkecil. Coba file lain.</string>
+
+  <string name="tracive_report_sent_title">Laporan terkirim</string>
+  <string name="tracive_report_sent_message">Terima kasih atas laporan Anda. Tim kami akan meninjau dan memverifikasi informasinya.</string>
+  <string name="tracive_report_sent_status">Status: %1$s</string>
+  <string name="tracive_report_view_status">Lihat Status</string>
+
+  <string name="tracive_report_status_submitted">Laporan terkirim</string>
+  <string name="tracive_report_status_submitted_line">Tracive sudah menerima laporan Anda dan akan segera meninjaunya.</string>
+  <string name="tracive_report_status_in_review">Sedang ditinjau</string>
+  <string name="tracive_report_status_in_review_line">Tracive sedang meninjau laporan Anda.</string>
+  <string name="tracive_report_status_reviewed">Sudah ditinjau</string>
+  <string name="tracive_report_status_reviewed_line">Tracive sudah selesai meninjau laporan ini.</string>
+  <string name="tracive_report_status_need_revision">Perlu perbaikan</string>
+  <string name="tracive_report_status_need_revision_line">Tracive perlu perubahan pada laporan Anda. Buka di Tracive untuk memperbaikinya.</string>
+  <string name="tracive_report_status_gone">Laporan ini sudah tidak bisa dicek</string>
+  <string name="tracive_report_open_in_tracive">Buka di Tracive</string>
+  <string name="tracive_report_tracive_missing">Aplikasi Tracive belum terpasang di perangkat ini.</string>
+</resources>

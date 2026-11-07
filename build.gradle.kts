@@ -1,8 +1,12 @@
+import com.ncorti.ktfmt.gradle.tasks.KtfmtCheckTask
+import com.ncorti.ktfmt.gradle.tasks.KtfmtFormatTask
+
 plugins {
   // Declared here without `apply` so every subproject resolves the same plugin version from the
   // version catalog and none of them re-declares one.
   alias(libs.plugins.androidApplication) apply false
   alias(libs.plugins.androidKotlinMultiplatformLibrary) apply false
+  alias(libs.plugins.androidLibrary) apply false
   alias(libs.plugins.composeCompiler) apply false
   alias(libs.plugins.kotlinMultiplatform) apply false
   alias(libs.plugins.kotlinSerialization) apply false
@@ -38,7 +42,7 @@ version = providers.gradleProperty("tracive.version").get()
  */
 apiValidation {
   // The sample app is an application, not a published artifact. It has no ABI to keep stable.
-  ignoredProjects += listOf("samples", "composeApp", "androidApp")
+  ignoredProjects += listOf("samples", "composeApp", "androidApp", "extendedAndroidApp")
 
   // SQLDelight's generated database code. It is public because the generator has no way to make it
   // anything else, but it is not surface this SDK offers anyone: `SqlDelightCheckCache.Schema`
@@ -61,4 +65,16 @@ allprojects {
   // app and backend repos use. `./gradlew ktfmtFormat` reformats; `ktfmtCheck` (wired into `check`)
   // fails the build on unformatted code.
   ktfmt { googleStyle() }
+
+  // The plugin finds sources through the Kotlin Gradle plugin, which an AGP 9 Android module no
+  // longer applies. Without these two, ktfmtCheck there reads no source file and passes.
+  listOf("com.android.library", "com.android.application").forEach { android ->
+    pluginManager.withPlugin(android) {
+      val sources = fileTree("src") { include("**/*.kt") }
+      val check = tasks.register<KtfmtCheckTask>("ktfmtCheckSources") { source = sources }
+      val format = tasks.register<KtfmtFormatTask>("ktfmtFormatSources") { source = sources }
+      tasks.named("ktfmtCheck") { dependsOn(check) }
+      tasks.named("ktfmtFormat") { dependsOn(format) }
+    }
+  }
 }

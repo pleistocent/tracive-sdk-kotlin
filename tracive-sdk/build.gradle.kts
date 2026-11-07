@@ -39,9 +39,14 @@ kotlin {
 
   // iosX64 is kept alongside the two current targets so a partner still on an Intel Mac can build
   // the simulator framework. It costs one more compile task and nothing else.
-  iosX64()
-  iosArm64()
-  iosSimulatorArm64()
+  listOf(iosX64(), iosArm64(), iosSimulatorArm64()).forEach { target ->
+    // A klib stores each source path, which would publish the build machine's home directory.
+    target.compilations.configureEach {
+      compileTaskProvider.configure {
+        compilerOptions.freeCompilerArgs.add("-Xklib-relative-path-base=${rootDir.absolutePath}")
+      }
+    }
+  }
 
   sourceSets {
     commonMain.dependencies {

@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="tracive_report_form_title">Create Report</string>
+  <string name="tracive_report_status_title">Report Status</string>
+  <string name="tracive_report_close">Close</string>
+  <string name="tracive_report_ok">OK</string>
+  <string name="tracive_report_cancel">Cancel</string>
+  <string name="tracive_report_retry">Retry</string>
+  <string name="tracive_report_done">Done</string>
+  <string name="tracive_report_remove">Remove</string>
+  <string name="tracive_report_send">Send</string>
+  <string name="tracive_report_sending">Sending… %1$d%%</string>
+  <string name="tracive_report_count">%1$d/%2$d</string>
+  <string name="tracive_report_load_failed">Couldn\'t load this page</string>
+  <string name="tracive_report_no_browser">No browser is available to open this link.</string>
+
+  <string name="tracive_report_media_title">Scammer\'s Media</string>
+  <string name="tracive_report_media_phone">Phone number</string>
+  <string name="tracive_report_media_email">Email</string>
+  <string name="tracive_report_media_bank">Bank account</string>
+  <string name="tracive_report_media_crypto">Crypto address</string>
+  <string name="tracive_report_media_social">Social media</string>
+  <string name="tracive_report_media_other">Account</string>
+
+  <string name="tracive_report_date_label">Date of Incident</string>
+  <string name="tracive_report_date_placeholder">Select date</string>
+  <string name="tracive_report_title_label">Report Title</string>
+  <string name="tracive_report_title_placeholder">Example: Phone sale scam on Facebook</string>
+  <string name="tracive_report_chronology_label">Your Story</string>
+  <string name="tracive_report_chronology_description">Describe how you were contacted and what happened. Be as detailed as possible. Min %1$d characters.</string>
+  <string name="tracive_report_chronology_placeholder">Example: He DMed me offering cheap stuff, I transferred the money and got blocked right after</string>
+  <string name="tracive_report_comment_label">Your Comment</string>
+  <string name="tracive_report_comment_description">Everyone will see it on the search details page. Your name won\'t be shown. It\'s optional.</string>
+  <string name="tracive_report_evidence_label">Evidence</string>
+  <string name="tracive_report_evidence_description">Upload screenshots, messages, transaction history or other proofs. Up to %1$d files.</string>
+  <string name="tracive_report_evidence_file">File</string>
+  <string name="tracive_report_evidence_preparing">Compressing…</string>
+  <string name="tracive_report_evidence_ready">Ready</string>
+  <string name="tracive_report_add_photos">Add Photos</string>
+  <string name="tracive_report_add_pdf">Add PDF</string>
+
+  <string name="tracive_report_problem_no_identifier">Add at least 1 media</string>
+  <string name="tracive_report_problem_too_many_identifiers">A report can name up to %1$d media</string>
+  <string name="tracive_report_problem_title_missing">Enter report title</string>
+  <string name="tracive_report_problem_too_long">Maximum %1$d characters</string>
+  <string name="tracive_report_problem_too_short">At least %1$d characters are required</string>
+  <string name="tracive_report_problem_no_evidence">At least 1 evidence is required</string>
+  <string name="tracive_report_problem_too_many_evidence">You can attach up to %1$d files</string>
+  <string name="tracive_report_problem_date_missing">Select date of incident</string>
+  <string name="tracive_report_problem_date_future">The date can\'t be in the future</string>
+  <string name="tracive_report_problem_evidence_preparing">Wait until your files are ready.</string>
+  <string name="tracive_report_problem_evidence_failed">Remove the files marked in red.</string>
+
+  <string name="tracive_report_terms_sentence">By tapping Send, you agree to</string>
+  <string name="tracive_report_terms_and">and</string>
+  <string name="tracive_report_term_terms_of_service">Terms of Service</string>
+  <string name="tracive_report_term_privacy_policy">Privacy Policy</string>
+
+  <string name="tracive_report_error_needs_consent">This app needs your permission in Tracive first.</string>
+  <string name="tracive_report_error_email_not_verified">Verify your email in the Tracive app, then try again.</string>
+  <string name="tracive_report_error_report_not_found">Reports can be checked for 30 days after they\'re sent.</string>
+  <string name="tracive_report_error_terms_outdated">The terms changed. Read the new links below, then tap Send again.</string>
+  <string name="tracive_report_error_invalid_report">Tracive couldn\'t accept this report. Check the fields and try again.</string>
+  <string name="tracive_report_error_attachment_invalid">Tracive couldn\'t accept one of your files. Remove it or pick another, then try again.</string>
+  <string name="tracive_report_error_daily_limit">You\'ve reached today\'s report limit. Try again later.</string>
+  <plurals name="tracive_report_error_daily_limit_hours">
+    <item quantity="one">You\'ve reached today\'s report limit. Try again in about %1$d hour.</item>
+    <item quantity="other">You\'ve reached today\'s report limit. Try again in about %1$d hours.</item>
+  </plurals>
+  <string name="tracive_report_error_reporting_disabled">Reporting is switched off for now. Try again later.</string>
+  <string name="tracive_report_error_network">Can\'t reach Tracive. Check your connection and try again.</string>
+  <string name="tracive_report_error_server">Tracive couldn\'t process this right now. Try again in a moment.</string>
+  <string name="tracive_report_error_unsupported_file">Only images and PDF files can be attached.</string>
+  <string name="tracive_report_error_file_too_large">This PDF is too large. Pick a smaller file.</string>
+  <string name="tracive_report_error_image_unreadable">This file couldn\'t be read or made small enough. Try another one.</string>
+
+  <string name="tracive_report_sent_title">Report sent</string>
+  <string name="tracive_report_sent_message">Thank you for your report. Our team will review it and verify the information.</string>
+  <string name="tracive_report_sent_status">Status: %1$s</string>
+  <string name="tracive_report_view_status">View Status</string>
+
+  <string name="tracive_report_status_submitted">Report sent</string>
+  <string name="tracive_report_status_submitted_line">Tracive has your report and will start reviewing it soon.</string>
+  <string name="tracive_report_status_in_review">In review</string>
+  <string name="tracive_report_status_in_review_line">Tracive is reviewing your report.</string>
+  <string name="tracive_report_status_reviewed">Reviewed</string>
+  <string name="tracive_report_status_reviewed_line">Tracive has finished reviewing this report.</string>
+  <string name="tracive_report_status_need_revision">Needs revision</string>
+  <string name="tracive_report_status_need_revision_line">Tracive needs a change to your report. Open it in Tracive to make the change.</string>
+  <string name="tracive_report_status_gone">This report can no longer be checked</string>
+  <string name="tracive_report_open_in_tracive">Open in Tracive</string>
+  <string name="tracive_report_tracive_missing">Tracive isn\'t installed on this device.</string>
+</resources>

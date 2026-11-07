@@ -153,7 +153,7 @@ jobs:
       # and the suite runs against a fake. There is no live backend to hit, and a suite that needed
       # one could not run here anyway.
       - name: Run common tests (JVM)
-        run: ./gradlew :tracive-sdk:testAndroidHostTest
+        run: ./gradlew :tracive-sdk:testAndroidHostTest :tracive-sdk-extended:testAndroidHostTest :tracive-sdk-extended-ui:testDebugUnitTest
 
       # The same common tests again, compiled by Kotlin/Native and run on the simulator target.
       # Not redundant: this SDK implements SHA-256 and AES-GCM in common Kotlin specifically so a
@@ -161,7 +161,7 @@ jobs:
       # the vectors are checked by the Native backend too. Integer and byte semantics are where the
       # two would drift.
       - name: Run common tests (iOS simulator)
-        run: ./gradlew :tracive-sdk:iosSimulatorArm64Test
+        run: ./gradlew :tracive-sdk:iosSimulatorArm64Test :tracive-sdk-extended:iosSimulatorArm64Test
 
       # Compiles every target, links the Apple frameworks, and runs `check` on the whole tree —
       # including the sample app, which is a separate Gradle project depending on `:tracive-sdk` the

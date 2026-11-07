@@ -33,6 +33,12 @@ dependencyResolutionManagement {
 // partner's build.
 include(":tracive-sdk")
 
+// In-app reporting, published beside the base SDK at the same version. It is a separate artifact
+// because avifkit adds about 6 MB to an app on Android and 7 MB on iOS.
+include(":tracive-sdk-extended")
+
+include(":tracive-sdk-extended-ui")
+
 // One Compose Multiplatform sample, in three parts. `composeApp` is the sample: the screen, the
 // view model and the client wiring, with only key storage and the SQLite driver written per
 // platform. `androidApp` is a launcher Activity; `iosApp` is an Xcode project holding the SwiftUI
@@ -42,3 +48,5 @@ include(":tracive-sdk")
 include(":samples:composeApp")
 
 include(":samples:androidApp")
+
+include(":samples:extendedAndroidApp")

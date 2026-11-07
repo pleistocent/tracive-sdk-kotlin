@@ -95,7 +95,7 @@ const ALLOWED_PLEISTOCENT_PATTERNS = [
   /developer@pleistocent\.com(?![A-Za-z0-9_-]|\.[A-Za-z0-9])/g,
   // The Maven Central coordinate and the property that sets its group: Central only publishes under
   // a namespace verified for the account. Exact, so the group with any other artifact still fails.
-  /com\.pleistocent:tracive-sdk(?![A-Za-z0-9._-])/g,
+  /com\.pleistocent:tracive-sdk(?:-extended(?:-ui)?)?(?![A-Za-z0-9._-])/g,
   /^tracive\.group=com\.pleistocent$/g,
   /com\.pleistocent\.tracive(?:\.[A-Za-z0-9_]+)*(?![A-Za-z0-9._-])/g,
   /github\.com\/pleistocent\/tracive-sdk-kotlin(\.git)?(?![A-Za-z0-9._-])/g,
@@ -105,6 +105,11 @@ const ALLOWED_PLEISTOCENT_PATTERNS = [
 // Hex constants that are deliberately fake test data, allowed by exact value. Weakening the
 // 40-hex rule instead would stop it catching the thing it exists for.
 const ALLOWED_HEX = new Set(['feedfacedeadbeeffeedfacedeadbeefabaddad2']);
+
+// Where Indonesian is the content, not the working language of the repository: the translations,
+// and the tests that read them or stand in for what an Indonesian user types. Only the language
+// rule uses this, so every other rule still reads these files.
+const INDONESIAN_BY_DESIGN = /(^|\/)(values-in|src\/test)\//;
 
 const RULES = [
   {
@@ -131,6 +136,15 @@ const RULES = [
     code: 'internal_document_reference',
     pattern: /\b(internal design doc|design doc:|RFC-INT|internal spec)\b/gi,
     message: 'references an internal document',
+  },
+  {
+    code: 'non_english_jargon',
+    // Say "phase 1" / "phase 2". Ordinary Indonesian dictionary words, so publishing them discloses
+    // nothing beyond the existence of the language.
+    pattern:
+      /\b(tahap|rencana|pengguna|laporan|penipuan|penipu|keamanan|kebutuhan|jadwal|catatan|sasaran|anggaran|kuota|pemeriksaan|rekening)\b/gi,
+    exemptPath: INDONESIAN_BY_DESIGN,
+    message: 'Indonesian outside a translation or a test',
   },
 ];
 
@@ -278,6 +292,7 @@ for (const path of walk(ROOT)) {
   const lines = readFileSync(path, 'utf8').split('\n');
   lines.forEach((line, index) => {
     for (const rule of rules) {
+      if (rule.exemptPath?.test(relativePath)) continue;
       rule.pattern.lastIndex = 0;
       const match = rule.pattern.exec(line);
       // `allow` exempts one exact matched value, never a shape. A rule narrowed by shape stops

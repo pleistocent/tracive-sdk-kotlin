@@ -29,7 +29,7 @@ Three separate facts, none of which this README will pretend otherwise about:
    on-device cache with its TTL policy, error mapping and the OAuth flow are all covered against an
    injected fake transport, so the suite needs no server and no credentials.
 
-Version `0.2.1`. SemVer, and `0.x` means the surface can still move — it is frozen against the
+Version `0.2.2`. SemVer, and `0.x` means the surface can still move — it is frozen against the
 cross-language contract shared with the Flutter and Swift SDKs, not against you, until `1.0.0`.
 
 ## There is no API key. There will never be one.
@@ -57,7 +57,7 @@ On Maven Central:
 
 ```kotlin
 // build.gradle.kts — in a multiplatform module, put it in commonMain.dependencies { }
-dependencies { implementation("com.pleistocent:tracive-sdk:0.2.1") }
+dependencies { implementation("com.pleistocent:tracive-sdk:0.2.2") }
 ```
 
 Requirements: Android `minSdk` 24, iOS 15+, Kotlin 2.3, JDK 17 to build.
@@ -313,6 +313,10 @@ Two platform notes: on Android the SDK adds an unexported `FileProvider` to your
 iOS add `tracive-report` and `tracivesandbox-report` to `LSApplicationQueriesSchemes`. Both are
 explained in [docs/integration.md](docs/integration.md#9-report-a-scammer).
 
+To let the user report without leaving your app, add `com.pleistocent:tracive-sdk-extended`, or
+`com.pleistocent:tracive-sdk-extended-ui` for Tracive's screens. They are separate artifacts because
+avifkit adds about 6 MB on Android and 7 MB on iOS. See [docs/extended.md](docs/extended.md).
+
 ## Errors
 
 Everything throws a subclass of `TraciveException`, mapped from the server's `error.code`:
@@ -367,6 +371,7 @@ the point.
 - [docs/architecture.md](docs/architecture.md) — the diagrams: components, the PKCE flow, the token
   lifecycle, the check path, and identifier folding
 - [docs/integration.md](docs/integration.md) — wiring the SDK into an Android or iOS app end to end
+- [docs/extended.md](docs/extended.md) — in-app reporting, with Tracive's screens or your own UI
 - [docs/oauth.md](docs/oauth.md) — the PKCE flow, redirect handling, token storage, refresh
 - [docs/caching.md](docs/caching.md) — TTLs, encryption, invalidation, what is and is not stored
 - [docs/proxy-contract.md](docs/proxy-contract.md) — the phase 2 contract, written down early

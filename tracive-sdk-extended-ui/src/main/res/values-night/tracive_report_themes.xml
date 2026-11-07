@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <style name="TraciveReport.Theme" parent="android:Theme.Material.NoActionBar">
+    <item name="android:windowBackground">@color/tracive_report_window</item>
+  </style>
+
+  <color name="tracive_report_window">#FF1B1C22</color>
+</resources>

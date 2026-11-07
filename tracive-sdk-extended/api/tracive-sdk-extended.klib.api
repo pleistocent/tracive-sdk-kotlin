@@ -1,0 +1,291 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <com.pleistocent:tracive-sdk-extended>
+final enum class id.tracive.sdk.extended/ReportErrorCode : kotlin/Enum<id.tracive.sdk.extended/ReportErrorCode> { // id.tracive.sdk.extended/ReportErrorCode|null[0]
+    enum entry ATTACHMENT_INVALID // id.tracive.sdk.extended/ReportErrorCode.ATTACHMENT_INVALID|null[0]
+    enum entry DAILY_LIMIT_REACHED // id.tracive.sdk.extended/ReportErrorCode.DAILY_LIMIT_REACHED|null[0]
+    enum entry EMAIL_NOT_VERIFIED // id.tracive.sdk.extended/ReportErrorCode.EMAIL_NOT_VERIFIED|null[0]
+    enum entry FILE_TOO_LARGE // id.tracive.sdk.extended/ReportErrorCode.FILE_TOO_LARGE|null[0]
+    enum entry IMAGE_UNREADABLE // id.tracive.sdk.extended/ReportErrorCode.IMAGE_UNREADABLE|null[0]
+    enum entry INVALID_REPORT // id.tracive.sdk.extended/ReportErrorCode.INVALID_REPORT|null[0]
+    enum entry NEEDS_CONSENT // id.tracive.sdk.extended/ReportErrorCode.NEEDS_CONSENT|null[0]
+    enum entry NETWORK // id.tracive.sdk.extended/ReportErrorCode.NETWORK|null[0]
+    enum entry REPORTING_DISABLED // id.tracive.sdk.extended/ReportErrorCode.REPORTING_DISABLED|null[0]
+    enum entry REPORT_NOT_FOUND // id.tracive.sdk.extended/ReportErrorCode.REPORT_NOT_FOUND|null[0]
+    enum entry SERVER // id.tracive.sdk.extended/ReportErrorCode.SERVER|null[0]
+    enum entry TERMS_OUTDATED // id.tracive.sdk.extended/ReportErrorCode.TERMS_OUTDATED|null[0]
+    enum entry UNSUPPORTED_FILE // id.tracive.sdk.extended/ReportErrorCode.UNSUPPORTED_FILE|null[0]
+
+    final val entries // id.tracive.sdk.extended/ReportErrorCode.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<id.tracive.sdk.extended/ReportErrorCode> // id.tracive.sdk.extended/ReportErrorCode.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): id.tracive.sdk.extended/ReportErrorCode // id.tracive.sdk.extended/ReportErrorCode.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<id.tracive.sdk.extended/ReportErrorCode> // id.tracive.sdk.extended/ReportErrorCode.values|values#static(){}[0]
+}
+
+final enum class id.tracive.sdk.extended/ReportFieldProblem : kotlin/Enum<id.tracive.sdk.extended/ReportFieldProblem> { // id.tracive.sdk.extended/ReportFieldProblem|null[0]
+    enum entry CHRONOLOGY_TOO_LONG // id.tracive.sdk.extended/ReportFieldProblem.CHRONOLOGY_TOO_LONG|null[0]
+    enum entry CHRONOLOGY_TOO_SHORT // id.tracive.sdk.extended/ReportFieldProblem.CHRONOLOGY_TOO_SHORT|null[0]
+    enum entry COMMENT_TOO_LONG // id.tracive.sdk.extended/ReportFieldProblem.COMMENT_TOO_LONG|null[0]
+    enum entry INCIDENT_DATE_INVALID // id.tracive.sdk.extended/ReportFieldProblem.INCIDENT_DATE_INVALID|null[0]
+    enum entry INCIDENT_DATE_IN_FUTURE // id.tracive.sdk.extended/ReportFieldProblem.INCIDENT_DATE_IN_FUTURE|null[0]
+    enum entry NO_EVIDENCE // id.tracive.sdk.extended/ReportFieldProblem.NO_EVIDENCE|null[0]
+    enum entry NO_IDENTIFIER // id.tracive.sdk.extended/ReportFieldProblem.NO_IDENTIFIER|null[0]
+    enum entry TITLE_MISSING // id.tracive.sdk.extended/ReportFieldProblem.TITLE_MISSING|null[0]
+    enum entry TITLE_TOO_LONG // id.tracive.sdk.extended/ReportFieldProblem.TITLE_TOO_LONG|null[0]
+    enum entry TOO_MANY_EVIDENCE // id.tracive.sdk.extended/ReportFieldProblem.TOO_MANY_EVIDENCE|null[0]
+    enum entry TOO_MANY_IDENTIFIERS // id.tracive.sdk.extended/ReportFieldProblem.TOO_MANY_IDENTIFIERS|null[0]
+
+    final val entries // id.tracive.sdk.extended/ReportFieldProblem.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<id.tracive.sdk.extended/ReportFieldProblem> // id.tracive.sdk.extended/ReportFieldProblem.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): id.tracive.sdk.extended/ReportFieldProblem // id.tracive.sdk.extended/ReportFieldProblem.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<id.tracive.sdk.extended/ReportFieldProblem> // id.tracive.sdk.extended/ReportFieldProblem.values|values#static(){}[0]
+}
+
+final enum class id.tracive.sdk.extended/ReportStatus : kotlin/Enum<id.tracive.sdk.extended/ReportStatus> { // id.tracive.sdk.extended/ReportStatus|null[0]
+    enum entry IN_REVIEW // id.tracive.sdk.extended/ReportStatus.IN_REVIEW|null[0]
+    enum entry NEED_REVISION // id.tracive.sdk.extended/ReportStatus.NEED_REVISION|null[0]
+    enum entry REVIEWED // id.tracive.sdk.extended/ReportStatus.REVIEWED|null[0]
+    enum entry SUBMITTED // id.tracive.sdk.extended/ReportStatus.SUBMITTED|null[0]
+
+    final val entries // id.tracive.sdk.extended/ReportStatus.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<id.tracive.sdk.extended/ReportStatus> // id.tracive.sdk.extended/ReportStatus.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): id.tracive.sdk.extended/ReportStatus // id.tracive.sdk.extended/ReportStatus.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<id.tracive.sdk.extended/ReportStatus> // id.tracive.sdk.extended/ReportStatus.values|values#static(){}[0]
+}
+
+abstract fun interface id.tracive.sdk.extended/AccessTokenProvider { // id.tracive.sdk.extended/AccessTokenProvider|null[0]
+    abstract suspend fun accessToken(kotlin/String?): kotlin/String // id.tracive.sdk.extended/AccessTokenProvider.accessToken|accessToken(kotlin.String?){}[0]
+}
+
+abstract fun interface id.tracive.sdk.extended/ReportProgressListener { // id.tracive.sdk.extended/ReportProgressListener|null[0]
+    abstract fun onProgress(kotlin/Float) // id.tracive.sdk.extended/ReportProgressListener.onProgress|onProgress(kotlin.Float){}[0]
+}
+
+final class id.tracive.sdk.extended/PreparedEvidence { // id.tracive.sdk.extended/PreparedEvidence|null[0]
+    final val bytes // id.tracive.sdk.extended/PreparedEvidence.bytes|{}bytes[0]
+        final fun <get-bytes>(): kotlin/ByteArray // id.tracive.sdk.extended/PreparedEvidence.bytes.<get-bytes>|<get-bytes>(){}[0]
+    final val mimeType // id.tracive.sdk.extended/PreparedEvidence.mimeType|{}mimeType[0]
+        final fun <get-mimeType>(): kotlin/String // id.tracive.sdk.extended/PreparedEvidence.mimeType.<get-mimeType>|<get-mimeType>(){}[0]
+}
+
+final class id.tracive.sdk.extended/ReportCallHandle { // id.tracive.sdk.extended/ReportCallHandle|null[0]
+    final fun cancel() // id.tracive.sdk.extended/ReportCallHandle.cancel|cancel(){}[0]
+}
+
+final class id.tracive.sdk.extended/ReportDraft { // id.tracive.sdk.extended/ReportDraft|null[0]
+    constructor <init>(id.tracive.sdk.query/TraciveQuery, kotlin/String, kotlin/String, kotlin/String? = ..., kotlinx.datetime/LocalDate, kotlin.collections/List<id.tracive.sdk.extended/PreparedEvidence>, kotlin.collections/List<id.tracive.sdk.extended/RequiredTerm>, kotlin/String? = ...) // id.tracive.sdk.extended/ReportDraft.<init>|<init>(id.tracive.sdk.query.TraciveQuery;kotlin.String;kotlin.String;kotlin.String?;kotlinx.datetime.LocalDate;kotlin.collections.List<id.tracive.sdk.extended.PreparedEvidence>;kotlin.collections.List<id.tracive.sdk.extended.RequiredTerm>;kotlin.String?){}[0]
+    constructor <init>(kotlin.collections/List<kotlin/String>, kotlin/String, kotlin/String, kotlin/String? = ..., kotlin/String, kotlin.collections/List<id.tracive.sdk.extended/PreparedEvidence>, kotlin.collections/List<id.tracive.sdk.extended/RequiredTerm>, kotlin/String? = ..., kotlin/String = ...) // id.tracive.sdk.extended/ReportDraft.<init>|<init>(kotlin.collections.List<kotlin.String>;kotlin.String;kotlin.String;kotlin.String?;kotlin.String;kotlin.collections.List<id.tracive.sdk.extended.PreparedEvidence>;kotlin.collections.List<id.tracive.sdk.extended.RequiredTerm>;kotlin.String?;kotlin.String){}[0]
+
+    final val acceptedTerms // id.tracive.sdk.extended/ReportDraft.acceptedTerms|{}acceptedTerms[0]
+        final fun <get-acceptedTerms>(): kotlin.collections/List<id.tracive.sdk.extended/RequiredTerm> // id.tracive.sdk.extended/ReportDraft.acceptedTerms.<get-acceptedTerms>|<get-acceptedTerms>(){}[0]
+    final val chronology // id.tracive.sdk.extended/ReportDraft.chronology|{}chronology[0]
+        final fun <get-chronology>(): kotlin/String // id.tracive.sdk.extended/ReportDraft.chronology.<get-chronology>|<get-chronology>(){}[0]
+    final val comment // id.tracive.sdk.extended/ReportDraft.comment|{}comment[0]
+        final fun <get-comment>(): kotlin/String? // id.tracive.sdk.extended/ReportDraft.comment.<get-comment>|<get-comment>(){}[0]
+    final val evidence // id.tracive.sdk.extended/ReportDraft.evidence|{}evidence[0]
+        final fun <get-evidence>(): kotlin.collections/List<id.tracive.sdk.extended/PreparedEvidence> // id.tracive.sdk.extended/ReportDraft.evidence.<get-evidence>|<get-evidence>(){}[0]
+    final val idempotencyKey // id.tracive.sdk.extended/ReportDraft.idempotencyKey|{}idempotencyKey[0]
+        final fun <get-idempotencyKey>(): kotlin/String // id.tracive.sdk.extended/ReportDraft.idempotencyKey.<get-idempotencyKey>|<get-idempotencyKey>(){}[0]
+    final val identifiers // id.tracive.sdk.extended/ReportDraft.identifiers|{}identifiers[0]
+        final fun <get-identifiers>(): kotlin.collections/List<kotlin/String> // id.tracive.sdk.extended/ReportDraft.identifiers.<get-identifiers>|<get-identifiers>(){}[0]
+    final val incidentDate // id.tracive.sdk.extended/ReportDraft.incidentDate|{}incidentDate[0]
+        final fun <get-incidentDate>(): kotlin/String // id.tracive.sdk.extended/ReportDraft.incidentDate.<get-incidentDate>|<get-incidentDate>(){}[0]
+    final val language // id.tracive.sdk.extended/ReportDraft.language|{}language[0]
+        final fun <get-language>(): kotlin/String? // id.tracive.sdk.extended/ReportDraft.language.<get-language>|<get-language>(){}[0]
+    final val title // id.tracive.sdk.extended/ReportDraft.title|{}title[0]
+        final fun <get-title>(): kotlin/String // id.tracive.sdk.extended/ReportDraft.title.<get-title>|<get-title>(){}[0]
+
+    final fun maxEvidence(id.tracive.sdk.extended/ReportLimits): kotlin/Int // id.tracive.sdk.extended/ReportDraft.maxEvidence|maxEvidence(id.tracive.sdk.extended.ReportLimits){}[0]
+    final fun problems(id.tracive.sdk.extended/ReportLimits, kotlinx.datetime/LocalDate): kotlin.collections/List<id.tracive.sdk.extended/ReportFieldProblem> // id.tracive.sdk.extended/ReportDraft.problems|problems(id.tracive.sdk.extended.ReportLimits;kotlinx.datetime.LocalDate){}[0]
+}
+
+final class id.tracive.sdk.extended/ReportLimits { // id.tracive.sdk.extended/ReportLimits|null[0]
+    constructor <init>(kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin/Int, kotlin.collections/List<kotlin/String>) // id.tracive.sdk.extended/ReportLimits.<init>|<init>(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.collections.List<kotlin.String>){}[0]
+
+    final val attachmentTypes // id.tracive.sdk.extended/ReportLimits.attachmentTypes|{}attachmentTypes[0]
+        final fun <get-attachmentTypes>(): kotlin.collections/List<kotlin/String> // id.tracive.sdk.extended/ReportLimits.attachmentTypes.<get-attachmentTypes>|<get-attachmentTypes>(){}[0]
+    final val attachmentsPerIdentifier // id.tracive.sdk.extended/ReportLimits.attachmentsPerIdentifier|{}attachmentsPerIdentifier[0]
+        final fun <get-attachmentsPerIdentifier>(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.attachmentsPerIdentifier.<get-attachmentsPerIdentifier>|<get-attachmentsPerIdentifier>(){}[0]
+    final val chronologyMaxLength // id.tracive.sdk.extended/ReportLimits.chronologyMaxLength|{}chronologyMaxLength[0]
+        final fun <get-chronologyMaxLength>(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.chronologyMaxLength.<get-chronologyMaxLength>|<get-chronologyMaxLength>(){}[0]
+    final val chronologyMinLength // id.tracive.sdk.extended/ReportLimits.chronologyMinLength|{}chronologyMinLength[0]
+        final fun <get-chronologyMinLength>(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.chronologyMinLength.<get-chronologyMinLength>|<get-chronologyMinLength>(){}[0]
+    final val commentMaxLength // id.tracive.sdk.extended/ReportLimits.commentMaxLength|{}commentMaxLength[0]
+        final fun <get-commentMaxLength>(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.commentMaxLength.<get-commentMaxLength>|<get-commentMaxLength>(){}[0]
+    final val extraAttachmentsWithPhone // id.tracive.sdk.extended/ReportLimits.extraAttachmentsWithPhone|{}extraAttachmentsWithPhone[0]
+        final fun <get-extraAttachmentsWithPhone>(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.extraAttachmentsWithPhone.<get-extraAttachmentsWithPhone>|<get-extraAttachmentsWithPhone>(){}[0]
+    final val maxAttachmentBytes // id.tracive.sdk.extended/ReportLimits.maxAttachmentBytes|{}maxAttachmentBytes[0]
+        final fun <get-maxAttachmentBytes>(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.maxAttachmentBytes.<get-maxAttachmentBytes>|<get-maxAttachmentBytes>(){}[0]
+    final val maxIdentifiers // id.tracive.sdk.extended/ReportLimits.maxIdentifiers|{}maxIdentifiers[0]
+        final fun <get-maxIdentifiers>(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.maxIdentifiers.<get-maxIdentifiers>|<get-maxIdentifiers>(){}[0]
+    final val titleMaxLength // id.tracive.sdk.extended/ReportLimits.titleMaxLength|{}titleMaxLength[0]
+        final fun <get-titleMaxLength>(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.titleMaxLength.<get-titleMaxLength>|<get-titleMaxLength>(){}[0]
+
+    final fun component1(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.component2|component2(){}[0]
+    final fun component3(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.component3|component3(){}[0]
+    final fun component4(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.component4|component4(){}[0]
+    final fun component5(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.component5|component5(){}[0]
+    final fun component6(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.component6|component6(){}[0]
+    final fun component7(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.component7|component7(){}[0]
+    final fun component8(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.component8|component8(){}[0]
+    final fun component9(): kotlin.collections/List<kotlin/String> // id.tracive.sdk.extended/ReportLimits.component9|component9(){}[0]
+    final fun copy(kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin.collections/List<kotlin/String> = ...): id.tracive.sdk.extended/ReportLimits // id.tracive.sdk.extended/ReportLimits.copy|copy(kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.collections.List<kotlin.String>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.extended/ReportLimits.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.extended/ReportLimits.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.extended/ReportLimits.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.extended/ReportLimits> { // id.tracive.sdk.extended/ReportLimits.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.extended/ReportLimits.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.extended/ReportLimits.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.extended/ReportLimits.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.extended/ReportLimits // id.tracive.sdk.extended/ReportLimits.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.extended/ReportLimits) // id.tracive.sdk.extended/ReportLimits.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.extended.ReportLimits){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.extended/ReportLimits.Companion|null[0]
+        final val $childSerializers // id.tracive.sdk.extended/ReportLimits.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.extended/ReportLimits> // id.tracive.sdk.extended/ReportLimits.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class id.tracive.sdk.extended/ReportRequirements { // id.tracive.sdk.extended/ReportRequirements|null[0]
+    constructor <init>(kotlin/Boolean, kotlin/Int, id.tracive.sdk.extended/ReportLimits, kotlin.collections/List<id.tracive.sdk.extended/RequiredTerm>) // id.tracive.sdk.extended/ReportRequirements.<init>|<init>(kotlin.Boolean;kotlin.Int;id.tracive.sdk.extended.ReportLimits;kotlin.collections.List<id.tracive.sdk.extended.RequiredTerm>){}[0]
+
+    final val enabled // id.tracive.sdk.extended/ReportRequirements.enabled|{}enabled[0]
+        final fun <get-enabled>(): kotlin/Boolean // id.tracive.sdk.extended/ReportRequirements.enabled.<get-enabled>|<get-enabled>(){}[0]
+    final val limits // id.tracive.sdk.extended/ReportRequirements.limits|{}limits[0]
+        final fun <get-limits>(): id.tracive.sdk.extended/ReportLimits // id.tracive.sdk.extended/ReportRequirements.limits.<get-limits>|<get-limits>(){}[0]
+    final val remainingToday // id.tracive.sdk.extended/ReportRequirements.remainingToday|{}remainingToday[0]
+        final fun <get-remainingToday>(): kotlin/Int // id.tracive.sdk.extended/ReportRequirements.remainingToday.<get-remainingToday>|<get-remainingToday>(){}[0]
+    final val terms // id.tracive.sdk.extended/ReportRequirements.terms|{}terms[0]
+        final fun <get-terms>(): kotlin.collections/List<id.tracive.sdk.extended/RequiredTerm> // id.tracive.sdk.extended/ReportRequirements.terms.<get-terms>|<get-terms>(){}[0]
+
+    final fun component1(): kotlin/Boolean // id.tracive.sdk.extended/ReportRequirements.component1|component1(){}[0]
+    final fun component2(): kotlin/Int // id.tracive.sdk.extended/ReportRequirements.component2|component2(){}[0]
+    final fun component3(): id.tracive.sdk.extended/ReportLimits // id.tracive.sdk.extended/ReportRequirements.component3|component3(){}[0]
+    final fun component4(): kotlin.collections/List<id.tracive.sdk.extended/RequiredTerm> // id.tracive.sdk.extended/ReportRequirements.component4|component4(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/Int = ..., id.tracive.sdk.extended/ReportLimits = ..., kotlin.collections/List<id.tracive.sdk.extended/RequiredTerm> = ...): id.tracive.sdk.extended/ReportRequirements // id.tracive.sdk.extended/ReportRequirements.copy|copy(kotlin.Boolean;kotlin.Int;id.tracive.sdk.extended.ReportLimits;kotlin.collections.List<id.tracive.sdk.extended.RequiredTerm>){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.extended/ReportRequirements.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.extended/ReportRequirements.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.extended/ReportRequirements.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.extended/ReportRequirements> { // id.tracive.sdk.extended/ReportRequirements.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.extended/ReportRequirements.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.extended/ReportRequirements.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.extended/ReportRequirements.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.extended/ReportRequirements // id.tracive.sdk.extended/ReportRequirements.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.extended/ReportRequirements) // id.tracive.sdk.extended/ReportRequirements.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.extended.ReportRequirements){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.extended/ReportRequirements.Companion|null[0]
+        final val $childSerializers // id.tracive.sdk.extended/ReportRequirements.Companion.$childSerializers|{}$childSerializers[0]
+
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.extended/ReportRequirements> // id.tracive.sdk.extended/ReportRequirements.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class id.tracive.sdk.extended/RequiredTerm { // id.tracive.sdk.extended/RequiredTerm|null[0]
+    constructor <init>(kotlin/String, kotlin/String, kotlin/String) // id.tracive.sdk.extended/RequiredTerm.<init>|<init>(kotlin.String;kotlin.String;kotlin.String){}[0]
+
+    final val id // id.tracive.sdk.extended/RequiredTerm.id|{}id[0]
+        final fun <get-id>(): kotlin/String // id.tracive.sdk.extended/RequiredTerm.id.<get-id>|<get-id>(){}[0]
+    final val url // id.tracive.sdk.extended/RequiredTerm.url|{}url[0]
+        final fun <get-url>(): kotlin/String // id.tracive.sdk.extended/RequiredTerm.url.<get-url>|<get-url>(){}[0]
+    final val version // id.tracive.sdk.extended/RequiredTerm.version|{}version[0]
+        final fun <get-version>(): kotlin/String // id.tracive.sdk.extended/RequiredTerm.version.<get-version>|<get-version>(){}[0]
+
+    final fun component1(): kotlin/String // id.tracive.sdk.extended/RequiredTerm.component1|component1(){}[0]
+    final fun component2(): kotlin/String // id.tracive.sdk.extended/RequiredTerm.component2|component2(){}[0]
+    final fun component3(): kotlin/String // id.tracive.sdk.extended/RequiredTerm.component3|component3(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ..., kotlin/String = ...): id.tracive.sdk.extended/RequiredTerm // id.tracive.sdk.extended/RequiredTerm.copy|copy(kotlin.String;kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.extended/RequiredTerm.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.extended/RequiredTerm.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.extended/RequiredTerm.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.extended/RequiredTerm> { // id.tracive.sdk.extended/RequiredTerm.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.extended/RequiredTerm.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.extended/RequiredTerm.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.extended/RequiredTerm.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.extended/RequiredTerm // id.tracive.sdk.extended/RequiredTerm.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.extended/RequiredTerm) // id.tracive.sdk.extended/RequiredTerm.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.extended.RequiredTerm){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.extended/RequiredTerm.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.extended/RequiredTerm> // id.tracive.sdk.extended/RequiredTerm.Companion.serializer|serializer(){}[0]
+    }
+}
+
+final class id.tracive.sdk.extended/TraciveReportException : kotlin/Exception { // id.tracive.sdk.extended/TraciveReportException|null[0]
+    constructor <init>(id.tracive.sdk.extended/ReportErrorCode, kotlin/String, kotlin/Int? = ..., kotlin/Long? = ..., kotlin/Throwable? = ...) // id.tracive.sdk.extended/TraciveReportException.<init>|<init>(id.tracive.sdk.extended.ReportErrorCode;kotlin.String;kotlin.Int?;kotlin.Long?;kotlin.Throwable?){}[0]
+
+    final val code // id.tracive.sdk.extended/TraciveReportException.code|{}code[0]
+        final fun <get-code>(): id.tracive.sdk.extended/ReportErrorCode // id.tracive.sdk.extended/TraciveReportException.code.<get-code>|<get-code>(){}[0]
+    final val httpStatus // id.tracive.sdk.extended/TraciveReportException.httpStatus|{}httpStatus[0]
+        final fun <get-httpStatus>(): kotlin/Int? // id.tracive.sdk.extended/TraciveReportException.httpStatus.<get-httpStatus>|<get-httpStatus>(){}[0]
+    final val retryAfterSeconds // id.tracive.sdk.extended/TraciveReportException.retryAfterSeconds|{}retryAfterSeconds[0]
+        final fun <get-retryAfterSeconds>(): kotlin/Long? // id.tracive.sdk.extended/TraciveReportException.retryAfterSeconds.<get-retryAfterSeconds>|<get-retryAfterSeconds>(){}[0]
+}
+
+final class id.tracive.sdk.extended/TraciveReports { // id.tracive.sdk.extended/TraciveReports|null[0]
+    constructor <init>(id.tracive.sdk.model/TraciveEnvironment, id.tracive.sdk.extended/AccessTokenProvider, id.tracive.sdk.model/ReportTarget? = ...) // id.tracive.sdk.extended/TraciveReports.<init>|<init>(id.tracive.sdk.model.TraciveEnvironment;id.tracive.sdk.extended.AccessTokenProvider;id.tracive.sdk.model.ReportTarget?){}[0]
+    constructor <init>(kotlin/String, kotlin/String, id.tracive.sdk.extended/AccessTokenProvider) // id.tracive.sdk.extended/TraciveReports.<init>|<init>(kotlin.String;kotlin.String;id.tracive.sdk.extended.AccessTokenProvider){}[0]
+
+    final fun close() // id.tracive.sdk.extended/TraciveReports.close|close(){}[0]
+    final fun openInTracive(kotlin/String): kotlin/Boolean // id.tracive.sdk.extended/TraciveReports.openInTracive|openInTracive(kotlin.String){}[0]
+    final suspend fun prepare(kotlin/ByteArray, kotlin/String): id.tracive.sdk.extended/PreparedEvidence // id.tracive.sdk.extended/TraciveReports.prepare|prepare(kotlin.ByteArray;kotlin.String){}[0]
+    final suspend fun requirements(): id.tracive.sdk.extended/ReportRequirements // id.tracive.sdk.extended/TraciveReports.requirements|requirements(){}[0]
+    final suspend fun status(kotlin/String): id.tracive.sdk.extended/ReportStatus // id.tracive.sdk.extended/TraciveReports.status|status(kotlin.String){}[0]
+    final suspend fun submit(id.tracive.sdk.extended/ReportDraft, id.tracive.sdk.extended/ReportProgressListener? = ...): id.tracive.sdk.extended/SubmitResult // id.tracive.sdk.extended/TraciveReports.submit|submit(id.tracive.sdk.extended.ReportDraft;id.tracive.sdk.extended.ReportProgressListener?){}[0]
+}
+
+sealed class id.tracive.sdk.extended/SubmitResult { // id.tracive.sdk.extended/SubmitResult|null[0]
+    final class Failed : id.tracive.sdk.extended/SubmitResult { // id.tracive.sdk.extended/SubmitResult.Failed|null[0]
+        constructor <init>(id.tracive.sdk.extended/TraciveReportException) // id.tracive.sdk.extended/SubmitResult.Failed.<init>|<init>(id.tracive.sdk.extended.TraciveReportException){}[0]
+
+        final val error // id.tracive.sdk.extended/SubmitResult.Failed.error|{}error[0]
+            final fun <get-error>(): id.tracive.sdk.extended/TraciveReportException // id.tracive.sdk.extended/SubmitResult.Failed.error.<get-error>|<get-error>(){}[0]
+    }
+
+    final class Submitted : id.tracive.sdk.extended/SubmitResult { // id.tracive.sdk.extended/SubmitResult.Submitted|null[0]
+        constructor <init>(kotlin/String, id.tracive.sdk.extended/ReportStatus) // id.tracive.sdk.extended/SubmitResult.Submitted.<init>|<init>(kotlin.String;id.tracive.sdk.extended.ReportStatus){}[0]
+
+        final val reportId // id.tracive.sdk.extended/SubmitResult.Submitted.reportId|{}reportId[0]
+            final fun <get-reportId>(): kotlin/String // id.tracive.sdk.extended/SubmitResult.Submitted.reportId.<get-reportId>|<get-reportId>(){}[0]
+        final val status // id.tracive.sdk.extended/SubmitResult.Submitted.status|{}status[0]
+            final fun <get-status>(): id.tracive.sdk.extended/ReportStatus // id.tracive.sdk.extended/SubmitResult.Submitted.status.<get-status>|<get-status>(){}[0]
+    }
+
+    final object NeedsConsent : id.tracive.sdk.extended/SubmitResult // id.tracive.sdk.extended/SubmitResult.NeedsConsent|null[0]
+}
+
+final object id.tracive.sdk.extended/TraciveReportScopes { // id.tracive.sdk.extended/TraciveReportScopes|null[0]
+    final const val CREATE // id.tracive.sdk.extended/TraciveReportScopes.CREATE|{}CREATE[0]
+        final fun <get-CREATE>(): kotlin/String // id.tracive.sdk.extended/TraciveReportScopes.CREATE.<get-CREATE>|<get-CREATE>(){}[0]
+    final const val READ // id.tracive.sdk.extended/TraciveReportScopes.READ|{}READ[0]
+        final fun <get-READ>(): kotlin/String // id.tracive.sdk.extended/TraciveReportScopes.READ.<get-READ>|<get-READ>(){}[0]
+}
+
+final val id.tracive.sdk.extended/data // id.tracive.sdk.extended/data|@id.tracive.sdk.extended.PreparedEvidence{}data[0]
+    final fun (id.tracive.sdk.extended/PreparedEvidence).<get-data>(): platform.Foundation/NSData // id.tracive.sdk.extended/data.<get-data>|<get-data>@id.tracive.sdk.extended.PreparedEvidence(){}[0]
+
+final fun (id.tracive.sdk.extended/TraciveReports).id.tracive.sdk.extended/reportDetailsLink(kotlin/String): kotlin/String // id.tracive.sdk.extended/reportDetailsLink|reportDetailsLink@id.tracive.sdk.extended.TraciveReports(kotlin.String){}[0]
+final fun (id.tracive.sdk.extended/TraciveReports).id.tracive.sdk.extended/startPrepare(platform.Foundation/NSData, kotlin/String, kotlin/Function2<id.tracive.sdk.extended/PreparedEvidence?, kotlin/Throwable?, kotlin/Unit>): id.tracive.sdk.extended/ReportCallHandle // id.tracive.sdk.extended/startPrepare|startPrepare@id.tracive.sdk.extended.TraciveReports(platform.Foundation.NSData;kotlin.String;kotlin.Function2<id.tracive.sdk.extended.PreparedEvidence?,kotlin.Throwable?,kotlin.Unit>){}[0]
+final fun (id.tracive.sdk.extended/TraciveReports).id.tracive.sdk.extended/startRequirements(kotlin/Function2<id.tracive.sdk.extended/ReportRequirements?, kotlin/Throwable?, kotlin/Unit>): id.tracive.sdk.extended/ReportCallHandle // id.tracive.sdk.extended/startRequirements|startRequirements@id.tracive.sdk.extended.TraciveReports(kotlin.Function2<id.tracive.sdk.extended.ReportRequirements?,kotlin.Throwable?,kotlin.Unit>){}[0]
+final fun (id.tracive.sdk.extended/TraciveReports).id.tracive.sdk.extended/startStatus(kotlin/String, kotlin/Function2<id.tracive.sdk.extended/ReportStatus?, kotlin/Throwable?, kotlin/Unit>): id.tracive.sdk.extended/ReportCallHandle // id.tracive.sdk.extended/startStatus|startStatus@id.tracive.sdk.extended.TraciveReports(kotlin.String;kotlin.Function2<id.tracive.sdk.extended.ReportStatus?,kotlin.Throwable?,kotlin.Unit>){}[0]
+final fun (id.tracive.sdk.extended/TraciveReports).id.tracive.sdk.extended/startSubmit(id.tracive.sdk.extended/ReportDraft, id.tracive.sdk.extended/ReportProgressListener?, kotlin/Function2<id.tracive.sdk.extended/SubmitResult?, kotlin/Throwable?, kotlin/Unit>): id.tracive.sdk.extended/ReportCallHandle // id.tracive.sdk.extended/startSubmit|startSubmit@id.tracive.sdk.extended.TraciveReports(id.tracive.sdk.extended.ReportDraft;id.tracive.sdk.extended.ReportProgressListener?;kotlin.Function2<id.tracive.sdk.extended.SubmitResult?,kotlin.Throwable?,kotlin.Unit>){}[0]
+final fun id.tracive.sdk.extended/TraciveReports(id.tracive.sdk.client/TraciveClient, id.tracive.sdk.model/ReportTarget? = ...): id.tracive.sdk.extended/TraciveReports // id.tracive.sdk.extended/TraciveReports|TraciveReports(id.tracive.sdk.client.TraciveClient;id.tracive.sdk.model.ReportTarget?){}[0]
+final fun id.tracive.sdk.extended/isCancellation(kotlin/Throwable): kotlin/Boolean // id.tracive.sdk.extended/isCancellation|isCancellation(kotlin.Throwable){}[0]
+final fun id.tracive.sdk.extended/rethrow(kotlin/Throwable) // id.tracive.sdk.extended/rethrow|rethrow(kotlin.Throwable){}[0]
