@@ -151,11 +151,14 @@ TraciveQuery.bankAccountByBic(countryAlpha3 = "IDN", bic = "CENAIDJA", account =
 TraciveQuery.iban("GB82 WEST 1234 5698 7654 32")
 TraciveQuery.crypto(chain = "ETH", address = "0xAbC…")
 TraciveQuery.username(platform = "instagram", handle = "@SomeHandle")
+TraciveQuery.qris(payload = scannedText)        // QRIS, from what the QR decoder returned
+TraciveQuery.qrisNmid(nmid = "ID1020000000033") // or the NMID printed on the sticker
+TraciveQuery.qrisPan(pan = "936009143100000003") // or the merchant PAN from a receipt
 ```
 
-Every builder folds its input into a canonical `searchQueryIndex` — the same string the Flutter and
-Swift SDKs produce for the same input, pinned by a shared fixture (`query-grammar-vectors.json`)
-that all three repos vendor verbatim. Invalid input throws `TraciveQueryException` **before**
+Every builder folds its input into a canonical `searchQueryIndex` — the same string the Flutter,
+Swift and React Native SDKs produce for the same input, pinned by a shared fixture
+(`query-grammar-vectors.json`) that all four repos vendor verbatim. Invalid input throws `TraciveQueryException` **before**
 anything is sent, because a key that cannot possibly hit would still be billed.
 
 If you store a bank by its national bank code (`014`) or its BIC (`CENAIDJA`) rather than by
@@ -169,6 +172,25 @@ and `email()` requires an `@`. Neither is validated server-side, so `EMAIL_budi`
 `PHONE_081234567891` are legal keys: without the client-side check they would be looked up, missed,
 and charged for. The email check is `@`-presence only — a fuller address grammar would reject
 addresses the server would have matched, which is the worse mistake.
+
+### QRIS
+
+QRIS checks are only for partners whose agreement covers QRIS. Any other client gets
+`TraciveException.UnsupportedInputType`, exactly as for a type the server does not index.
+
+- **`qris(payload)`** keys on the merchant's NMID inside the QR. It refuses, before anything is sent,
+  a payload that is not a QRIS (`not_a_qris`), one that fails its CRC because it was edited or
+  misread (`qris_crc_mismatch`: tell the user the QR is not intact, not that it is unreported), one
+  without an NMID (`qris_no_nmid`), and one that is not a micro or small business (`qris_not_indexed`,
+  since only UMI and UKE are ever indexed).
+- **`qrisNmid` and `qrisPan`** refuse anything that is not `ID` plus 13 digits (`not_an_nmid`), or 18
+  digits, or 19 with a valid Luhn digit (`not_a_pan`).
+- **A PAN and an NMID are two cache entries.** The server maps a PAN to its NMID after the charge, so
+  the SDK cannot know the NMID beforehand. A PAN the server has not seen is a miss, and still billed.
+- **Show the answer as a warning before the user pays. Never block or hold a payment on it
+  automatically.** The QRIS `disclaimer` says the same. A hit may carry `qris` (merchant name,
+  city, criteria, acquirer) and `rightOfReply`, the owner's reply: show its `text` below the
+  warning, as written and untranslated, never above it.
 
 ### Local phone formats: `normalizePhoneNumber`
 
@@ -324,6 +346,7 @@ Everything throws a subclass of `TraciveException`, mapped from the server's `er
 | You will see | When | What to do |
 |---|---|---|
 | `InsufficientCredits` | 402 | Prompt to top up. Do not pre-check with `credits()`. |
+| `UnsupportedInputType` | 400 | The server does not index that type for you. A QRIS query gets it when your agreement does not cover QRIS. |
 | `ExpiredToken` | 401 | Nothing — the SDK refreshes and retries once, single-flight. |
 | `GrantRevoked` | 401 | Tokens are already cleared. Send the user through `authorize()` again. Never retry. |
 | `InvalidToken` | — | No usable grant is stored: either nobody has authorised yet, or the stored record lost its access token and had no refresh token left to renew from. Send the user through `authorize()`. Nothing was sent to the server. |
@@ -345,6 +368,9 @@ it as a verdict on a named person is a legal problem for you rather than for us.
 
 Also note `relatedScammerCount` is a count and never a list — the SDK will not hand you other
 people's identifiers.
+
+On a QRIS check, the result is a warning before payment and never grounds to block or hold one
+automatically. When `rightOfReply` is present, show its `text` below the warning, verbatim.
 
 ## Building this repo
 

@@ -2,6 +2,7 @@ package id.tracive.sdk
 
 import id.tracive.sdk.query.MAX_DOCUMENT_ID_BYTES
 import id.tracive.sdk.query.TraciveQuery
+import id.tracive.sdk.query.qrisCrc
 import id.tracive.sdk.query.requireValidDocumentId
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -33,6 +34,11 @@ import kotlinx.serialization.json.jsonPrimitive
  * semantics: `trim`, `\s`, `\d` and the case mappings all differ somewhere. Those two sections are
  * driven here as well, so "the SDK uses its platform default" cannot pass silently.
  *
+ * Fixture version 7 added QRIS: a vector's `input` holds exactly one of `payload`, `nmid` or `pan`,
+ * and the six `qris*`/`not_a*` reasons. Its traps are cross-language ones again: TLV lengths count
+ * UTF-16 code units while the CRC runs over UTF-8 bytes, and the NMID/PAN space set is five
+ * characters, not JavaScript's `trim()` set.
+ *
  * Fixture version 6 added the `BANK_SHORT_CODE` and `BANK_BIC` rules: a vector's `input` may name
  * the bank by `bankShortCode` or `bic` instead of `bankCode`, the SDK translates either through the
  * bundled `bank-codes.json`, and a code that resolves to nothing is rejected as
@@ -63,9 +69,9 @@ class QueryGrammarTest {
 
   @Test
   fun theEmbeddedFixtureIsTheWholeVendoredFile() {
-    assertEquals(6, fixture.getValue("version").jsonPrimitive.int, "fixture schema version")
-    assertEquals(42, vectors.size, "vector count — did the embedded copy get truncated?")
-    assertEquals(21, rejected.size, "rejected count — did the embedded copy get truncated?")
+    assertEquals(7, fixture.getValue("version").jsonPrimitive.int, "fixture schema version")
+    assertEquals(61, vectors.size, "vector count — did the embedded copy get truncated?")
+    assertEquals(37, rejected.size, "rejected count — did the embedded copy get truncated?")
     assertTrue(
       fixture.getValue("derivedFrom").jsonObject.string("authority").isNotBlank(),
       "the fixture must still record where its expected values came from",
@@ -134,6 +140,40 @@ class QueryGrammarTest {
     assertTrue(shortCode.endsWith(NBSP), "the short code must still end with an NBSP, not a space")
   }
 
+  /**
+   * The QRIS vectors whose point is one code point: an NBSP that is stripped, an em space and a
+   * ZWSP that are not, a two-byte letter and an astral emoji inside a TLV value, and Arabic-Indic
+   * digits. Normalised or re-spaced by an editor, each would pass while testing nothing.
+   */
+  @Test
+  fun theQrisTrapVectorsSurvivedEmbedding() {
+    fun nmid(id: String) = entryWithId(id).getValue("input").jsonObject.string("nmid")
+    assertTrue(nmid("qris-nmid-nbsp").contains(NBSP), "the NMID must still hold an NBSP")
+    assertTrue(nmid("qris-nmid-em-space").contains('\u2003'), "the NMID must still hold U+2003")
+    assertTrue(nmid("qris-nmid-zero-width-space").contains(ZWSP), "the NMID must still hold a ZWSP")
+
+    fun payload(id: String) = entryWithId(id).getValue("input").jsonObject.string("payload")
+    assertTrue(payload("qris-payload-non-ascii-name").contains('\u00c9'), "U+00C9 in the name")
+    assertTrue(
+      payload("qris-payload-astral-name").contains("\uD83C\uDF5C"),
+      "the emoji must still be one surrogate pair",
+    )
+    val pan = entryWithId("qris-pan-arabic-indic-digits").getValue("input").jsonObject.string("pan")
+    assertTrue(pan.isNotEmpty() && pan.all { it in '\u0660'..'\u0669' }, "Arabic-Indic digits only")
+  }
+
+  /**
+   * A lone surrogate is CRC'd as U+FFFD's three bytes, as Node's `Buffer.from` writes it. The JVM's
+   * UTF-8 encoder writes `?` instead, which is the drift this pins.
+   */
+  @Test
+  fun theQrisCrcEncodesALoneSurrogateAsNodeDoes() {
+    assertEquals("29B1", qrisCrc("123456789"), "the CRC-16/CCITT-FALSE check value")
+    assertEquals(qrisCrc("a\uFFFDb"), qrisCrc("a\uD800b"))
+    assertEquals(qrisCrc("a\uFFFDb"), qrisCrc("a\uDC00b"))
+    assertNotEquals(qrisCrc("a?b"), qrisCrc("a\uD800b"))
+  }
+
   @Test
   fun everyVectorFoldsToItsExpectedKey() {
     for (element in vectors) {
@@ -169,7 +209,7 @@ class QueryGrammarTest {
    */
   @Test
   fun theGrammarEmitsOnlyThePrefixesTheBackendWrites() {
-    val supported = setOf("PHONE", "EMAIL", "BANK", "CRYPTO", "USERNAME")
+    val supported = setOf("PHONE", "EMAIL", "BANK", "CRYPTO", "USERNAME", "QRIS")
     assertTrue(
       fixture.getValue("notImplemented").jsonObject.containsKey("DOMAIN"),
       "the fixture must keep documenting why DOMAIN is absent",
@@ -639,6 +679,10 @@ class QueryGrammarTest {
       "toString reaches logs and crash reports; it must not carry the identifier",
     )
     assertEquals("TraciveQuery(EMAIL, redacted)", TraciveQuery.email("Budi@Gmail.com").toString())
+    assertEquals(
+      "TraciveQuery(QRIS, redacted)",
+      TraciveQuery.qrisPan("936009143100000003").toString(),
+    )
   }
 
   @Test
@@ -657,6 +701,10 @@ class QueryGrammarTest {
     vectors.map { it.jsonObject }.firstOrNull { it.string("id") == id }
       ?: fail("the fixture no longer contains the vector $id")
 
+  private fun entryWithId(id: String): JsonObject =
+    (vectors + rejected).map { it.jsonObject }.firstOrNull { it.string("id") == id }
+      ?: fail("the fixture no longer contains the entry $id")
+
   private fun buildQuery(type: String, input: JsonObject, id: String): TraciveQuery =
     when (type) {
       "PHONE" -> TraciveQuery.phone(input.string("value"))
@@ -664,8 +712,21 @@ class QueryGrammarTest {
       "BANK" -> buildBankQuery(input, id)
       "CRYPTO" -> TraciveQuery.crypto(input.string("chain"), input.string("address"))
       "USERNAME" -> TraciveQuery.username(input.string("platform"), input.string("handle"))
+      "QRIS" -> buildQrisQuery(input, id)
       else -> fail("vector $id has an unknown type $type — teach this test about it")
     }
+
+  /** Exactly one of `payload`, `nmid` or `pan`, as the server requires of a QRIS input. */
+  private fun buildQrisQuery(input: JsonObject, id: String): TraciveQuery {
+    val fields = listOf("payload", "nmid", "pan").filter { it in input }
+    if (fields.size != 1) fail("vector $id names the QRIS by $fields — teach this test about it")
+    val value = input.string(fields.single())
+    return when (fields.single()) {
+      "payload" -> TraciveQuery.qris(value)
+      "nmid" -> TraciveQuery.qrisNmid(value)
+      else -> TraciveQuery.qrisPan(value)
+    }
+  }
 
   /**
    * An IBAN, or a country and account with the bank named by exactly one of `bankCode`,

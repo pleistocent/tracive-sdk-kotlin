@@ -224,6 +224,10 @@ client.cache.size()    // entries stored, expired ones included
 **Key:** `SHA-256(searchQueryIndex)`, lower-case hex. The identifier — the phone number, the account
 number, the wallet address — is never written to disk in any form.
 
+A QRIS checked by its PAN and the same QRIS checked by its NMID (or its payload) are **two entries**.
+The server maps a PAN to its NMID only after the charge, so the SDK cannot know the NMID's key when
+it forms the PAN's.
+
 Be precise about what that buys. It is **not** a defence against someone who already suspects a
 specific number: SHA-256 of a phone number is trivially brute-forced from a candidate list, and no
 salt would change that, because a salt the device stores is a salt the attacker also has. It is a
@@ -255,7 +259,8 @@ to query on would give all of that away at once.
 
 `topChronologies`, `comments`, `billing` and `checkId` are dropped on the way in. What survives is
 invariant across `detail` — but not across `locale`: `tags` and `disclaimer` are localized and are
-kept. Safety comes from what is never written, not from the projection being locale-proof. A minimal
+kept. `qris` and `rightOfReply` are kept too; both come at either detail level and neither is
+translated. A record written before they existed decodes with both null. Safety comes from what is never written, not from the projection being locale-proof. A minimal
 check does not send a `locale` at all, so its answer has only one form; a `Detail.FULL` request,
 which does send one, never reaches the cache in either direction.
 

@@ -19,6 +19,7 @@ class ReadableIdentifierTest {
         "USERNAME_INSTAGRAM_scammer_x" to
           ReadableIdentifier(MediaKind.SOCIAL_MEDIA, "Instagram @scammer_x"),
         "USERNAME_TIKTOK_@budi" to ReadableIdentifier(MediaKind.SOCIAL_MEDIA, "Tiktok @budi"),
+        "QRIS_ID1020000000033" to ReadableIdentifier(MediaKind.QRIS, "ID1020000000033"),
       )
 
     cases.forEach { (key, expected) -> assertEquals(expected, readableIdentifier(key), key) }
@@ -26,7 +27,7 @@ class ReadableIdentifierTest {
 
   @Test
   fun aKeyThatDoesNotParseIsShownAsItIs() {
-    listOf("BANK_IDN", "CRYPTO_ETH", "USERNAME_X", "PHONE", "SOMETHING_ELSE", "").forEach {
+    listOf("BANK_IDN", "CRYPTO_ETH", "USERNAME_X", "PHONE", "QRIS_", "SOMETHING_ELSE", "").forEach {
       assertEquals(ReadableIdentifier(MediaKind.OTHER, it), readableIdentifier(it))
     }
   }

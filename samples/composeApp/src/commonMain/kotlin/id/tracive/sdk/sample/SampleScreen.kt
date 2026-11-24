@@ -93,6 +93,15 @@ internal fun SampleScreen(model: CheckViewModel, reportModel: ReportViewModel) {
           }
         }
 
+        OutlinedTextField(
+          value = state.qris,
+          onValueChange = model::onQrisChanged,
+          label = { Text("QRIS payload, NMID or PAN") },
+          singleLine = true,
+          modifier = Modifier.fillMaxWidth(),
+        )
+        Button(onClick = model::checkQris, enabled = !state.busy) { Text("Check QRIS") }
+
         if (state.busy) {
           CircularProgressIndicator()
         }
@@ -129,6 +138,12 @@ private fun ResultCard(result: CheckResult) {
       if (result.tags.isNotEmpty()) Text("Tags: ${result.tags.joinToString()}")
       result.fraudAmount.forEach { (currency, amount) -> Text("Reported loss: $amount $currency") }
       result.lastReportOn?.let { Text("Most recent report: ${monthYear(it)}") }
+      result.qris?.let { qris ->
+        Text(listOfNotNull(qris.merchantName, qris.city, qris.criteria).joinToString(" · "))
+      }
+
+      // Below the warning, never above it, and as written: the owner's words are not translated.
+      result.rightOfReply?.let { Text("Owner's reply: ${it.text}", fontWeight = FontWeight.Medium) }
 
       // Where the answer came from, and how old it is. A cache hit is displayed exactly like a live
       // one, so without this the user cannot tell that they are looking at yesterday's answer.

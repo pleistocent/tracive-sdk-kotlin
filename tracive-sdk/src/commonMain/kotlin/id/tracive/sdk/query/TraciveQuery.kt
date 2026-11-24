@@ -20,8 +20,8 @@ import id.tracive.sdk.TraciveQueryException
  * does and why.
  *
  * **There is deliberately no `domain()` factory.** The Tracive API indexes only PHONE, EMAIL, BANK,
- * CRYPTO and USERNAME, and no record with a `DOMAIN_` id is ever written. A `domain()` factory
- * would therefore build keys that can never hit — and every one of those misses would be billed.
+ * CRYPTO, USERNAME and QRIS, and no record with a `DOMAIN_` id is ever written. A `domain()`
+ * factory would therefore build keys that can never hit, and every such miss would be billed.
  */
 class TraciveQuery
 private constructor(
@@ -160,5 +160,40 @@ private constructor(
      */
     fun username(platform: String, handle: String): TraciveQuery =
       TraciveQuery(foldUsernameKey(platform, handle))
+
+    /**
+     * A QRIS, from the text a QR decoder returned. The key is the merchant's NMID, read from the
+     * payload, so a payload and its NMID passed to [qrisNmid] share one cache entry.
+     *
+     * Only for a partner whose agreement covers QRIS; any other gets
+     * [TraciveException.UnsupportedInputType][id.tracive.sdk.TraciveException.UnsupportedInputType].
+     * Show the answer as a warning before payment and never block or hold a payment on it.
+     *
+     * @throws TraciveQueryException [TraciveQueryException.NOT_A_QRIS],
+     *   [TraciveQueryException.QRIS_CRC_MISMATCH] (the QR was edited or misread),
+     *   [TraciveQueryException.QRIS_NO_NMID] or [TraciveQueryException.QRIS_NOT_INDEXED] (not a
+     *   micro or small business, so never indexed), checked in that order.
+     */
+    fun qris(payload: String): TraciveQuery = TraciveQuery(foldQrisPayloadKey(payload))
+
+    /**
+     * A QRIS by its NMID, as printed on the sticker: `ID` and 13 digits. Spaces and case do not
+     * matter.
+     *
+     * @throws TraciveQueryException [TraciveQueryException.NOT_AN_NMID].
+     */
+    fun qrisNmid(nmid: String): TraciveQuery = TraciveQuery(foldQrisNmidKey(nmid))
+
+    /**
+     * A QRIS by its merchant PAN: 18 digits, or the 19 a receipt prints (the 18 plus a Luhn check
+     * digit, dropped when it checks out).
+     *
+     * The server maps a PAN to its NMID after the charge, and a PAN it has not seen answers as a
+     * miss that is still billed. The local cache keys this query on the PAN, so it and the NMID's
+     * query are two cache entries.
+     *
+     * @throws TraciveQueryException [TraciveQueryException.NOT_A_PAN].
+     */
+    fun qrisPan(pan: String): TraciveQuery = TraciveQuery(foldQrisPanKey(pan))
   }
 }

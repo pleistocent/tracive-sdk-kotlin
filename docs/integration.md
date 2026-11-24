@@ -248,7 +248,7 @@ val result = client.checkScammer(query)
 Validation runs before any network call, deliberately: a malformed key cannot possibly hit, and a
 miss is still billed.
 
-`e.reason` is a stable machine-readable token, identical in the Flutter and Swift SDKs; the message
+`e.reason` is a stable machine-readable token, identical in the Flutter, Swift and React Native SDKs; the message
 wording is not, so branch on the token. The ones a user's typing can produce:
 
 | `reason` | Builder | Means |
@@ -261,6 +261,12 @@ wording is not, so branch on the token. The ones a user's typing can produce:
 | `empty_bank_code`, `empty_account_id` | `bankAccount`, `bankAccountByShortCode`, `bankAccountByBic`, `iban` | The field folded away to nothing. |
 | `empty_chain`, `empty_address` | `crypto` | The chain code, or the wallet address, folded away to nothing. |
 | `empty_platform`, `empty_handle` | `username` | The platform, or the handle, folded away to nothing. |
+| `not_a_qris` | `qris` | Not a QRIS payload: no `000201` start, broken TLV framing (often a partial scan), or no CRC tag at the end. |
+| `qris_crc_mismatch` | `qris` | The QR was edited or misread. Tell the user it is not intact, not that it is unreported. |
+| `qris_no_nmid` | `qris` | The payload names no NMID. |
+| `qris_not_indexed` | `qris` | Not a micro or small business (UMI or UKE). Only those are indexed, so the check could only miss. |
+| `not_an_nmid` | `qrisNmid` | Not `ID` and 13 digits once spaces are removed. |
+| `not_a_pan` | `qrisPan` | Not 18 digits, or 19 whose last digit is the Luhn check digit. |
 | `invalid_document_id` | any | The folded key is not one the API can store under: it holds a `/`, an unpaired surrogate, or exceeds 1500 UTF-8 bytes. Not usually reachable from a builder. |
 
 Neither the token nor the message ever carries the rejected input, so both are safe to log.
@@ -280,6 +286,18 @@ if (result.origin == Origin.CACHE) showAge(result.fetchedAt)
 
 **Show the disclaimer.** A risk tier is aggregated user-reported evidence, not an adjudication.
 Presenting it as a verdict on a named person is a legal problem for you, not for us.
+
+**A QRIS check is a warning, never a block.** Show it before the user pays and let them decide; do
+not block or hold the payment on it automatically. QRIS needs an agreement that covers it, and
+without one the check throws `UnsupportedInputType`. A hit may carry:
+
+```kotlin
+result.qris?.let { showMerchant(it.merchantName, it.city) }  // the QR maker's own text
+result.rightOfReply?.let { showBelowWarning(it.text) }       // as written, untranslated
+```
+
+The merchant name is whatever the QR's maker typed, so never identify a person by it. The reply
+goes below the warning, never above it.
 
 `relatedScammerCount` is a count and never a list — the SDK will not hand you other people's
 identifiers.

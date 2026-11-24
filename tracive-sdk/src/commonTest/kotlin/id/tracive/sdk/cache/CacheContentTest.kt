@@ -3,6 +3,8 @@ package id.tracive.sdk.cache
 import id.tracive.sdk.crypto.Sha256
 import id.tracive.sdk.model.CachePolicy
 import id.tracive.sdk.model.Origin
+import id.tracive.sdk.model.QrisDetails
+import id.tracive.sdk.model.RightOfReply
 import id.tracive.sdk.model.RiskTier
 import id.tracive.sdk.query.TraciveQuery
 import kotlin.test.Test
@@ -87,6 +89,58 @@ class CacheContentTest {
     // The disclaimer travels with the verdict because a UI is required to show it, and a cache hit
     // is displayed exactly like a live answer.
     assertEquals(server.disclaimer, hit.disclaimer)
+  }
+
+  @Test
+  fun aQrisHitKeepsItsMerchantAndReplyThroughTheEncryptedStore() = runTest {
+    val cache =
+      DefaultCheckCache(
+        InMemoryCacheRecordStore(),
+        testKeyStore(),
+        CachePolicy.Default,
+        TestClock.atStart(),
+      )
+    val qris = TraciveQuery.qrisNmid("ID9900000000203")
+    val server =
+      serverResult(riskTier = RiskTier.CAUTION)
+        .copy(
+          qris = QrisDetails("SANDBOX SAMPLE STORE", "BANDUNG", "UMI", "ID.DANA.WWW"),
+          rightOfReply = RightOfReply("We own this business.", "en"),
+        )
+
+    cache.put(qris, server)
+    val hit = assertNotNull(cache.get(qris))
+
+    assertEquals(server.qris, hit.qris)
+    assertEquals(server.rightOfReply, hit.rightOfReply)
+  }
+
+  /** A record sealed by 0.2.x has neither QRIS field; it must still open, with both null. */
+  @Test
+  fun aRecordWrittenBeforeQrisStillDecodes() = runTest {
+    val store = InMemoryCacheRecordStore()
+    val keyStore = testKeyStore()
+    val cache = DefaultCheckCache(store, keyStore, CachePolicy.Default, TestClock.atStart())
+    cache.put(query, serverResult())
+    val key = cacheKeyFor(query)
+    val row = assertNotNull(store.select(key))
+    // The cache's own key, not the seed: the key store derives a fresh one per generation.
+    val dataKey = assertNotNull(keyStore.loadKey(assertNotNull(store.readMeta()).dataKeyId))
+    val legacy =
+      AesGcmCacheCipher(dataKey)
+        .seal(
+          """{"found":true,"riskTier":"HIGH","reportTotal":3,"disclaimer":"d"}"""
+            .encodeToByteArray(),
+          cacheNonce(9_998),
+          cacheAssociatedData(key, CachePolicy.SCHEMA_VERSION),
+        )
+    store.upsert(CacheRow(key, legacy, row.expiresAtEpochMs))
+
+    val hit = assertNotNull(cache.get(query), "a pre-QRIS record must not read as a miss")
+    assertEquals(RiskTier.HIGH, hit.riskTier)
+    assertEquals(3, hit.reportTotal)
+    assertNull(hit.qris)
+    assertNull(hit.rightOfReply)
   }
 
   @Test
@@ -183,6 +237,8 @@ class CacheContentTest {
         TraciveQuery.iban("DE89 3704 0044 0532 0130 00"),
         TraciveQuery.crypto("ETH", "0xAbC0000000000000000000000000000000000001"),
         TraciveQuery.username("instagram", "@scammerx"),
+        TraciveQuery.qrisNmid("ID1020000000033"),
+        TraciveQuery.qrisPan("936009143100000003"),
       )
 
     queries.forEach { cache.put(it, serverResult()) }

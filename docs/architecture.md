@@ -225,7 +225,7 @@ write happens inside the flight, so a collapsed check is also stored once.
 
 ```mermaid
 flowchart TD
-    Build["TraciveQuery.phone, email, bankAccount, bankAccountByShortCode, bankAccountByBic, iban, crypto, username"] --> Valid{"folds and validates"}
+    Build["TraciveQuery.phone, email, bankAccount, bankAccountByShortCode, bankAccountByBic, iban, crypto, username, qris, qrisNmid, qrisPan"] --> Valid{"folds and validates"}
     Valid -->|"unusable input"| Reject["Throw TraciveQueryException. Nothing is sent, nothing is billed."]
     Valid -->|"canonical searchQueryIndex"| Call["client.checkScammer(query, source, detail, idempotencyKey)"]
     Call --> Mode{"mode"}
@@ -321,6 +321,9 @@ Worked examples, all of them vectors from the shared fixture:
 | `iban` | `DE89 3704 0044 0532 0130 00` | `BANK_IBAN_DE89370400440532013000` |
 | `crypto` | `ETH`, `0x52908400…4169EE7` | `CRYPTO_ETH_0x52908400…4169ee7` |
 | `username` | `TIKTOK`, `@ScammerX` | `USERNAME_TIKTOK_@scammerx` |
+| `qris` | a static UMI payload naming `ID1020000000033` in tag 51 | `QRIS_ID1020000000033` |
+| `qrisNmid` | ` id1020 0000 00033 ` | `QRIS_ID1020000000033` |
+| `qrisPan` | `9360 0914 3100 0000 030` | `QRIS_936009143100000003` |
 
 Four folds look like oversights and are not:
 
@@ -343,8 +346,12 @@ for, and `email` requires an `@` because the server validates no shape at all, s
 be looked up, missed and charged. The email test is `@`-presence and nothing more — a fuller address
 grammar would reject addresses the server would have matched, which is the worse mistake.
 
-**There is no `domain()` builder.** The Tracive API indexes exactly five identifier types — PHONE,
-EMAIL, BANK, CRYPTO and USERNAME — so a `DOMAIN_` key could only ever miss, and a miss is billed.
+**There is no `domain()` builder.** The Tracive API indexes exactly six identifier types — PHONE,
+EMAIL, BANK, CRYPTO, USERNAME and QRIS — so a `DOMAIN_` key could only ever miss, and a miss is billed.
+
+**QRIS is read like the server reads it, not like JavaScript trims.** A payload's TLV lengths count
+UTF-16 code units, which is what a Kotlin `String` indexes, while its CRC-16/CCITT-FALSE runs over
+the UTF-8 bytes. NMIDs, PANs and payload edges lose exactly tab, LF, CR, space and U+00A0.
 
 The document-id guard runs on the *folded* key, never on the caller's input, because case mapping is
 not length-preserving. It rejects an empty key, one containing `/`, one that is exactly `.` or `..`,

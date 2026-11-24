@@ -376,6 +376,7 @@ private fun mediaLabel(kind: MediaKind): Int =
     MediaKind.BANK -> R.string.tracive_report_media_bank
     MediaKind.CRYPTO -> R.string.tracive_report_media_crypto
     MediaKind.SOCIAL_MEDIA -> R.string.tracive_report_media_social
+    MediaKind.QRIS -> R.string.tracive_report_media_qris
     MediaKind.OTHER -> R.string.tracive_report_media_other
   }
 

@@ -6,6 +6,7 @@ internal enum class MediaKind {
   BANK,
   CRYPTO,
   SOCIAL_MEDIA,
+  QRIS,
   OTHER,
 }
 
@@ -24,6 +25,7 @@ internal fun readableIdentifier(key: String): ReadableIdentifier {
     "BANK" -> bank(key, value)
     "CRYPTO" -> crypto(key, value)
     "USERNAME" -> username(key, value)
+    "QRIS" -> ReadableIdentifier(MediaKind.QRIS, value)
     else -> ReadableIdentifier(MediaKind.OTHER, key)
   }
 }
