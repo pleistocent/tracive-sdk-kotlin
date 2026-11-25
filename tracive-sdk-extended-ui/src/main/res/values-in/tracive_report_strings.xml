@@ -20,6 +20,7 @@
   <string name="tracive_report_media_bank">Rekening bank</string>
   <string name="tracive_report_media_crypto">Alamat kripto</string>
   <string name="tracive_report_media_social">Media sosial</string>
+  <string name="tracive_report_media_qris">QRIS</string>
   <string name="tracive_report_media_other">Akun</string>
 
   <string name="tracive_report_date_label">Tanggal Kejadian</string>

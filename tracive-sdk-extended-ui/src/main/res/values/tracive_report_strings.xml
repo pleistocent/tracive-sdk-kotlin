@@ -20,6 +20,7 @@
   <string name="tracive_report_media_bank">Bank account</string>
   <string name="tracive_report_media_crypto">Crypto address</string>
   <string name="tracive_report_media_social">Social media</string>
+  <string name="tracive_report_media_qris">QRIS</string>
   <string name="tracive_report_media_other">Account</string>
 
   <string name="tracive_report_date_label">Date of Incident</string>

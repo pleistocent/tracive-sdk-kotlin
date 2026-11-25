@@ -105,9 +105,16 @@ data class CheckResult(
    *
    * **Surface this in any UI built on the SDK.** These results are user-generated allegations about
    * named people and accounts, not adjudicated findings, and the wording here is what makes that
-   * clear to the person acting on them.
+   * clear to the person acting on them. On a QRIS check it also says the answer is a warning before
+   * payment, never grounds to block or hold one automatically.
    */
   @SerialName("disclaimer") val disclaimer: String? = null,
+
+  /** On a QRIS hit, what its QR says about the merchant. Null for every other query. */
+  @SerialName("qris") val qris: QrisDetails? = null,
+
+  /** On a QRIS hit whose owner replied. Show it below the warning, as written. */
+  @SerialName("rightOfReply") val rightOfReply: RightOfReply? = null,
 
   /**
    * Whether this came from the local cache or the server.
@@ -143,6 +150,8 @@ data class CheckResult(
    * kind that carries a locale, must never be written at all. `TraciveClient` enforces that
    * separately; this method cannot, because it cannot see the request. Do not read "the subset is
    * safe to cache" as "any result is safe to cache once projected".
+   *
+   * [qris] and [rightOfReply] stay: both come on either detail level, and neither is translated.
    *
    * If a later version ever needs to cache full-detail content, the cache key must become the
    * triple of query, detail and locale. Not this method's business, but do not skip it.

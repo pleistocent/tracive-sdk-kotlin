@@ -384,9 +384,9 @@ private fun foldBankAccountId(account: String): String {
  * folding would be measuring a different string.
  *
  * Most of the branches below cannot fire for a key a public factory produced: every factory
- * prefixes `PHONE_`, `EMAIL_`, `BANK_`, `CRYPTO_` or `USERNAME_`, so the result is never empty,
- * never `.` or `..`, and never starts with `__`. They are here because this function is also the
- * guard on the raw path, where a caller-supplied key arrives unprefixed — which is what the
+ * prefixes `PHONE_`, `EMAIL_`, `BANK_`, `CRYPTO_`, `USERNAME_` or `QRIS_`, so the result is never
+ * empty, never `.` or `..`, and never starts with `__`. They are here because this function is also
+ * the guard on the raw path, where a caller-supplied key arrives unprefixed — which is what the
  * fixture's `RAW` rejection vectors exercise. A reader who assumes the factories can produce those
  * shapes is reading it backwards.
  *

@@ -8,6 +8,8 @@ import id.tracive.sdk.model.CreditsInfo
 import id.tracive.sdk.model.Detail
 import id.tracive.sdk.model.Origin
 import id.tracive.sdk.model.ProfileInfo
+import id.tracive.sdk.model.QrisDetails
+import id.tracive.sdk.model.RightOfReply
 import id.tracive.sdk.model.RiskTier
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -77,6 +79,37 @@ class ModelDecodingTest {
     // Client-assigned fields the server never sends.
     assertEquals(Origin.SERVER, result.origin)
     assertEquals(Instant.DISTANT_PAST, result.fetchedAt)
+  }
+
+  @Test
+  fun aQrisHitDecodesItsMerchantAndTheOwnersReply() {
+    val payload =
+      """
+      {"checkId":"chk_4d2c0b9a8e7f6a5b4c3d","found":true,"riskTier":"CAUTION","reportTotal":2,
+       "credibleReports":1,"ambiguousReports":1,"firstReportOn":"2026-08","lastReportOn":"2026-09",
+       "fraudAmount":{"IDR":350000},"tags":["barang tidak dikirim"],"relatedScammerCount":0,
+       "qris":{"merchantName":"TOKO CONTOH","city":"JAKARTA","criteria":"UMI",
+               "acquirer":"ID.DANA.WWW"},
+       "rightOfReply":{"text":"Kami pemilik usaha ini.","language":"id"},
+       "billing":{"creditSource":"USER","unitsCharged":1},
+       "disclaimer":"Indicative. For a QRIS, show it as a warning before they pay."}
+      """
+        .trimIndent()
+
+    val result = json.decodeFromString(CheckResult.serializer(), payload)
+
+    assertEquals(RiskTier.CAUTION, result.riskTier)
+    assertEquals(QrisDetails("TOKO CONTOH", "JAKARTA", "UMI", "ID.DANA.WWW"), result.qris)
+    assertEquals(RightOfReply("Kami pemilik usaha ini.", "id"), result.rightOfReply)
+  }
+
+  /** A criteria this release has never heard of must not cost the caller the whole check. */
+  @Test
+  fun anUnknownQrisCriteriaStillDecodes() {
+    val payload = """{"found":true,"riskTier":"HIGH","qris":{"criteria":"UXX","futureField":1}}"""
+    val result = json.decodeFromString(CheckResult.serializer(), payload)
+    assertEquals(QrisDetails(criteria = "UXX"), result.qris)
+    assertNull(result.rightOfReply)
   }
 
   @Test
@@ -264,6 +297,8 @@ class ModelDecodingTest {
         comments = listOf(Comment("2026-07", "text", true)),
         billing = Billing("USER", 1, null),
         disclaimer = "Community reports.",
+        qris = QrisDetails("TOKO CONTOH", "JAKARTA", "UMI", "ID.DANA.WWW"),
+        rightOfReply = RightOfReply("Kami pemilik usaha ini.", "id"),
         fetchedAt = fetched,
       )
 
@@ -280,6 +315,8 @@ class ModelDecodingTest {
     assertEquals(full.reportTotal, cacheable.reportTotal)
     assertEquals(full.tags, cacheable.tags)
     assertEquals(full.disclaimer, cacheable.disclaimer)
+    assertEquals(full.qris, cacheable.qris, "QRIS details vary with neither detail nor locale")
+    assertEquals(full.rightOfReply, cacheable.rightOfReply, "the reply is never translated")
     assertEquals(fetched, cacheable.fetchedAt)
   }
 

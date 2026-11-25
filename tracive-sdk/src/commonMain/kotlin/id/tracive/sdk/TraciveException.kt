@@ -39,7 +39,10 @@ sealed class TraciveException(
       checkId,
     )
 
-  /** 400 `unsupported_input_type` — the server does not index this kind of identifier. */
+  /**
+   * 400 `unsupported_input_type` — the server does not index this kind of identifier for this
+   * client. A QRIS query gets it when the partner's agreement does not cover QRIS.
+   */
   class UnsupportedInputType(message: String? = null, checkId: String? = null) :
     TraciveException(
       message ?: "The server does not support this input type.",
@@ -391,9 +394,10 @@ sealed class TraciveException(
  * [EMPTY_COUNTRY], [UNKNOWN_COUNTRY], [EMPTY_PHONE_NUMBER] and [COUNTRY_CONFLICT], which
  * `normalizePhoneNumber` raises — from `phone-normalization-vectors.json`: [NOT_E164],
  * [NOT_AN_EMAIL], [COUNTRY_NOT_ALPHA3], [EMPTY_ACCOUNT_ID], [EMPTY_BANK_CODE], [UNKNOWN_BANK_CODE],
- * [EMPTY_VALUE], [EMPTY_HANDLE], [EMPTY_CHAIN], [EMPTY_ADDRESS], [EMPTY_PLATFORM] or
+ * [EMPTY_VALUE], [EMPTY_HANDLE], [EMPTY_CHAIN], [EMPTY_ADDRESS], [EMPTY_PLATFORM], [NOT_A_QRIS],
+ * [QRIS_CRC_MISMATCH], [QRIS_NO_NMID], [QRIS_NOT_INDEXED], [NOT_AN_NMID], [NOT_A_PAN] or
  * [INVALID_DOCUMENT_ID]. Branch on it rather than on the message: the token is identical across the
- * Kotlin, Flutter and Swift SDKs, whereas the wording is not.
+ * Kotlin, Flutter, Swift and React Native SDKs, whereas the wording is not.
  *
  * Validation always runs before the network call. A key that cannot possibly match a stored
  * document still costs a credit when the server answers "not found", so the SDK refuses to send it.
@@ -472,6 +476,33 @@ class TraciveQueryException(val reason: String) :
 
     /** The social-media platform folded to an empty string. */
     const val EMPTY_PLATFORM: String = "empty_platform"
+
+    /**
+     * The QRIS payload is not one: it does not start with `000201`, its TLV framing breaks (a
+     * partial scan), or it does not end in a CRC tag.
+     */
+    const val NOT_A_QRIS: String = "not_a_qris"
+
+    /**
+     * The QRIS payload is framed correctly but fails its CRC: the QR was edited or misread. Tell
+     * the user the QR is not intact rather than calling it unreported.
+     */
+    const val QRIS_CRC_MISMATCH: String = "qris_crc_mismatch"
+
+    /** The QRIS payload carries no NMID (`ID` and 13 digits) in tag 51. */
+    const val QRIS_NO_NMID: String = "qris_no_nmid"
+
+    /**
+     * The QRIS is not of a micro or small business (UMI or UKE). Only those are indexed, so the
+     * check could only be a billed miss.
+     */
+    const val QRIS_NOT_INDEXED: String = "qris_not_indexed"
+
+    /** The value is not an NMID: `ID` and 13 digits once spaces are removed. */
+    const val NOT_AN_NMID: String = "not_an_nmid"
+
+    /** The value is not a QRIS PAN: 18 digits, or 19 whose last digit is the Luhn check digit. */
+    const val NOT_A_PAN: String = "not_a_pan"
 
     /** The folded key is not a legal record key. */
     const val INVALID_DOCUMENT_ID: String = "invalid_document_id"

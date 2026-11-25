@@ -20,6 +20,7 @@ import kotlinx.coroutines.launch
 /** Everything the one screen in this sample renders. */
 internal data class SampleUiState(
   val phone: String = "+62",
+  val qris: String = "",
   val busy: Boolean = false,
   val authorized: Boolean = false,
   val result: CheckResult? = null,
@@ -51,7 +52,12 @@ internal class CheckViewModel(
   private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main),
 ) {
 
-  private val _state = MutableStateFlow(SampleUiState())
+  private val _state =
+    MutableStateFlow(
+      SampleUiState(
+        qris = if (client.environment == TraciveEnvironment.Sandbox) SANDBOX_QRIS else ""
+      )
+    )
   val state: StateFlow<SampleUiState> = _state.asStateFlow()
 
   val environment: TraciveEnvironment
@@ -70,6 +76,10 @@ internal class CheckViewModel(
 
   fun onPhoneChanged(value: String) {
     _state.update { it.copy(phone = value, message = null) }
+  }
+
+  fun onQrisChanged(value: String) {
+    _state.update { it.copy(qris = value, message = null) }
   }
 
   /**
@@ -157,15 +167,29 @@ internal class CheckViewModel(
     }
   }
 
-  fun check() {
-    val input = _state.value.phone
+  fun check() = checkQuery { TraciveQuery.phone(_state.value.phone) }
 
-    // Validation first, and locally. A malformed number cannot match anything the server has, but
-    // the server still bills the lookup that discovers that — so the SDK refuses to send it, and
-    // this is where that refusal surfaces.
+  /**
+   * One field takes a scanned QR payload, the sticker's NMID or a receipt's PAN. Only for a partner
+   * whose agreement covers QRIS; any other gets `UnsupportedInputType`.
+   */
+  fun checkQris() = checkQuery {
+    val input = _state.value.qris
+    val trimmed = input.trim()
+    when {
+      trimmed.startsWith("000201") -> TraciveQuery.qris(input)
+      trimmed.startsWith("ID", ignoreCase = true) -> TraciveQuery.qrisNmid(input)
+      else -> TraciveQuery.qrisPan(input)
+    }
+  }
+
+  private fun checkQuery(build: () -> TraciveQuery) {
+    // Validation first, and locally. A malformed identifier cannot match anything the server has,
+    // but the server still bills the lookup that finds that out, so the SDK refuses to send it.
+    // This is where that refusal surfaces.
     val query =
       try {
-        TraciveQuery.phone(input)
+        build()
       } catch (invalid: TraciveQueryException) {
         _state.update { it.copy(message = describeQuery(invalid), result = null) }
         return
@@ -231,6 +255,8 @@ internal class CheckViewModel(
       // TODO(partner): send the user into your own top-up or subscription flow here, rather than
       // leaving them on a dead end.
       is TraciveException.InsufficientCredits -> "Out of credits (${error.which})."
+      is TraciveException.UnsupportedInputType ->
+        "This client cannot check that kind of identifier. QRIS needs an agreement that covers it."
       is TraciveException.RateLimited ->
         "Rate limited." +
           (error.retryAfter?.let { " Try again in $it." } ?: " Back off before retrying.") +
@@ -253,6 +279,19 @@ internal class CheckViewModel(
         "Enter the number in international form, e.g. +6281234567891. A local format such as " +
           "081234567891 is a different entity to the server, and looking it up would still cost a " +
           "credit."
+      TraciveQueryException.QRIS_CRC_MISMATCH ->
+        "This QR is not intact: it was edited or misread. Scan it again before paying."
+      TraciveQueryException.QRIS_NOT_INDEXED ->
+        "Only micro and small businesses' QRIS are in Tracive's reports, so this is not checked."
       else -> "That identifier cannot be looked up (${error.reason})."
     }
 }
+
+/**
+ * The sandbox's HIGH QRIS, as a QR decoder returns it. Its NMID is ID9900000000201; ID9900000000203
+ * answers CAUTION with the owner's right of reply.
+ */
+private const val SANDBOX_QRIS: String =
+  "00020101021126550011ID.DANA.WWW01189360999900000201000207SBX00010303UMI51440014ID.CO.QRIS.WWW" +
+    "0215ID99000000002010303UMI5204581253033605802ID5920SANDBOX SAMPLE STORE6007BANDUNG" +
+    "61054011163041DFD"

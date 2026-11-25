@@ -9,6 +9,43 @@ with the Flutter and Swift SDKs, not against consumers, until `1.0.0`.
 
 ## [Unreleased]
 
+## [0.3.0]
+
+### Added
+
+- **QRIS checks**, for partners whose agreement covers QRIS. `TraciveQuery.qris(payload)` takes
+  what a QR decoder returned, `TraciveQuery.qrisNmid(nmid)` the NMID on the sticker, and
+  `TraciveQuery.qrisPan(pan)` the merchant PAN from a receipt (18 digits, or 19 with its Luhn
+  digit). Any other client gets `TraciveException.UnsupportedInputType`, as before.
+
+  ```kotlin
+  val result = client.checkScammer(TraciveQuery.qris(scannedText))
+  ```
+
+  Each builder refuses input that could only be a billed miss, before anything is sent, with a new
+  `TraciveQueryException` reason: `not_a_qris`, `qris_crc_mismatch` (the QR was edited or
+  misread), `qris_no_nmid`, `qris_not_indexed` (only micro and small businesses, UMI and UKE, are
+  indexed), `not_an_nmid` and `not_a_pan`.
+- `CheckResult.qris` (`QrisDetails`: merchant name, city, criteria, acquirer) and
+  `CheckResult.rightOfReply` (`RightOfReply`: the owner's `text` and its `language`), on both
+  detail levels. Show a QRIS result as a warning before the user pays and never block or hold a
+  payment on it automatically. Show `rightOfReply.text` below the warning, as written and
+  untranslated. `criteria` is a `String`, so a value added later still decodes.
+- Both fields are kept in the cache, and a record written by 0.2.x still opens. A QRIS checked by
+  its PAN and by its NMID are two cache entries: the server maps a PAN to its NMID only after the
+  charge.
+- `tracive-sdk-extended-ui` shows a `QRIS_<NMID>` identifier as QRIS with its NMID.
+- The sample has a QRIS field that takes a payload, an NMID or a PAN, prefilled in the sandbox
+  build with the sandbox's HIGH QRIS, and shows the owner's reply below the result.
+
+### Changed
+
+- The query grammar fixture is version 7, with the QRIS rules and vectors.
+- `CheckResult` has two more constructor parameters. Code compiled against 0.2.x that calls its
+  constructor or `copy()` has to be recompiled; source that names its arguments needs no change.
+  The other SDKs turn their query-type enum into an open type in 0.3.0. This SDK has no such enum,
+  so there is nothing to migrate here.
+
 ## [0.2.2] — 2026-11-08
 
 ### Added

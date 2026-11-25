@@ -711,7 +711,7 @@ final class id.tracive.sdk.model/CachePolicy { // id.tracive.sdk.model/CachePoli
 }
 
 final class id.tracive.sdk.model/CheckResult { // id.tracive.sdk.model/CheckResult|null[0]
-    constructor <init>(kotlin/String? = ..., kotlin/Boolean = ..., id.tracive.sdk.model/RiskTier = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/Double> = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/Int = ..., kotlin.collections/List<id.tracive.sdk.model/Chronology>? = ..., kotlin.collections/List<id.tracive.sdk.model/Comment>? = ..., id.tracive.sdk.model/Billing? = ..., kotlin/String? = ..., id.tracive.sdk.model/Origin = ..., kotlinx.datetime/Instant = ...) // id.tracive.sdk.model/CheckResult.<init>|<init>(kotlin.String?;kotlin.Boolean;id.tracive.sdk.model.RiskTier;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.Double>;kotlin.collections.List<kotlin.String>;kotlin.Int;kotlin.collections.List<id.tracive.sdk.model.Chronology>?;kotlin.collections.List<id.tracive.sdk.model.Comment>?;id.tracive.sdk.model.Billing?;kotlin.String?;id.tracive.sdk.model.Origin;kotlinx.datetime.Instant){}[0]
+    constructor <init>(kotlin/String? = ..., kotlin/Boolean = ..., id.tracive.sdk.model/RiskTier = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/Double> = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/Int = ..., kotlin.collections/List<id.tracive.sdk.model/Chronology>? = ..., kotlin.collections/List<id.tracive.sdk.model/Comment>? = ..., id.tracive.sdk.model/Billing? = ..., kotlin/String? = ..., id.tracive.sdk.model/QrisDetails? = ..., id.tracive.sdk.model/RightOfReply? = ..., id.tracive.sdk.model/Origin = ..., kotlinx.datetime/Instant = ...) // id.tracive.sdk.model/CheckResult.<init>|<init>(kotlin.String?;kotlin.Boolean;id.tracive.sdk.model.RiskTier;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.Double>;kotlin.collections.List<kotlin.String>;kotlin.Int;kotlin.collections.List<id.tracive.sdk.model.Chronology>?;kotlin.collections.List<id.tracive.sdk.model.Comment>?;id.tracive.sdk.model.Billing?;kotlin.String?;id.tracive.sdk.model.QrisDetails?;id.tracive.sdk.model.RightOfReply?;id.tracive.sdk.model.Origin;kotlinx.datetime.Instant){}[0]
 
     final val ambiguousReports // id.tracive.sdk.model/CheckResult.ambiguousReports|{}ambiguousReports[0]
         final fun <get-ambiguousReports>(): kotlin/Int // id.tracive.sdk.model/CheckResult.ambiguousReports.<get-ambiguousReports>|<get-ambiguousReports>(){}[0]
@@ -737,10 +737,14 @@ final class id.tracive.sdk.model/CheckResult { // id.tracive.sdk.model/CheckResu
         final fun <get-lastReportOn>(): kotlin/String? // id.tracive.sdk.model/CheckResult.lastReportOn.<get-lastReportOn>|<get-lastReportOn>(){}[0]
     final val origin // id.tracive.sdk.model/CheckResult.origin|{}origin[0]
         final fun <get-origin>(): id.tracive.sdk.model/Origin // id.tracive.sdk.model/CheckResult.origin.<get-origin>|<get-origin>(){}[0]
+    final val qris // id.tracive.sdk.model/CheckResult.qris|{}qris[0]
+        final fun <get-qris>(): id.tracive.sdk.model/QrisDetails? // id.tracive.sdk.model/CheckResult.qris.<get-qris>|<get-qris>(){}[0]
     final val relatedScammerCount // id.tracive.sdk.model/CheckResult.relatedScammerCount|{}relatedScammerCount[0]
         final fun <get-relatedScammerCount>(): kotlin/Int // id.tracive.sdk.model/CheckResult.relatedScammerCount.<get-relatedScammerCount>|<get-relatedScammerCount>(){}[0]
     final val reportTotal // id.tracive.sdk.model/CheckResult.reportTotal|{}reportTotal[0]
         final fun <get-reportTotal>(): kotlin/Int // id.tracive.sdk.model/CheckResult.reportTotal.<get-reportTotal>|<get-reportTotal>(){}[0]
+    final val rightOfReply // id.tracive.sdk.model/CheckResult.rightOfReply|{}rightOfReply[0]
+        final fun <get-rightOfReply>(): id.tracive.sdk.model/RightOfReply? // id.tracive.sdk.model/CheckResult.rightOfReply.<get-rightOfReply>|<get-rightOfReply>(){}[0]
     final val riskTier // id.tracive.sdk.model/CheckResult.riskTier|{}riskTier[0]
         final fun <get-riskTier>(): id.tracive.sdk.model/RiskTier // id.tracive.sdk.model/CheckResult.riskTier.<get-riskTier>|<get-riskTier>(){}[0]
     final val tags // id.tracive.sdk.model/CheckResult.tags|{}tags[0]
@@ -755,8 +759,10 @@ final class id.tracive.sdk.model/CheckResult { // id.tracive.sdk.model/CheckResu
     final fun component13(): kotlin.collections/List<id.tracive.sdk.model/Comment>? // id.tracive.sdk.model/CheckResult.component13|component13(){}[0]
     final fun component14(): id.tracive.sdk.model/Billing? // id.tracive.sdk.model/CheckResult.component14|component14(){}[0]
     final fun component15(): kotlin/String? // id.tracive.sdk.model/CheckResult.component15|component15(){}[0]
-    final fun component16(): id.tracive.sdk.model/Origin // id.tracive.sdk.model/CheckResult.component16|component16(){}[0]
-    final fun component17(): kotlinx.datetime/Instant // id.tracive.sdk.model/CheckResult.component17|component17(){}[0]
+    final fun component16(): id.tracive.sdk.model/QrisDetails? // id.tracive.sdk.model/CheckResult.component16|component16(){}[0]
+    final fun component17(): id.tracive.sdk.model/RightOfReply? // id.tracive.sdk.model/CheckResult.component17|component17(){}[0]
+    final fun component18(): id.tracive.sdk.model/Origin // id.tracive.sdk.model/CheckResult.component18|component18(){}[0]
+    final fun component19(): kotlinx.datetime/Instant // id.tracive.sdk.model/CheckResult.component19|component19(){}[0]
     final fun component2(): kotlin/Boolean // id.tracive.sdk.model/CheckResult.component2|component2(){}[0]
     final fun component3(): id.tracive.sdk.model/RiskTier // id.tracive.sdk.model/CheckResult.component3|component3(){}[0]
     final fun component4(): kotlin/Int // id.tracive.sdk.model/CheckResult.component4|component4(){}[0]
@@ -765,7 +771,7 @@ final class id.tracive.sdk.model/CheckResult { // id.tracive.sdk.model/CheckResu
     final fun component7(): kotlin/String? // id.tracive.sdk.model/CheckResult.component7|component7(){}[0]
     final fun component8(): kotlin/String? // id.tracive.sdk.model/CheckResult.component8|component8(){}[0]
     final fun component9(): kotlin.collections/Map<kotlin/String, kotlin/Double> // id.tracive.sdk.model/CheckResult.component9|component9(){}[0]
-    final fun copy(kotlin/String? = ..., kotlin/Boolean = ..., id.tracive.sdk.model/RiskTier = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/Double> = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/Int = ..., kotlin.collections/List<id.tracive.sdk.model/Chronology>? = ..., kotlin.collections/List<id.tracive.sdk.model/Comment>? = ..., id.tracive.sdk.model/Billing? = ..., kotlin/String? = ..., id.tracive.sdk.model/Origin = ..., kotlinx.datetime/Instant = ...): id.tracive.sdk.model/CheckResult // id.tracive.sdk.model/CheckResult.copy|copy(kotlin.String?;kotlin.Boolean;id.tracive.sdk.model.RiskTier;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.Double>;kotlin.collections.List<kotlin.String>;kotlin.Int;kotlin.collections.List<id.tracive.sdk.model.Chronology>?;kotlin.collections.List<id.tracive.sdk.model.Comment>?;id.tracive.sdk.model.Billing?;kotlin.String?;id.tracive.sdk.model.Origin;kotlinx.datetime.Instant){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/Boolean = ..., id.tracive.sdk.model/RiskTier = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/Int = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin.collections/Map<kotlin/String, kotlin/Double> = ..., kotlin.collections/List<kotlin/String> = ..., kotlin/Int = ..., kotlin.collections/List<id.tracive.sdk.model/Chronology>? = ..., kotlin.collections/List<id.tracive.sdk.model/Comment>? = ..., id.tracive.sdk.model/Billing? = ..., kotlin/String? = ..., id.tracive.sdk.model/QrisDetails? = ..., id.tracive.sdk.model/RightOfReply? = ..., id.tracive.sdk.model/Origin = ..., kotlinx.datetime/Instant = ...): id.tracive.sdk.model/CheckResult // id.tracive.sdk.model/CheckResult.copy|copy(kotlin.String?;kotlin.Boolean;id.tracive.sdk.model.RiskTier;kotlin.Int;kotlin.Int;kotlin.Int;kotlin.String?;kotlin.String?;kotlin.collections.Map<kotlin.String,kotlin.Double>;kotlin.collections.List<kotlin.String>;kotlin.Int;kotlin.collections.List<id.tracive.sdk.model.Chronology>?;kotlin.collections.List<id.tracive.sdk.model.Comment>?;id.tracive.sdk.model.Billing?;kotlin.String?;id.tracive.sdk.model.QrisDetails?;id.tracive.sdk.model.RightOfReply?;id.tracive.sdk.model.Origin;kotlinx.datetime.Instant){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/CheckResult.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // id.tracive.sdk.model/CheckResult.hashCode|hashCode(){}[0]
     final fun toCacheable(): id.tracive.sdk.model/CheckResult // id.tracive.sdk.model/CheckResult.toCacheable|toCacheable(){}[0]
@@ -922,6 +928,41 @@ final class id.tracive.sdk.model/ProfileInfo { // id.tracive.sdk.model/ProfileIn
     }
 }
 
+final class id.tracive.sdk.model/QrisDetails { // id.tracive.sdk.model/QrisDetails|null[0]
+    constructor <init>(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...) // id.tracive.sdk.model/QrisDetails.<init>|<init>(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+
+    final val acquirer // id.tracive.sdk.model/QrisDetails.acquirer|{}acquirer[0]
+        final fun <get-acquirer>(): kotlin/String? // id.tracive.sdk.model/QrisDetails.acquirer.<get-acquirer>|<get-acquirer>(){}[0]
+    final val city // id.tracive.sdk.model/QrisDetails.city|{}city[0]
+        final fun <get-city>(): kotlin/String? // id.tracive.sdk.model/QrisDetails.city.<get-city>|<get-city>(){}[0]
+    final val criteria // id.tracive.sdk.model/QrisDetails.criteria|{}criteria[0]
+        final fun <get-criteria>(): kotlin/String? // id.tracive.sdk.model/QrisDetails.criteria.<get-criteria>|<get-criteria>(){}[0]
+    final val merchantName // id.tracive.sdk.model/QrisDetails.merchantName|{}merchantName[0]
+        final fun <get-merchantName>(): kotlin/String? // id.tracive.sdk.model/QrisDetails.merchantName.<get-merchantName>|<get-merchantName>(){}[0]
+
+    final fun component1(): kotlin/String? // id.tracive.sdk.model/QrisDetails.component1|component1(){}[0]
+    final fun component2(): kotlin/String? // id.tracive.sdk.model/QrisDetails.component2|component2(){}[0]
+    final fun component3(): kotlin/String? // id.tracive.sdk.model/QrisDetails.component3|component3(){}[0]
+    final fun component4(): kotlin/String? // id.tracive.sdk.model/QrisDetails.component4|component4(){}[0]
+    final fun copy(kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ..., kotlin/String? = ...): id.tracive.sdk.model/QrisDetails // id.tracive.sdk.model/QrisDetails.copy|copy(kotlin.String?;kotlin.String?;kotlin.String?;kotlin.String?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/QrisDetails.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.model/QrisDetails.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.model/QrisDetails.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.model/QrisDetails> { // id.tracive.sdk.model/QrisDetails.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.model/QrisDetails.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.model/QrisDetails.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.model/QrisDetails.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.model/QrisDetails // id.tracive.sdk.model/QrisDetails.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.model/QrisDetails) // id.tracive.sdk.model/QrisDetails.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.model.QrisDetails){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.model/QrisDetails.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/QrisDetails> // id.tracive.sdk.model/QrisDetails.Companion.serializer|serializer(){}[0]
+    }
+}
+
 final class id.tracive.sdk.model/ReportAttachment { // id.tracive.sdk.model/ReportAttachment|null[0]
     final val mimeType // id.tracive.sdk.model/ReportAttachment.mimeType|{}mimeType[0]
         final fun <get-mimeType>(): kotlin/String // id.tracive.sdk.model/ReportAttachment.mimeType.<get-mimeType>|<get-mimeType>(){}[0]
@@ -962,6 +1003,35 @@ final class id.tracive.sdk.model/ReportTarget { // id.tracive.sdk.model/ReportTa
             final fun <get-Sandbox>(): id.tracive.sdk.model/ReportTarget // id.tracive.sdk.model/ReportTarget.Companion.Sandbox.<get-Sandbox>|<get-Sandbox>(){}[0]
 
         final fun forEnvironment(id.tracive.sdk.model/TraciveEnvironment): id.tracive.sdk.model/ReportTarget // id.tracive.sdk.model/ReportTarget.Companion.forEnvironment|forEnvironment(id.tracive.sdk.model.TraciveEnvironment){}[0]
+    }
+}
+
+final class id.tracive.sdk.model/RightOfReply { // id.tracive.sdk.model/RightOfReply|null[0]
+    constructor <init>(kotlin/String, kotlin/String) // id.tracive.sdk.model/RightOfReply.<init>|<init>(kotlin.String;kotlin.String){}[0]
+
+    final val language // id.tracive.sdk.model/RightOfReply.language|{}language[0]
+        final fun <get-language>(): kotlin/String // id.tracive.sdk.model/RightOfReply.language.<get-language>|<get-language>(){}[0]
+    final val text // id.tracive.sdk.model/RightOfReply.text|{}text[0]
+        final fun <get-text>(): kotlin/String // id.tracive.sdk.model/RightOfReply.text.<get-text>|<get-text>(){}[0]
+
+    final fun component1(): kotlin/String // id.tracive.sdk.model/RightOfReply.component1|component1(){}[0]
+    final fun component2(): kotlin/String // id.tracive.sdk.model/RightOfReply.component2|component2(){}[0]
+    final fun copy(kotlin/String = ..., kotlin/String = ...): id.tracive.sdk.model/RightOfReply // id.tracive.sdk.model/RightOfReply.copy|copy(kotlin.String;kotlin.String){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // id.tracive.sdk.model/RightOfReply.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // id.tracive.sdk.model/RightOfReply.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // id.tracive.sdk.model/RightOfReply.toString|toString(){}[0]
+
+    final object $serializer : kotlinx.serialization.internal/GeneratedSerializer<id.tracive.sdk.model/RightOfReply> { // id.tracive.sdk.model/RightOfReply.$serializer|null[0]
+        final val descriptor // id.tracive.sdk.model/RightOfReply.$serializer.descriptor|{}descriptor[0]
+            final fun <get-descriptor>(): kotlinx.serialization.descriptors/SerialDescriptor // id.tracive.sdk.model/RightOfReply.$serializer.descriptor.<get-descriptor>|<get-descriptor>(){}[0]
+
+        final fun childSerializers(): kotlin/Array<kotlinx.serialization/KSerializer<*>> // id.tracive.sdk.model/RightOfReply.$serializer.childSerializers|childSerializers(){}[0]
+        final fun deserialize(kotlinx.serialization.encoding/Decoder): id.tracive.sdk.model/RightOfReply // id.tracive.sdk.model/RightOfReply.$serializer.deserialize|deserialize(kotlinx.serialization.encoding.Decoder){}[0]
+        final fun serialize(kotlinx.serialization.encoding/Encoder, id.tracive.sdk.model/RightOfReply) // id.tracive.sdk.model/RightOfReply.$serializer.serialize|serialize(kotlinx.serialization.encoding.Encoder;id.tracive.sdk.model.RightOfReply){}[0]
+    }
+
+    final object Companion { // id.tracive.sdk.model/RightOfReply.Companion|null[0]
+        final fun serializer(): kotlinx.serialization/KSerializer<id.tracive.sdk.model/RightOfReply> // id.tracive.sdk.model/RightOfReply.Companion.serializer|serializer(){}[0]
     }
 }
 
@@ -1149,6 +1219,9 @@ final class id.tracive.sdk.query/TraciveQuery { // id.tracive.sdk.query/TraciveQ
         final fun email(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.email|email(kotlin.String){}[0]
         final fun iban(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.iban|iban(kotlin.String){}[0]
         final fun phone(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.phone|phone(kotlin.String){}[0]
+        final fun qris(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.qris|qris(kotlin.String){}[0]
+        final fun qrisNmid(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.qrisNmid|qrisNmid(kotlin.String){}[0]
+        final fun qrisPan(kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.qrisPan|qrisPan(kotlin.String){}[0]
         final fun username(kotlin/String, kotlin/String): id.tracive.sdk.query/TraciveQuery // id.tracive.sdk.query/TraciveQuery.Companion.username|username(kotlin.String;kotlin.String){}[0]
     }
 }
@@ -1186,8 +1259,20 @@ final class id.tracive.sdk/TraciveQueryException : id.tracive.sdk/TraciveExcepti
             final fun <get-INVALID_DOCUMENT_ID>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.INVALID_DOCUMENT_ID.<get-INVALID_DOCUMENT_ID>|<get-INVALID_DOCUMENT_ID>(){}[0]
         final const val NOT_AN_EMAIL // id.tracive.sdk/TraciveQueryException.Companion.NOT_AN_EMAIL|{}NOT_AN_EMAIL[0]
             final fun <get-NOT_AN_EMAIL>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.NOT_AN_EMAIL.<get-NOT_AN_EMAIL>|<get-NOT_AN_EMAIL>(){}[0]
+        final const val NOT_AN_NMID // id.tracive.sdk/TraciveQueryException.Companion.NOT_AN_NMID|{}NOT_AN_NMID[0]
+            final fun <get-NOT_AN_NMID>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.NOT_AN_NMID.<get-NOT_AN_NMID>|<get-NOT_AN_NMID>(){}[0]
+        final const val NOT_A_PAN // id.tracive.sdk/TraciveQueryException.Companion.NOT_A_PAN|{}NOT_A_PAN[0]
+            final fun <get-NOT_A_PAN>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.NOT_A_PAN.<get-NOT_A_PAN>|<get-NOT_A_PAN>(){}[0]
+        final const val NOT_A_QRIS // id.tracive.sdk/TraciveQueryException.Companion.NOT_A_QRIS|{}NOT_A_QRIS[0]
+            final fun <get-NOT_A_QRIS>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.NOT_A_QRIS.<get-NOT_A_QRIS>|<get-NOT_A_QRIS>(){}[0]
         final const val NOT_E164 // id.tracive.sdk/TraciveQueryException.Companion.NOT_E164|{}NOT_E164[0]
             final fun <get-NOT_E164>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.NOT_E164.<get-NOT_E164>|<get-NOT_E164>(){}[0]
+        final const val QRIS_CRC_MISMATCH // id.tracive.sdk/TraciveQueryException.Companion.QRIS_CRC_MISMATCH|{}QRIS_CRC_MISMATCH[0]
+            final fun <get-QRIS_CRC_MISMATCH>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.QRIS_CRC_MISMATCH.<get-QRIS_CRC_MISMATCH>|<get-QRIS_CRC_MISMATCH>(){}[0]
+        final const val QRIS_NOT_INDEXED // id.tracive.sdk/TraciveQueryException.Companion.QRIS_NOT_INDEXED|{}QRIS_NOT_INDEXED[0]
+            final fun <get-QRIS_NOT_INDEXED>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.QRIS_NOT_INDEXED.<get-QRIS_NOT_INDEXED>|<get-QRIS_NOT_INDEXED>(){}[0]
+        final const val QRIS_NO_NMID // id.tracive.sdk/TraciveQueryException.Companion.QRIS_NO_NMID|{}QRIS_NO_NMID[0]
+            final fun <get-QRIS_NO_NMID>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.QRIS_NO_NMID.<get-QRIS_NO_NMID>|<get-QRIS_NO_NMID>(){}[0]
         final const val UNKNOWN_BANK_CODE // id.tracive.sdk/TraciveQueryException.Companion.UNKNOWN_BANK_CODE|{}UNKNOWN_BANK_CODE[0]
             final fun <get-UNKNOWN_BANK_CODE>(): kotlin/String // id.tracive.sdk/TraciveQueryException.Companion.UNKNOWN_BANK_CODE.<get-UNKNOWN_BANK_CODE>|<get-UNKNOWN_BANK_CODE>(){}[0]
         final const val UNKNOWN_COUNTRY // id.tracive.sdk/TraciveQueryException.Companion.UNKNOWN_COUNTRY|{}UNKNOWN_COUNTRY[0]
