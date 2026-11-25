@@ -139,7 +139,10 @@ private fun ResultCard(result: CheckResult) {
       result.fraudAmount.forEach { (currency, amount) -> Text("Reported loss: $amount $currency") }
       result.lastReportOn?.let { Text("Most recent report: ${monthYear(it)}") }
       result.qris?.let { qris ->
-        Text(listOfNotNull(qris.merchantName, qris.city, qris.criteria).joinToString(" · "))
+        Text(
+          listOfNotNull(qris.merchantName, qris.city, qris.criteria, qris.acquirer)
+            .joinToString(" · ")
+        )
       }
 
       // Below the warning, never above it, and as written: the owner's words are not translated.
